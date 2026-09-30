@@ -1,0 +1,16 @@
+{
+  "rewrites": [
+    {
+      "source": "/",
+      "destination": "/index.html"
+    },
+    {
+      "source": "/cozinha",
+      "destination": "/cozinha/index.html"
+    },
+    {
+      "source": "/cozinha/",
+      "destination": "/cozinha/index.html"
+    }
+  ]
+}
