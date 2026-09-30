@@ -1,4 +1,4 @@
-const { getSql, cors, send, normalize, makeId } = require("../_lib");
+const { getSql, cors, send, normalize, makeId, requireKitchenAuth } = require("../_lib");
 
 module.exports = async function handler(req, res) {
   cors(res);
@@ -8,6 +8,7 @@ module.exports = async function handler(req, res) {
     const sql = getSql();
 
     if (req.method === "GET") {
+      if (!requireKitchenAuth(req, res)) return;
       const rows = await sql`
         SELECT
           id,
