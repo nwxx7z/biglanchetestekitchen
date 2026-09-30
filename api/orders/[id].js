@@ -1,4 +1,4 @@
-const { getSql, cors, send } = require("../_lib");
+const { getSql, cors, send, requireKitchenAuth } = require("../_lib");
 
 module.exports = async function handler(req, res) {
   cors(res);
@@ -6,6 +6,7 @@ module.exports = async function handler(req, res) {
 
   try {
     if (req.method !== "PATCH") return send(res, 405, { error: "Método não permitido" });
+    if (!requireKitchenAuth(req, res)) return;
     const id = String(req.query.id || "");
     if (!id) return send(res, 400, { error: "ID ausente" });
 
