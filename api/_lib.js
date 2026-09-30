@@ -19,6 +19,13 @@ function send(res, status, data) {
 }
 
 function normalize(x = {}) {
+  if (typeof x === "string") {
+    try { x = JSON.parse(x); } catch { x = {}; }
+  }
+  if (Buffer.isBuffer(x)) {
+    try { x = JSON.parse(x.toString("utf8")); } catch { x = {}; }
+  }
+  if (!x || typeof x !== "object") x = {};
   return {
     cart: (Array.isArray(x.cart) ? x.cart : []).slice(0, 50).map(i => ({
       name: String(i.name || "Item").slice(0, 120),
