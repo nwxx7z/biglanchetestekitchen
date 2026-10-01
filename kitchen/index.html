@@ -122,6 +122,18 @@ main{margin:0 auto;padding:22px 14px 48px}
 }
 @media(prefers-reduced-motion:reduce){html{scroll-behavior:auto}.order,.toolbar button,.tab{transition:none!important}.order.new::before{animation:none}.auth-card{animation:none}}
 
+
+<style id="printer-path-status-style">
+.printer-paths{margin:0 0 18px;padding:12px 14px;border:1px solid var(--k-line);background:var(--k-card);border-radius:16px;display:grid;gap:7px;box-shadow:0 6px 20px rgba(44,33,26,.05)}
+.printer-path-title{font-size:12px;font-weight:900;text-transform:uppercase;letter-spacing:.08em;color:var(--k-muted);margin-bottom:2px}
+.printer-path{display:grid;grid-template-columns:22px 1fr auto;align-items:center;gap:8px;min-height:30px;font-size:13px;color:var(--k-ink)}
+.printer-path strong{font-size:12px;font-weight:800;color:var(--k-muted)}
+.printer-path.ok strong{color:#3f704d}
+.printer-path.none strong{color:#a36b28}
+.printer-path.none.alert strong{color:#a43f3f}
+.path-icon{font-size:14px;line-height:1}
+@media(max-width:600px){.printer-paths{border-radius:14px;padding:11px 12px}.printer-path{font-size:12px}}
+</style>
 </style>
 
 <script>
@@ -2687,6 +2699,12 @@ h1::before{
 </div>
 <main>
 <div class="toolbar"><button class="primary" id="connect">🖨️ Conectar impressora</button><button id="testPrint">🧪 Testar impressão</button><button id="refresh">Atualizar</button><button id="logout">Sair</button></div>
+<div id="printerPaths" class="printer-paths" aria-live="polite" aria-label="Status das impressoras">
+  <div class="printer-path-title">Caminho de impressão</div>
+  <div id="pathBluetooth" class="printer-path"><span class="path-icon">🔴</span><span>Bluetooth</span><strong>Indisponível</strong></div>
+  <div id="pathUsb" class="printer-path"><span class="path-icon">🔴</span><span>USB / QZ Tray</span><strong>Indisponível</strong></div>
+  <div id="pathNone" class="printer-path none"><span class="path-icon">🟡</span><span>Status geral</span><strong>Detectando...</strong></div>
+</div>
 <div id="orders" class="orders"><div class="empty">Nenhum pedido.</div></div>
 </main>
 <script>
@@ -2705,26 +2723,66 @@ async function api(p,o={}){const r=await fetch(API_URL+p,{cache:"no-store",crede
 async function checkAuth(){try{const r=await fetch(API_URL+"/api/auth",{cache:"no-store",credentials:"same-origin"});if(r.ok){showApp();return true}}catch(e){}showLogin();return false}
 async function doLogin(password){const r=await fetch(API_URL+"/api/auth",{method:"POST",credentials:"same-origin",headers:{"Content-Type":"application/json"},body:JSON.stringify({password})});if(!r.ok){let msg="Senha incorreta";try{msg=(await r.json()).error||msg}catch(e){}throw Error(msg)}showApp();await load();}
 async function doLogout(){try{await fetch(API_URL+"/api/auth",{method:"DELETE",credentials:"same-origin"})}catch(e){}showLogin();}
+async function detectPrinterPaths(){
+  const bluetooth = !!window.BIGLANCHE_PRINTER?.bridgeAvailable?.();
+  let bluetoothReady = false;
+  if(bluetooth){
+    try{ bluetoothReady = !!window.BIGLANCHE_PRINTER.ready?.(); }catch(e){}
+  }
+
+  let usb = false, usbName = "";
+  try{
+    if(globalThis["qz"]){
+      if(!globalThis["qz"].websocket.isActive()) await globalThis["qz"].websocket.connect();
+      usbName = PRINT_PRINTER || await globalThis["qz"].printers.getDefault() || "";
+      usb = !!usbName;
+    }
+  }catch(e){
+    usb = false;
+  }
+
+  const btEl=$("#pathBluetooth"), usbEl=$("#pathUsb"), noneEl=$("#pathNone");
+  btEl.classList.toggle("ok", bluetoothReady);
+  btEl.querySelector(".path-icon").textContent = bluetoothReady ? "🟢" : "🔴";
+  btEl.querySelector("strong").textContent = bluetoothReady ? "Conectada" : (bluetooth ? "Bridge disponível · não conectada" : "Indisponível");
+
+  usbEl.classList.toggle("ok", usb);
+  usbEl.querySelector(".path-icon").textContent = usb ? "🟢" : "🔴";
+  usbEl.querySelector("strong").textContent = usb ? `Conectada${usbName ? " · "+usbName : ""}` : "Indisponível";
+
+  const any = bluetoothReady || usb;
+  noneEl.classList.toggle("alert", !any);
+  noneEl.querySelector(".path-icon").textContent = any ? "🟢" : "🔴";
+  noneEl.querySelector("span:nth-child(2)").textContent = any ? "Caminho disponível" : "Nenhuma impressora disponível";
+  noneEl.querySelector("strong").textContent = any ? (bluetoothReady && usb ? "Bluetooth + USB/QZ Tray" : bluetoothReady ? "Bluetooth" : "USB/QZ Tray") : "Conecte uma impressora";
+
+  return {bluetooth, bluetoothReady, usb, usbName, any};
+}
+
 async function connectPrinter(){
   try{
     if(window.BIGLANCHE_PRINTER.bridgeAvailable()){
       await window.BIGLANCHE_PRINTER.connect();
       qzReady=false;
-      status("Impressora Android conectada",true);
+      status("Impressora conectada — Bluetooth",true);
+      await detectPrinterPaths();
       return;
     }
-    if(!window.qz)throw Error("QZ Tray não carregado");
-    if(!qz.websocket.isActive())await qz.websocket.connect();
-    const p=PRINT_PRINTER||await qz.printers.getDefault();
-    if(!p)throw Error("Sem impressora");
+    if(!globalThis["qz"])throw Error("QZ Tray não carregado");
+    if(!globalThis["qz"].websocket.isActive())await globalThis["qz"].websocket.connect();
+    const p=PRINT_PRINTER||await globalThis["qz"].printers.getDefault();
+    if(!p)throw Error("Nenhuma impressora USB/QZ Tray encontrada");
     qzReady=true;
-    status("Impressora: "+p,true);
+    status("Impressora conectada — USB/QZ Tray",true);
+    await detectPrinterPaths();
   }catch(e){
     qzReady=false;
-    status("Impressora não conectada");
+    await detectPrinterPaths();
+    status("Nenhuma impressora disponível");
     alert(e.message);
   }
 }
+
 function pedidoTime(value){
   if(!value) return "";
   const d = new Date(value);
@@ -2794,9 +2852,9 @@ async function printOrder(id,automatic=false){
       return true;
     }
     if(!qzReady){browserPrint(o);return}
-    const p=PRINT_PRINTER||await qz.printers.getDefault(),
-          c=qz.configs.create(p,{jobName:`BIG LANCHE Pedido #${o.number}`});
-    await qz.print(c,[{type:"raw",format:"command",flavor:"plain",data:raw}]);
+    const p=PRINT_PRINTER||await globalThis["qz"].printers.getDefault(),
+          c=globalThis["qz"].configs.create(p,{jobName:`BIG LANCHE Pedido #${o.number}`});
+    await globalThis["qz"].print(c,[{type:"raw",format:"command",flavor:"plain",data:raw}]);
     await setStatus(id,"printed");
     return true;
   }catch(e){
@@ -2826,6 +2884,8 @@ async function testPrintSimulation(){
     "\x1D\x56\x00";                // corte, se suportado
 
   try{
+    const paths = await detectPrinterPaths();
+
     /* Android / RP80-PLUS: envia para a impressora física. */
     if(window.BIGLANCHE_PRINTER?.available()){
       const sent=await window.BIGLANCHE_PRINTER.print(rawTest);
@@ -2839,23 +2899,23 @@ async function testPrintSimulation(){
     }
 
     /* PC + QZ Tray: também imprime fisicamente. */
-    if(window.qz){
+    if(globalThis["qz"]){
       if(!qzReady){
-        if(!qz.websocket.isActive()) await qz.websocket.connect();
-        const detected=PRINT_PRINTER || await qz.printers.getDefault();
+        if(!globalThis["qz"].websocket.isActive()) await globalThis["qz"].websocket.connect();
+        const detected=PRINT_PRINTER || await globalThis["qz"].printers.getDefault();
         if(!detected) throw Error("Nenhuma impressora encontrada.");
         qzReady=true;
       }
 
-      const printer=PRINT_PRINTER || await qz.printers.getDefault();
+      const printer=PRINT_PRINTER || await globalThis["qz"].printers.getDefault();
       if(!printer) throw Error("Nenhuma impressora encontrada.");
 
-      const config=qz.configs.create(
+      const config=globalThis["qz"].configs.create(
         printer,
         {jobName:"BIG LANCHE - Teste de impressão"}
       );
 
-      await qz.print(config,[{
+      await globalThis["qz"].print(config,[{
         type:"raw",
         format:"command",
         flavor:"plain",
@@ -2895,7 +2955,8 @@ async function deleteOrder(id,number){
 async function load(){try{
   const previous=orders;
   orders=await api("/api/orders");
-  status(qzReady||window.BIGLANCHE_PRINTER?.ready()?"Pedidos + impressora":"Pedidos conectados",true);
+  const paths=await detectPrinterPaths();
+  status(paths.any?`Pedidos + impressora — ${paths.bluetoothReady&&paths.usb?"Bluetooth + USB/QZ Tray":paths.bluetoothReady?"Bluetooth":"USB/QZ Tray"}`:"Nenhuma impressora disponível",paths.any);
   render();
   if(window.BIGLANCHE_PRINTER?.ready()){
     for(const o of orders){
