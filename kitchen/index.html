@@ -1,4 +1,3 @@
-```html
 <!doctype html>
 <html lang="pt-BR">
 <head>
@@ -26,6 +25,50 @@ button{border:1px solid var(--line);border-radius:10px;padding:9px 12px;backgrou
 .auth-card input{width:100%;padding:12px 13px;border:1px solid var(--line);border-radius:10px;background:#fff;font:inherit}
 .auth-card button{width:100%;margin-top:12px}.auth-error{min-height:20px;margin-top:10px!important;color:var(--danger)!important;font-size:.88rem}
 .hidden{display:none!important}
+:root[data-theme="dark"]{color-scheme:dark;--bg:#1c1713;--card:#2a211b;--ink:#f8ebdd;--muted:#c5b2a1;--line:#574536;--accent:#876448;--ok:#80ad86;--warn:#dfb15d;--danger:#e38379}
+:root[data-theme="dark"] header{background:#241c17ed}
+:root[data-theme="dark"] button{background:#352920;color:var(--ink);border-color:var(--line)}
+:root[data-theme="dark"] button.primary{background:var(--accent);border-color:var(--accent);color:#fff}
+:root[data-theme="dark"] .badge{background:#49382c;color:var(--ink)}
+:root[data-theme="dark"] .badge.new{background:#624321}
+:root[data-theme="dark"] .badge.printed{background:#2e5139}
+:root[data-theme="dark"] .auth-card input{background:#352920;color:var(--ink);border-color:var(--line)}
+.store-controls{background:var(--card);border:1px solid var(--line);border-radius:14px;padding:12px 14px;margin-bottom:16px}
+.store-controls-head{display:flex;flex-wrap:wrap;align-items:center;justify-content:space-between;gap:8px;margin-bottom:10px}
+.store-controls-status{color:var(--muted);font-size:.88rem}
+.store-mode-buttons{display:flex;flex-wrap:wrap;gap:8px}
+.store-mode-button[aria-pressed="true"]{background:var(--accent);border-color:var(--accent);color:#fff;font-weight:800}
+.store-mode-message{min-height:1.2em;margin-top:7px;color:var(--danger);font-size:.82rem}
+@media(max-width:500px){.store-controls-head{align-items:flex-start;flex-direction:column}.store-mode-buttons button{flex:1}}
+@media(max-width:650px){
+  html{scroll-padding-top:10px;-webkit-text-size-adjust:100%}
+  body{min-width:320px;overflow-x:hidden;font-size:16px;padding-bottom:env(safe-area-inset-bottom)}
+  header{padding:12px max(12px,env(safe-area-inset-left))}
+  main{margin:12px auto;padding:0 max(12px,env(safe-area-inset-right)) calc(24px + env(safe-area-inset-bottom)) max(12px,env(safe-area-inset-left))}
+  .head{width:100%;gap:6px}
+  .head h1{font-size:1.05rem;line-height:1.25}
+  .toolbar{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:8px}
+  .toolbar button{width:100%;min-height:46px;padding:10px 8px;white-space:normal}
+  #connect{grid-column:1/-1}
+  .store-controls{padding:12px;border-radius:12px}
+  .store-mode-buttons{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:6px}
+  .store-mode-buttons button{min-height:46px;padding:8px 4px;white-space:normal}
+  .store-controls-status{overflow-wrap:anywhere}
+  .orders{grid-template-columns:minmax(0,1fr);gap:10px}
+  .order{min-width:0;padding:13px;border-radius:14px}
+  .order-head{align-items:flex-start;gap:8px}
+  .number{font-size:1.08rem}
+  .meta,.item-name{overflow-wrap:anywhere;word-break:normal}
+  .actions button{flex:1 1 120px;min-height:46px}
+  .auth-card{padding:22px}
+  .auth-card input,.auth-card button{min-height:46px;font-size:16px}
+}
+@media(max-width:380px){
+  .head h1{font-size:.98rem}
+  .order{padding:11px}
+  .store-mode-buttons{gap:4px}
+  .store-mode-buttons button{font-size:.9rem}
+}
 </style>
 
 <script>
@@ -66,7 +109,16 @@ window.BIGLANCHE_PRINTER = {
   <button id="tabReady" class="tab" type="button" role="tab" aria-selected="false">Prontos <span id="countReady" class="tab-count">0</span></button>
 </div>
 <main>
-<div class="toolbar"><button class="primary" id="connect">🖨️ Conectar impressora</button><button id="refresh">Atualizar</button><button id="logout">Sair</button></div>
+<div class="toolbar"><button class="primary" id="connect">🖨️ Conectar impressora</button><button id="refresh">Atualizar</button><button id="themeToggle" type="button" aria-pressed="false">🌙 Modo escuro</button><button id="logout">Sair</button></div>
+<section class="store-controls" aria-label="Controle de pedidos">
+  <div class="store-controls-head"><strong>Recebimento de pedidos</strong><span id="storeStatus" class="store-controls-status" role="status">Carregando modo...</span></div>
+  <div class="store-mode-buttons" role="group" aria-label="Modo de recebimento de pedidos">
+    <button class="store-mode-button" type="button" data-store-mode="open" aria-pressed="false">Aberto</button>
+    <button class="store-mode-button" type="button" data-store-mode="closed" aria-pressed="false">Fechado</button>
+    <button class="store-mode-button" type="button" data-store-mode="auto" aria-pressed="false">Automático</button>
+  </div>
+  <div id="storeModeMessage" class="store-mode-message" aria-live="polite"></div>
+</section>
 <div id="orders" class="orders"><div class="empty">Nenhum pedido.</div></div>
 </main>
 <script>
@@ -74,6 +126,8 @@ const API_URL=location.origin, PRINT_PRINTER="";
 let qzReady=false, orders=[], authenticated=false, currentTab="active";
 let autoPrintSeen=new Set();
 let autoPrintBusy=new Set();
+let storeMode="auto", storeOpenState=null;
+const STORE_OPEN_MINUTES=18*60, STORE_CLOSE_MINUTES=23*60+40;
 const $=s=>document.querySelector(s);
 const money=v=>Number(v||0).toLocaleString("pt-BR",{style:"currency",currency:"BRL"});
 const esc=s=>String(s??"").replace(/[&<>"']/g,c=>({"&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;","'":"&#039;"}[c]));
@@ -83,7 +137,7 @@ function showLogin(message=""){authenticated=false;$("#app").classList.add("hidd
 function showApp(){authenticated=true;$("#loginScreen").classList.add("hidden");$("#app").classList.remove("hidden")}
 async function api(p,o={}){const r=await fetch(API_URL+p,{cache:"no-store",credentials:"same-origin",...o,headers:{"Content-Type":"application/json",...(o.headers||{})}});if(r.status===401){showLogin("Sua sessão expirou. Entre novamente.");throw Error("AUTH_REQUIRED")}if(!r.ok)throw Error(await r.text());return r.json();}
 async function checkAuth(){try{const r=await fetch(API_URL+"/api/auth",{cache:"no-store",credentials:"same-origin"});if(r.ok){showApp();return true}}catch(e){}showLogin();return false}
-async function doLogin(password){const r=await fetch(API_URL+"/api/auth",{method:"POST",credentials:"same-origin",headers:{"Content-Type":"application/json"},body:JSON.stringify({password})});if(!r.ok){let msg="Senha incorreta";try{msg=(await r.json()).error||msg}catch(e){}throw Error(msg)}showApp();await load();}
+async function doLogin(password){const r=await fetch(API_URL+"/api/auth",{method:"POST",credentials:"same-origin",headers:{"Content-Type":"application/json"},body:JSON.stringify({password})});if(!r.ok){let msg="Senha incorreta";try{msg=(await r.json()).error||msg}catch(e){}throw Error(msg)}showApp();await load();await carregarModoLoja();}
 async function doLogout(){try{await fetch(API_URL+"/api/auth",{method:"DELETE",credentials:"same-origin"})}catch(e){}showLogin();}
 async function connectPrinter(){
   try{
@@ -115,6 +169,74 @@ function referenciaSeparada(o){
   const referencia=String(o.delivery?.reference||"").trim();
   const endereco=String(o.delivery?.address||"").toLowerCase();
   return referencia && !endereco.includes(referencia.toLowerCase()) ? referencia : "";
+}
+function horarioAutomaticoAberto(){
+  const parts=new Intl.DateTimeFormat("en-US",{timeZone:"America/Sao_Paulo",hour:"2-digit",minute:"2-digit",hour12:false}).formatToParts(new Date());
+  const hour=Number(parts.find(p=>p.type==="hour")?.value||0);
+  const minute=Number(parts.find(p=>p.type==="minute")?.value||0);
+  const now=hour*60+minute;
+  return now>=STORE_OPEN_MINUTES&&now<=STORE_CLOSE_MINUTES;
+}
+function atualizarControlesLoja(){
+  const open=storeMode==="open"?true:storeMode==="closed"?false:(storeOpenState===null?horarioAutomaticoAberto():storeOpenState);
+  const label=storeMode==="open"?"Pedidos abertos manualmente":storeMode==="closed"?"Pedidos fechados manualmente":`Automático · pedidos ${open?"abertos":"fechados"}`;
+  const status=$("#storeStatus");
+  if(status)status.textContent=label;
+  document.querySelectorAll("[data-store-mode]").forEach(button=>{
+    const selected=button.dataset.storeMode===storeMode;
+    button.setAttribute("aria-pressed",String(selected));
+  });
+}
+function aplicarTema(theme){
+  const dark=theme==="dark";
+  document.documentElement.dataset.theme=dark?"dark":"light";
+  const button=$("#themeToggle");
+  if(button){button.textContent=dark?"☀️ Modo claro":"🌙 Modo escuro";button.setAttribute("aria-pressed",String(dark));}
+}
+function iniciarTema(){
+  let saved="";
+  try{saved=localStorage.getItem("big-lanche-kitchen-theme")||"";}catch(e){}
+  const theme=saved==="dark"||saved==="light"?saved:(window.matchMedia&&window.matchMedia("(prefers-color-scheme: dark)").matches?"dark":"light");
+  aplicarTema(theme);
+}
+function alternarTema(){
+  const theme=document.documentElement.dataset.theme==="dark"?"light":"dark";
+  aplicarTema(theme);
+  try{localStorage.setItem("big-lanche-kitchen-theme",theme);}catch(e){}
+}
+async function carregarModoLoja(){
+  try{
+    const response=await fetch(`${API_URL}/api/store-status`,{cache:"no-store",credentials:"same-origin"});
+    if(!response.ok)throw new Error("Não foi possível consultar o modo de pedidos.");
+    const data=await response.json();
+    storeMode=["open","closed","auto"].includes(String(data.mode))?String(data.mode):"auto";
+    storeOpenState=typeof data.open==="boolean"?data.open:null;
+    $("#storeModeMessage").textContent="";
+    atualizarControlesLoja();
+  }catch(e){
+    $("#storeStatus").textContent="Status indisponível";
+    $("#storeModeMessage").textContent="Não foi possível carregar o status da loja.";
+  }
+}
+async function definirModoLoja(mode){
+  if(!["open","closed","auto"].includes(mode))return;
+  const buttons=[...document.querySelectorAll("[data-store-mode]")];
+  buttons.forEach(button=>button.disabled=true);
+  $("#storeModeMessage").textContent="Salvando...";
+  try{
+    const response=await fetch(`${API_URL}/api/store-status`,{method:"POST",credentials:"same-origin",headers:{"Content-Type":"application/json"},body:JSON.stringify({mode})});
+    let data={};
+    try{data=await response.json();}catch(e){}
+    if(!response.ok)throw new Error(data.error||"O servidor não aceitou a alteração.");
+    storeMode=["open","closed","auto"].includes(String(data.mode))?String(data.mode):mode;
+    storeOpenState=typeof data.open==="boolean"?data.open:null;
+    $("#storeModeMessage").textContent="Modo atualizado.";
+    atualizarControlesLoja();
+  }catch(e){
+    $("#storeModeMessage").textContent=e.message||"Não foi possível salvar o modo da loja.";
+  }finally{
+    buttons.forEach(button=>button.disabled=false);
+  }
 }
 function setTab(tab){
   currentTab=tab;
@@ -222,8 +344,7 @@ async function load(){try{
     }
   }
 }catch{status("Servidor offline");}}
-$("#connect").onclick=connectPrinter;$("#refresh").onclick=load;$("#logout").onclick=doLogout;$("#loginForm").addEventListener("submit",async e=>{e.preventDefault();const b=$("#loginForm button");const p=$("#loginPassword").value.trim();if(!p)return;$("#loginError").textContent="";b.disabled=true;try{await doLogin(p);$("#loginPassword").value=""}catch(err){$("#loginError").textContent=err.message||"Senha incorreta";$("#loginPassword").select()}finally{b.disabled=false}});checkAuth().then(ok=>{if(ok)load()});setInterval(()=>{if(authenticated)load()},2500);$("#tabActive").onclick=()=>setTab("active");$("#tabReady").onclick=()=>setTab("ready");
+$("#connect").onclick=connectPrinter;$("#refresh").onclick=load;$("#logout").onclick=doLogout;$("#themeToggle").addEventListener("click",alternarTema);document.querySelectorAll("[data-store-mode]").forEach(button=>button.addEventListener("click",()=>definirModoLoja(button.dataset.storeMode)));$("#loginForm").addEventListener("submit",async e=>{e.preventDefault();const b=$("#loginForm button");const p=$("#loginPassword").value.trim();if(!p)return;$("#loginError").textContent="";b.disabled=true;try{await doLogin(p);$("#loginPassword").value=""}catch(err){$("#loginError").textContent=err.message||"Senha incorreta";$("#loginPassword").select()}finally{b.disabled=false}});iniciarTema();atualizarControlesLoja();checkAuth().then(ok=>{if(ok){load();carregarModoLoja()}});setInterval(()=>{if(authenticated)load()},2500);setInterval(()=>{if(authenticated)carregarModoLoja()},15000);$("#tabActive").onclick=()=>setTab("active");$("#tabReady").onclick=()=>setTab("ready");
 </script>
 </div></body>
 </html>
-```
