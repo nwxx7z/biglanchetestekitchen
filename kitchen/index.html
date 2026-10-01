@@ -122,6 +122,11 @@ main{margin:0 auto;padding:22px 14px 48px}
 }
 @media(prefers-reduced-motion:reduce){html{scroll-behavior:auto}.order,.toolbar button,.tab{transition:none!important}.order.new::before{animation:none}.auth-card{animation:none}}
 
+
+#autoPrintToggle{font-weight:800}
+#autoPrintToggle.auto-print-on{border-color:var(--accent);color:var(--accent)}
+#autoPrintToggle.auto-print-off{opacity:.78}
+:root[data-theme="dark"] #autoPrintToggle.auto-print-on{color:#ffd09a;border-color:#ffd09a}
 </style>
 
 <script>
@@ -2976,7 +2981,7 @@ html[data-theme="dark"] .order-mode.active{
   <button id="tabReady" class="tab" type="button" role="tab" aria-selected="false">Prontos <span id="countReady" class="tab-count">0</span></button>
 </div>
 <main>
-<div class="toolbar"><button class="primary" id="connect">🖨️ Conectar impressora</button><button id="testPrint">🧪 Testar impressão</button><button id="refresh">Atualizar</button><button id="logout">Sair</button></div>
+<div class="toolbar"><button id="autoPrintToggle" type="button" aria-pressed="true">⚡ Impressão automática: ON</button><button class="primary" id="connect">🖨️ Conectar impressora</button><button id="testPrint">🧪 Testar impressão</button><button id="refresh">Atualizar</button><button id="logout">Sair</button></div>
 <div class="order-control" id="orderControl">
   <div class="order-control-info">
     <span class="order-control-kicker">Status dos pedidos</span>
@@ -2996,6 +3001,9 @@ const API_URL=location.origin, PRINT_PRINTER="";
 let qzReady=false, orders=[], authenticated=false, currentTab="active";
 let autoPrintSeen=new Set();
 let autoPrintBusy=new Set();
+let autoPrintEnabled=true;
+const autoPrintStorageKey="big-lanche-auto-print-v1";
+let autoPrintInitialized=false;
 const $=s=>document.querySelector(s);
 const money=v=>Number(v||0).toLocaleString("pt-BR",{style:"currency",currency:"BRL"});
 const esc=s=>String(s??"").replace(/[&<>"']/g,c=>({"&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;","'":"&#039;"}[c]));
@@ -3027,6 +3035,50 @@ async function connectPrinter(){
     alert(e.message);
   }
 }
+function loadAutoPrintSetting(){
+  try{
+    const v=localStorage.getItem(autoPrintStorageKey);
+    autoPrintEnabled=v===null?true:v==="1";
+  }catch(e){autoPrintEnabled=true}
+  renderAutoPrintToggle();
+}
+function renderAutoPrintToggle(){
+  const b=$("#autoPrintToggle");
+  if(!b)return;
+  b.classList.toggle("auto-print-on",autoPrintEnabled);
+  b.classList.toggle("auto-print-off",!autoPrintEnabled);
+  b.setAttribute("aria-pressed",String(autoPrintEnabled));
+  b.textContent=autoPrintEnabled?"⚡ Impressão automática: ON":"⚡ Impressão automática: OFF";
+}
+function toggleAutoPrint(){
+  autoPrintEnabled=!autoPrintEnabled;
+  try{localStorage.setItem(autoPrintStorageKey,autoPrintEnabled?"1":"0")}catch(e){}
+  renderAutoPrintToggle();
+  if(!autoPrintEnabled)autoPrintBusy.clear();
+  status(autoPrintEnabled?"Impressão automática ativada":"Impressão automática desativada",true);
+}
+function markAutoPrintBaseline(list){
+  for(const o of list){if(o?.id)autoPrintSeen.add(o.id)}
+  autoPrintInitialized=true;
+}
+async function autoPrintNewOrders(previous,next){
+  if(!autoPrintEnabled || !window.BIGLANCHE_PRINTER?.ready?.())return;
+  if(!autoPrintInitialized){
+    markAutoPrintBaseline(next);
+    return;
+  }
+  const prevIds=new Set((previous||[]).map(o=>o.id));
+  for(const o of next){
+    if(o.status!=="new"||prevIds.has(o.id)||autoPrintSeen.has(o.id)||autoPrintBusy.has(o.id))continue;
+    autoPrintBusy.add(o.id);
+    try{
+      if(await printOrder(o.id,true))autoPrintSeen.add(o.id);
+    }finally{
+      autoPrintBusy.delete(o.id);
+    }
+  }
+}
+
 function pedidoTime(value){
   if(!value) return "";
   const d = new Date(value);
@@ -3247,7 +3299,9 @@ document.querySelectorAll("[data-order-mode]").forEach(b=>{
 
 async function load(){try{
   const previous=orders;
-  orders=await api("/api/orders");
+  const previousOrders=orders.slice();
+orders=await api("/api/orders");
+  await autoPrintNewOrders(previousOrders,orders);
   status(qzReady||window.BIGLANCHE_PRINTER?.ready()?"Pedidos + impressora":"Pedidos conectados",true);
   render();
   if(window.BIGLANCHE_PRINTER?.ready()){
@@ -3268,6 +3322,11 @@ let kitchenPollBusy=false;
 async function pollKitchen(){if(!authenticated||document.hidden||kitchenPollBusy)return;kitchenPollBusy=true;try{await load()}finally{kitchenPollBusy=false}}
 function startKitchenPolling(){if(kitchenPollTimer)clearInterval(kitchenPollTimer);kitchenPollTimer=setInterval(pollKitchen,10000)}
 document.addEventListener("visibilitychange",()=>{if(!document.hidden&&authenticated)pollKitchen()});
+
+const autoPrintButton=$("#autoPrintToggle");
+if(autoPrintButton)autoPrintButton.addEventListener("click",toggleAutoPrint);
+loadAutoPrintSetting();
+
 checkAuth().then(ok=>{if(ok){load();loadOrderMode();startKitchenPolling();startOrderModePolling()}});$("#tabActive").onclick=()=>setTab("active");$("#tabReady").onclick=()=>setTab("ready");
 </script>
 </div>
