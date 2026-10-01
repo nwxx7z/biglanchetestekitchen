@@ -12,7 +12,7 @@ header{position:sticky;top:0;z-index:5;background:#fffaf5eF;border-bottom:1px so
 .head{max-width:1100px;margin:auto;display:flex;justify-content:space-between;align-items:center;gap:12px}h1{font-size:1.1rem;margin:0}
 .status{color:var(--muted);font-size:.85rem}.dot{display:inline-block;width:9px;height:9px;border-radius:50%;background:#999;margin-right:6px}.dot.ok{background:var(--ok)}
 main{max-width:1100px;margin:20px auto;padding:0 14px 40px}.toolbar{display:flex;flex-wrap:wrap;gap:8px;margin-bottom:16px}
-button{border:1px solid var(--line);border-radius:10px;padding:9px 12px;background:#fff;cursor:pointer}button.primary{background:var(--accent);border-color:var(--accent);color:#fff}
+button{border:1px solid var(--line);border-radius:10px;padding:9px 12px;background:#fff;cursor:pointer}button:disabled{opacity:.6;cursor:wait}button.danger{color:#fff;background:var(--danger);border-color:var(--danger)}button.primary{background:var(--accent);border-color:var(--accent);color:#fff}
 .orders{display:grid;grid-template-columns:repeat(auto-fill,minmax(300px,1fr));gap:14px}.order{background:var(--card);border:1px solid var(--line);border-radius:16px;padding:15px;box-shadow:0 4px 15px #3223190e}.order.new{box-shadow:0 0 0 2px #b779322b,0 6px 18px #32231914}
 .order-head{display:flex;justify-content:space-between;align-items:center}.number{font-weight:800;font-size:1.15rem}.badge{padding:4px 8px;border-radius:999px;font-size:.72rem;font-weight:700;background:#eadfd4}.badge.new{background:#f3dfc2}.badge.printed{background:#dcebdd}
 .item{padding:9px 0;border-bottom:1px solid var(--line)}.item-name{font-weight:800}.add{padding-left:10px;color:var(--muted);font-size:.88rem}.item-note{margin-top:5px;padding-left:10px;color:var(--warn);font-size:.88rem}.meta{border-top:1px solid var(--line);margin-top:10px;padding-top:10px;display:grid;gap:5px}.total{font-size:1.08rem;font-weight:900;margin-top:10px}.actions{display:flex;flex-wrap:wrap;gap:7px;margin-top:13px}.empty{text-align:center;padding:36px;color:var(--muted)}
@@ -32,7 +32,11 @@ button{border:1px solid var(--line);border-radius:10px;padding:9px 12px;backgrou
    O APK expõe window.AndroidPrinter. No navegador normal, mantém o QZ Tray.
 */
 window.BIGLANCHE_PRINTER = {
-  available: () => !!window.AndroidPrinter && !!window.AndroidPrinter.isReady && window.AndroidPrinter.isReady(),
+  // O bridge existe mesmo antes de uma impressora ser configurada.
+  // "ready" indica se já existe uma impressora salva e pronta para imprimir.
+  bridgeAvailable: () => !!window.AndroidPrinter,
+  available: () => !!window.AndroidPrinter,
+  ready: () => !!window.AndroidPrinter && (!window.AndroidPrinter.isReady || window.AndroidPrinter.isReady()),
   connect: async () => {
     if (!window.AndroidPrinter) throw new Error("Ponte Android não disponível");
     const r = window.AndroidPrinter.connectPrinter();
@@ -41,6 +45,11 @@ window.BIGLANCHE_PRINTER = {
   print: async (data) => {
     if (!window.AndroidPrinter) throw new Error("Ponte Android não disponível");
     const r = window.AndroidPrinter.printEscPos(String(data));
+    return r === undefined ? true : r;
+  },
+  simulate: async (data) => {
+    if (!window.AndroidPrinter?.simulatePrint) throw new Error("Modo de simulação disponível apenas no aplicativo Android");
+    const r = window.AndroidPrinter.simulatePrint(String(data));
     return r === undefined ? true : r;
   }
 };
@@ -65,7 +74,7 @@ window.BIGLANCHE_PRINTER = {
   <button id="tabReady" class="tab" type="button" role="tab" aria-selected="false">Prontos <span id="countReady" class="tab-count">0</span></button>
 </div>
 <main>
-<div class="toolbar"><button class="primary" id="connect">🖨️ Conectar impressora</button><button id="testPrint">🧪 Testar impressão</button><button id="refresh">Atualizar</button><button id="logout">Sair</button></div>
+<div class="toolbar"><button class="primary" id="connect">🖨️ Conectar impressora</button><button id="testPrint" hidden>🧪 Testar impressão</button><button id="refresh">Atualizar</button><button id="logout">Sair</button></div>
 <div id="orders" class="orders"><div class="empty">Nenhum pedido.</div></div>
 </main>
 <script>
@@ -86,15 +95,12 @@ async function doLogin(password){const r=await fetch(API_URL+"/api/auth",{method
 async function doLogout(){try{await fetch(API_URL+"/api/auth",{method:"DELETE",credentials:"same-origin"})}catch(e){}showLogin();}
 async function connectPrinter(){
   try{
-    // Dentro do APK, a ponte Android sempre tem prioridade.
-    // Não tente QZ Tray mesmo que nenhuma impressora esteja configurada ainda.
-    if(window.AndroidPrinter){
+    if(window.BIGLANCHE_PRINTER.bridgeAvailable()){
       await window.BIGLANCHE_PRINTER.connect();
       qzReady=false;
-      status("Selecione a impressora no Android",true);
+      status("Impressora Android conectada",true);
       return;
     }
-    // Fora do APK, mantém o QZ Tray para uso no PC.
     if(!window.qz)throw Error("QZ Tray não carregado");
     if(!qz.websocket.isActive())await qz.websocket.connect();
     const p=PRINT_PRINTER||await qz.printers.getDefault();
@@ -134,8 +140,8 @@ function card(o){
   const time=pedidoTime(o.createdAt);
   const isReady=o.status==="ready";
   const actions=isReady
-    ? `<button onclick="setStatus('${esc(o.id)}','preparing')">↩️ Voltar para pedidos</button>`
-    : `<button class="primary" onclick="printOrder('${esc(o.id)}')">🖨️ Imprimir</button><button onclick="setStatus('${esc(o.id)}','preparing')">Em preparo</button><button onclick="setStatus('${esc(o.id)}','ready')">Pronto</button>`;
+    ? `<button onclick="setStatus('${esc(o.id)}','preparing')">↩️ Voltar para pedidos</button><button class="danger" onclick="deleteOrder('${esc(o.id)}', '${esc(o.number)}')">🗑️ Excluir</button>`
+    : `<button class="primary" onclick="printOrder('${esc(o.id)}')">🖨️ Imprimir</button><button onclick="setStatus('${esc(o.id)}','preparing')">Em preparo</button><button onclick="setStatus('${esc(o.id)}','ready')">Pronto</button><button class="danger" onclick="deleteOrder('${esc(o.id)}', '${esc(o.number)}')">🗑️ Excluir</button>`;
   return `<article class="order ${o.status==="new"?"new":""}">
     <div class="order-head">
       <div><div class="number">Pedido #${esc(o.number)}</div>${time?`<div class="order-time">Feito às ${time}</div>`:""}</div>
@@ -163,55 +169,12 @@ function render(){
     : `<div class="empty">${currentTab==="ready"?"Nenhum pedido pronto.":"Nenhum pedido em andamento."}</div>`;
 }
 function receipt(o){const line="-".repeat(42),a=["\x1B\x40","\x1B\x61\x01","\x1B\x45\x01","BIG LANCHE","PEDIDO #"+o.number,"\x1B\x45\x00",line,"\x1B\x61\x00"];for(const i of o.cart||[]){a.push(`${i.quantity}x ${printSafe(i.name)}`);for(const x of i.additions||[])a.push(`   + ${x.quantity||1}x ${printSafe(x.name)}`);if(i.note)a.push(`   OBS: ${printSafe(i.note)}`)}a.push(line,`Entrega: ${printSafe(o.delivery?.city)} ${o.delivery?.fee?money(o.delivery.fee):""}`,`Endereco: ${printSafe(o.delivery?.address)}`,`Pagamento: ${printSafe(o.payment)}`,o.notes?`Obs: ${printSafe(o.notes)}`:"",`TOTAL: ${money(o.total)}`,"","","","\x1D\x56\x00");return a.join("\n");}
-function simulatePrint(){
-  const o=orders.find(x=>x.status!=="ready") || orders[0];
-  if(!o){alert("Não há nenhum pedido para testar.");return;}
-  const raw=receipt(o);
-  // Remove os bytes de controle ESC/POS apenas da visualização.
-  const preview=raw
-    .replace(/\x1B(?:[\x00-\xFF])/g,"")
-    .replace(/\x1D(?:[\x00-\xFF])/g,"")
-    .replace(/[\x00-\x08\x0B\x0C\x0E-\x1F\x7F]/g,"")
-    .trim();
-
-  let modal=document.getElementById("printTestModal");
-  if(modal) modal.remove();
-
-  modal=document.createElement("div");
-  modal.id="printTestModal";
-  modal.style.cssText="position:fixed;inset:0;z-index:9999;background:rgba(0,0,0,.58);display:flex;align-items:center;justify-content:center;padding:18px";
-  modal.innerHTML=`
-    <div style="width:min(560px,100%);max-height:90vh;overflow:auto;background:#fffaf5;color:#2c211a;border:1px solid #dfd3c8;border-radius:16px;padding:20px;box-shadow:0 18px 50px rgba(0,0,0,.3)">
-      <h2 style="margin:0 0 6px">🧪 Simulação de impressão</h2>
-      <p style="color:#6f6259;margin:0 0 14px">Nenhum dado foi enviado para uma impressora. Esta é apenas uma prévia.</p>
-      <div style="background:#fff;margin-top:10px;padding:16px;border:1px dashed #bbb;white-space:pre-wrap;font:14px/1.45 monospace;overflow:auto">${esc(preview)}</div>
-      <div style="display:flex;gap:8px;flex-wrap:wrap;margin-top:16px">
-        <button id="closePrintTest" style="padding:10px 16px;border:1px solid #dfd3c8;border-radius:9px;background:#fff;color:#2c211a;font-size:15px">Fechar</button>
-        <button id="printPreview" style="padding:10px 16px;border:0;border-radius:9px;background:#5f493a;color:#fff;font-size:15px">🖨️ Imprimir prévia</button>
-      </div>
-    </div>`;
-  document.body.appendChild(modal);
-
-  const close=()=>modal.remove();
-  document.getElementById("closePrintTest").onclick=close;
-  document.getElementById("printPreview").onclick=()=>{
-    const w=window.open("","_blank","width=430,height=760");
-    if(!w){alert("Permita pop-ups para imprimir a prévia.");return;}
-    w.document.write(`<!doctype html><html lang="pt-BR"><head><meta charset="utf-8"><title>Teste de impressão</title><style>body{font:14px monospace;width:80mm;margin:0;padding:5mm}.t{font-size:18px;font-weight:900}</style></head><body>${esc(preview).replace(/\n/g,"<br>")}<script>window.print()<\/script></body></html>`);
-    w.document.close();
-  };
-  modal.addEventListener("click",e=>{if(e.target===modal)close()});
-}
 async function printOrder(id,automatic=false){
   const o=orders.find(x=>x.id===id);
   if(!o)return;
   const raw=receipt(o);
   try{
-    if(window.AndroidPrinter){
-      if(!window.BIGLANCHE_PRINTER.available()) {
-        if(!automatic) alert("Configure a impressora no botão 🖨️ antes de imprimir.");
-        return false;
-      }
+    if(window.BIGLANCHE_PRINTER.available()){
       const sent=await window.BIGLANCHE_PRINTER.print(raw);
       if(!sent) throw Error("Impressora não respondeu");
       await setStatus(id,"printed");
@@ -230,13 +193,55 @@ async function printOrder(id,automatic=false){
   }
 }
 function browserPrint(o){const w=window.open("","_blank","width=420,height=700");if(!w)return;w.document.write(`<style>body{font:14px monospace;width:80mm;margin:0;padding:5mm}.i{font-weight:700;margin:6px 0}.a{padding-left:10px}.t{font-size:18px;font-weight:900;margin-top:12px}</style><h2>BIG LANCHE<br>Pedido #${esc(o.number)}</h2>${(o.cart||[]).map(i=>`<div class=i>${i.quantity}x ${esc(i.name)}${(i.additions||[]).map(a=>`<div class=a>+ ${a.quantity||1}x ${esc(a.name)}</div>`).join("")}${i.note?`<div class=a><b>Obs.:</b> ${esc(i.note)}</div>`:""}</div>`).join("")}<hr>Entrega: ${esc(o.delivery?.city)}<br>Endereco: ${esc(o.delivery?.address)}<br>Pagamento: ${esc(o.payment)}<div class=t>TOTAL: ${money(o.total)}</div><script>window.print()<\/script>`);w.document.close();}
-async function setStatus(id,s){await api("/api/orders/"+encodeURIComponent(id),{method:"PATCH",body:JSON.stringify({status:s})});const o=orders.find(x=>x.id===id);if(o)o.status=s;render();}
+async function testPrintSimulation(){
+  if(!window.BIGLANCHE_PRINTER?.bridgeAvailable() || !window.BIGLANCHE_PRINTER?.simulate){
+    alert("O modo de simulação está disponível apenas no aplicativo Android.");
+    return;
+  }
+  const o=orders.find(x=>x.status!=="ready") || {
+    number:"TESTE",
+    cart:[{quantity:1,name:"Pastel mistão",additions:[],note:"sem salada"}],
+    delivery:{city:"Maragogi",fee:10,address:"Rua de teste, 123"},
+    payment:"Pix",
+    total:30
+  };
+  try{
+    // A simulação deve mostrar o texto legível, sem os bytes de controle ESC/POS.
+    // A impressão real continua usando o recibo bruto com ESC/POS.
+    const preview = receipt(o)
+      .replace(/\\x1B[@aE](?:\\x01|\\x00)?/g, "")
+      .replace(/\\x1D[Vv](?:\\x00|\\x01)?/g, "")
+      .replace(/[\\x00-\\x08\\x0B\\x0C\\x0E-\\x1F]/g, "");
+    await window.BIGLANCHE_PRINTER.simulate(preview);
+  }catch(e){
+    alert("Falha no modo de simulação: "+e.message);
+  }
+}
+async function setStatus(id,s){
+  await api("/api/orders/"+encodeURIComponent(id),{method:"PATCH",body:JSON.stringify({status:s})});
+  const o=orders.find(x=>x.id===id);
+  if(o)o.status=s;
+  render();
+}
+
+async function deleteOrder(id,number){
+  if(!confirm(`Excluir o pedido #${number}?\n\nEssa ação não pode ser desfeita.`)) return;
+
+  try{
+    await api("/api/orders/"+encodeURIComponent(id),{method:"DELETE"});
+    orders=orders.filter(o=>o.id!==id);
+    render();
+    status(`Pedido #${number} excluído`,true);
+  }catch(e){
+    if(e.message!=="AUTH_REQUIRED") alert("Não foi possível excluir o pedido: "+e.message);
+  }
+}
 async function load(){try{
   const previous=orders;
   orders=await api("/api/orders");
-  status(qzReady||window.BIGLANCHE_PRINTER?.available()?"Pedidos + impressora":"Pedidos conectados",true);
+  status(qzReady||window.BIGLANCHE_PRINTER?.ready()?"Pedidos + impressora":"Pedidos conectados",true);
   render();
-  if(window.BIGLANCHE_PRINTER?.available()){
+  if(window.BIGLANCHE_PRINTER?.ready()){
     for(const o of orders){
       if(o.status!=="new" || autoPrintSeen.has(o.id) || autoPrintBusy.has(o.id)) continue;
       autoPrintBusy.add(o.id);
@@ -248,7 +253,8 @@ async function load(){try{
     }
   }
 }catch{status("Servidor offline");}}
-$("#connect").onclick=connectPrinter;$("#testPrint").onclick=simulatePrint;$("#refresh").onclick=load;$("#logout").onclick=doLogout;$("#loginForm").addEventListener("submit",async e=>{e.preventDefault();const b=$("#loginForm button");const p=$("#loginPassword").value.trim();if(!p)return;$("#loginError").textContent="";b.disabled=true;try{await doLogin(p);$("#loginPassword").value=""}catch(err){$("#loginError").textContent=err.message||"Senha incorreta";$("#loginPassword").select()}finally{b.disabled=false}});checkAuth().then(ok=>{if(ok)load()});setInterval(()=>{if(authenticated)load()},2500);$("#tabActive").onclick=()=>setTab("active");$("#tabReady").onclick=()=>setTab("ready");
+$("#connect").onclick=connectPrinter;$("#testPrint").onclick=testPrintSimulation;$("#refresh").onclick=load;$("#logout").onclick=doLogout;
+if(window.BIGLANCHE_PRINTER?.bridgeAvailable()) $("#testPrint").hidden=false;$("#loginForm").addEventListener("submit",async e=>{e.preventDefault();const b=$("#loginForm button");const p=$("#loginPassword").value.trim();if(!p)return;$("#loginError").textContent="";b.disabled=true;try{await doLogin(p);$("#loginPassword").value=""}catch(err){$("#loginError").textContent=err.message||"Senha incorreta";$("#loginPassword").select()}finally{b.disabled=false}});checkAuth().then(ok=>{if(ok)load()});setInterval(()=>{if(authenticated)load()},2500);$("#tabActive").onclick=()=>setTab("active");$("#tabReady").onclick=()=>setTab("ready");
 </script>
 </div></body>
 </html>
