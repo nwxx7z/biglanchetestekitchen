@@ -3,6 +3,7 @@
 <head>
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width,initial-scale=1">
+<meta name="color-scheme" content="light dark">
 <title>BIG LANCHE — Cozinha</title>
 <script src="https://cdn.jsdelivr.net/npm/qz-tray/qz-tray.js"></script>
 <style>
@@ -25,6 +26,102 @@ button{border:1px solid var(--line);border-radius:10px;padding:9px 12px;backgrou
 .auth-card input{width:100%;padding:12px 13px;border:1px solid var(--line);border-radius:10px;background:#fff;font:inherit}
 .auth-card button{width:100%;margin-top:12px}.auth-error{min-height:20px;margin-top:10px!important;color:var(--danger)!important;font-size:.88rem}
 .hidden{display:none!important}
+
+/* ===== DESIGN PREMIUM 2026 — PAINEL DA COZINHA ===== */
+:root{
+  --k-deep:#35261f;
+  --k-deep-2:#493429;
+  --k-warm:#815e47;
+  --k-gold:#e6ad45;
+  --k-cream:#fffaf4;
+  --k-shadow:0 12px 32px rgba(49,35,27,.10);
+}
+html{scroll-behavior:smooth}
+body{
+  min-height:100vh;
+  background:
+    radial-gradient(circle at 8% -10%,rgba(230,173,69,.16),transparent 26rem),
+    radial-gradient(circle at 96% 4%,rgba(129,94,71,.10),transparent 22rem),
+    linear-gradient(180deg,#f8f2eb 0%,var(--bg) 55%,#eee7df 100%);
+}
+header{
+  padding:0;
+  background:linear-gradient(135deg,#392920 0%,#554033 68%,#6d4f3a 100%);
+  color:#fff8ef;
+  border-bottom:1px solid rgba(255,255,255,.08);
+  box-shadow:0 10px 26px rgba(38,27,21,.18);
+}
+.head{min-height:70px;padding:13px 18px}
+h1{font-size:1.12rem;letter-spacing:.01em;display:flex;align-items:center;gap:10px}
+h1::before{content:"";display:inline-grid;place-items:center;width:34px;height:34px;border-radius:11px;background:rgba(255,255,255,.12);box-shadow:inset 0 1px 0 rgba(255,255,255,.10);font-size:18px}
+.status{display:inline-flex;align-items:center;gap:7px;color:#eadbce;font-size:.83rem;background:rgba(255,255,255,.08);border:1px solid rgba(255,255,255,.10);border-radius:999px;padding:7px 10px;backdrop-filter:blur(8px);-webkit-backdrop-filter:blur(8px)}
+.dot{margin-right:0;box-shadow:0 0 0 4px rgba(153,153,153,.08);transition:background-color .2s ease,box-shadow .2s ease}
+.dot.ok{box-shadow:0 0 0 4px rgba(79,123,92,.14),0 0 14px rgba(79,123,92,.28)}
+main{margin:0 auto;padding:22px 14px 48px}
+.tabs{padding:12px 14px 0;margin:0 auto;position:sticky;top:70px;z-index:4;background:rgba(243,238,232,.80);backdrop-filter:blur(12px);-webkit-backdrop-filter:blur(12px)}
+.tab{position:relative;border:1px solid rgba(95,73,58,.16);border-radius:12px;padding:10px 14px;background:rgba(255,255,255,.72);box-shadow:0 4px 12px rgba(42,31,24,.04);transition:transform .18s ease,background-color .18s ease,color .18s ease,box-shadow .18s ease}
+.tab:hover{transform:translateY(-1px);box-shadow:0 8px 16px rgba(42,31,24,.08)}
+.tab.active{background:linear-gradient(135deg,#4e392c,#6d503e);box-shadow:0 8px 18px rgba(63,45,35,.18);color:#fff}
+.tab-count{display:inline-flex;min-width:22px;height:22px;align-items:center;justify-content:center;padding:0 6px;border-radius:999px;background:rgba(255,255,255,.16);margin-left:6px;font-size:.75rem}
+.toolbar{margin-bottom:18px;position:sticky;top:126px;z-index:3;padding:8px 0;background:linear-gradient(180deg,rgba(243,238,232,.92),rgba(243,238,232,.76),transparent);backdrop-filter:blur(8px);-webkit-backdrop-filter:blur(8px)}
+.toolbar button{min-height:42px;border-radius:12px;font-weight:800;transition:transform .18s cubic-bezier(.2,.8,.2,1),box-shadow .18s ease,background-color .18s ease,border-color .18s ease,filter .18s ease}
+.toolbar button:hover{transform:translateY(-2px);box-shadow:0 9px 17px rgba(42,31,24,.09)}
+.toolbar button:active{transform:scale(.97)}
+.toolbar button.primary{background:linear-gradient(135deg,#5a4232,#7b5b44);box-shadow:0 8px 16px rgba(95,73,58,.18)}
+.orders{gap:16px}
+.order{
+  position:relative;
+  overflow:hidden;
+  border-radius:18px;
+  padding:17px;
+  background:linear-gradient(180deg,rgba(255,250,245,.98),rgba(255,248,241,.98));
+  border-color:rgba(223,211,200,.90);
+  box-shadow:var(--k-shadow);
+  transition:transform .22s cubic-bezier(.2,.8,.2,1),box-shadow .22s ease,border-color .22s ease;
+}
+.order::before{content:"";position:absolute;left:0;top:0;right:0;height:4px;background:linear-gradient(90deg,#8b654c,#d0a06d);opacity:.58}
+.order:hover{transform:translateY(-3px);box-shadow:0 18px 40px rgba(49,35,27,.14);border-color:rgba(129,94,71,.26)}
+.order.new{box-shadow:0 0 0 1px rgba(183,121,50,.28),0 14px 34px rgba(183,121,50,.11)}
+.order.new::before{background:linear-gradient(90deg,#b77932,#e3b867,#b77932);opacity:1;animation:kNewGlow 2.2s ease-in-out infinite}
+.order-head{gap:12px;padding-bottom:5px}
+.number{font-size:1.18rem;letter-spacing:-.01em}
+.order-time{display:inline-flex;align-items:center;gap:5px;padding:3px 8px;margin-top:5px;border-radius:999px;background:#f2e7dc;color:#816f62}
+.badge{border:1px solid rgba(129,94,71,.12);box-shadow:0 2px 7px rgba(42,31,24,.04);transition:transform .18s ease}
+.order:hover .badge{transform:translateY(-1px)}
+.item{padding:11px 0}
+.item-name{font-size:.96rem}
+.add-title{display:inline-flex;margin-top:8px;padding:3px 7px;border-radius:999px;background:#f2e7dc;color:#71584a}
+.add{font-size:.87rem;padding-top:2px}
+.item-note{padding:7px 9px;border-left:3px solid #d09a4f;background:#fff5e7;border-radius:0 9px 9px 0;color:#93632d}
+.meta{background:rgba(239,230,221,.46);border-top:0;border-radius:13px;padding:11px 12px;gap:6px;margin-top:12px}
+.total{font-size:1.12rem;margin-top:13px;padding-top:2px}
+.actions{margin-top:15px}
+.actions button{min-height:40px;border-radius:11px;font-weight:800;transition:transform .18s ease,box-shadow .18s ease,filter .18s ease,background-color .18s ease}
+.actions button:not(.primary):not(.danger){background:#fff;border-color:#ddcec1}
+.actions button:hover{transform:translateY(-2px);box-shadow:0 8px 16px rgba(42,31,24,.09)}
+.actions button:active{transform:scale(.96)}
+.actions .danger{background:linear-gradient(135deg,#a6473d,#c45b50);box-shadow:0 6px 14px rgba(166,71,61,.14)}
+.empty{min-height:180px;display:grid;place-items:center;border:1px dashed #d6c7ba;border-radius:18px;background:rgba(255,250,245,.54);font-weight:700}
+.auth-screen{background:radial-gradient(circle at 20% 0%,rgba(230,173,69,.16),transparent 24rem),linear-gradient(135deg,#30231d,#5b4233)}
+.auth-card{width:min(440px,100%);padding:30px;border-radius:22px;background:rgba(255,250,245,.98);border-color:rgba(255,255,255,.35);box-shadow:0 26px 70px rgba(0,0,0,.28);animation:kAuthIn .5s cubic-bezier(.2,.8,.2,1)}
+.auth-card h2{font-size:1.35rem;letter-spacing:-.02em}
+.auth-card input{min-height:46px;transition:border-color .18s ease,box-shadow .18s ease,transform .18s ease}
+.auth-card input:focus{outline:0;border-color:#9a7359;box-shadow:0 0 0 4px rgba(154,115,89,.12);transform:translateY(-1px)}
+.auth-card button.primary{min-height:46px;background:linear-gradient(135deg,#5a4232,#7b5b44);box-shadow:0 10px 20px rgba(95,73,58,.18)}
+@keyframes kNewGlow{0%,100%{box-shadow:inset 0 0 0 rgba(255,255,255,0)}50%{box-shadow:inset 0 0 18px rgba(255,226,167,.24)}}
+@keyframes kAuthIn{from{opacity:0;transform:translateY(14px) scale(.985)}to{opacity:1;transform:none}}
+@media(max-width:650px){
+  .head{min-height:76px}
+  .tabs{top:76px;padding-left:10px;padding-right:10px}
+  .toolbar{top:128px;gap:7px}
+  .toolbar button{flex:1 1 calc(50% - 7px)}
+  .orders{gap:12px}
+  .order{padding:15px;border-radius:16px}
+  .actions button{flex:1 1 calc(50% - 7px)}
+  .actions button.primary{flex-basis:100%}
+}
+@media(prefers-reduced-motion:reduce){html{scroll-behavior:auto}.order,.toolbar button,.tab{transition:none!important}.order.new::before{animation:none}.auth-card{animation:none}}
+
 </style>
 
 <script>
@@ -55,6 +152,473 @@ window.BIGLANCHE_PRINTER = {
 };
 </script>
 
+
+<style id="kitchen-system-theme">
+/* =========================================================
+   BIG LANCHE • COZINHA
+   Tema automático + acabamento consistente com o cardápio.
+   O sistema escolhe claro/escuro pelo aparelho/navegador.
+   ========================================================= */
+
+:root{
+  color-scheme:light dark;
+
+  /* Light */
+  --k-bg:#f3eee8;
+  --k-card:#fffaf5;
+  --k-card-2:#fffdf9;
+  --k-ink:#2c211a;
+  --k-muted:#75675e;
+  --k-line:#dfd3c8;
+  --k-accent:#5f493a;
+  --k-accent-2:#7b5b44;
+  --k-ok:#4f7b5c;
+  --k-warn:#b77932;
+  --k-danger:#a6473d;
+  --k-gold:#e6ad45;
+  --k-shadow:0 10px 28px rgba(49,35,27,.08);
+}
+
+/* Base: leve, previsível e com bordas arredondadas */
+html{
+  color-scheme:light dark;
+  scrollbar-gutter:stable;
+}
+
+body{
+  min-height:100vh;
+  background:
+    radial-gradient(circle at 8% -10%,rgba(230,173,69,.12),transparent 24rem),
+    linear-gradient(180deg,#f8f2eb 0%,#f3eee8 55%,#eee7df 100%) !important;
+  color:var(--k-ink) !important;
+}
+
+/* Header */
+header{
+  background:linear-gradient(135deg,#392920 0%,#554033 68%,#6d4f3a 100%) !important;
+  color:#fff8ef !important;
+  border-bottom:1px solid rgba(255,255,255,.08) !important;
+  box-shadow:0 8px 22px rgba(38,27,21,.13) !important;
+}
+
+.head{
+  min-height:70px;
+}
+
+.status{
+  color:#eadbce !important;
+}
+
+/* Tabs e toolbar */
+.tabs{
+  background:rgba(243,238,232,.86) !important;
+  border-radius:18px 18px 0 0;
+}
+
+.tab,
+.toolbar button{
+  border-radius:13px !important;
+}
+
+.tab{
+  min-height:42px;
+  background:rgba(255,255,255,.84) !important;
+  color:var(--k-ink) !important;
+  border-color:rgba(95,73,58,.16) !important;
+}
+
+.tab.active{
+  background:linear-gradient(135deg,#4e392c,#6d503e) !important;
+  color:#fff !important;
+  border-color:transparent !important;
+}
+
+.tab:hover,
+.toolbar button:hover{
+  transform:translateY(-1px);
+}
+
+/* Cards dos pedidos */
+.order{
+  background:linear-gradient(180deg,var(--k-card),var(--k-card-2)) !important;
+  color:var(--k-ink) !important;
+  border:1px solid var(--k-line) !important;
+  border-radius:20px !important;
+  box-shadow:var(--k-shadow) !important;
+
+  /* Corta custo de pintura/layout quando a lista crescer. */
+  content-visibility:auto;
+  contain-intrinsic-size:220px;
+}
+
+.order:hover{
+  box-shadow:0 16px 36px rgba(49,35,27,.12) !important;
+}
+
+.order.new{
+  box-shadow:0 0 0 1px rgba(183,121,50,.25),0 12px 30px rgba(183,121,50,.10) !important;
+}
+
+.order-time{
+  color:#78685e !important;
+  background:#f2e7dc !important;
+}
+
+.badge{
+  border-radius:999px !important;
+}
+
+.badge.new{
+  background:#f3dfc2 !important;
+  color:#744c24 !important;
+}
+
+.badge.printed{
+  background:#dcebdd !important;
+  color:#315b3b !important;
+}
+
+.item{
+  border-bottom-color:var(--k-line) !important;
+}
+
+.item-name,
+.add-title{
+  color:var(--k-ink) !important;
+}
+
+.add{
+  color:#6e5c51 !important;
+}
+
+.add-title{
+  background:#f2e7dc !important;
+}
+
+.item-note{
+  background:#fff5e7 !important;
+  color:#8c5c27 !important;
+  border-radius:0 10px 10px 0 !important;
+}
+
+.meta{
+  background:rgba(239,230,221,.54) !important;
+  color:var(--k-ink) !important;
+  border-radius:14px !important;
+}
+
+.total{
+  color:var(--k-ink) !important;
+}
+
+/* Botões */
+button{
+  color:var(--k-ink);
+  border-color:var(--k-line);
+  background:#fff !important;
+}
+
+button.primary{
+  background:linear-gradient(135deg,#5a4232,#7b5b44) !important;
+  color:#fff !important;
+  border-color:transparent !important;
+}
+
+button.danger{
+  background:linear-gradient(135deg,#a6473d,#c45b50) !important;
+  color:#fff !important;
+  border-color:transparent !important;
+}
+
+/* Empty state */
+.empty{
+  color:var(--k-muted) !important;
+  border-color:#d6c7ba !important;
+  background:rgba(255,250,245,.62) !important;
+}
+
+/* Login */
+.auth-screen{
+  background:
+    radial-gradient(circle at 20% 0%,rgba(230,173,69,.14),transparent 24rem),
+    linear-gradient(135deg,#30231d,#5b4233) !important;
+}
+
+.auth-card{
+  background:rgba(255,250,245,.98) !important;
+  color:var(--k-ink) !important;
+  border:1px solid rgba(255,255,255,.32) !important;
+  border-radius:24px !important;
+  box-shadow:0 22px 60px rgba(0,0,0,.26) !important;
+}
+
+.auth-card p{
+  color:var(--k-muted) !important;
+}
+
+.auth-card input{
+  background:#fff !important;
+  color:var(--k-ink) !important;
+  border-color:var(--k-line) !important;
+  border-radius:13px !important;
+}
+
+.auth-card input::placeholder{
+  color:#8a7a70 !important;
+}
+
+.auth-card input:focus{
+  outline:0;
+  border-color:#9a7359 !important;
+  box-shadow:0 0 0 4px rgba(154,115,89,.12) !important;
+}
+
+/* =========================================================
+   DARK MODE — mesma família de cores do cardápio
+   ========================================================= */
+@media (prefers-color-scheme:dark){
+  :root{
+    --k-bg:#241a14;
+    --k-card:#33261d;
+    --k-card-2:#2e221b;
+    --k-ink:#fff1d6;
+    --k-muted:#d1bfb2;
+    --k-line:#4a382b;
+    --k-accent:#6e503d;
+    --k-accent-2:#876247;
+    --k-ok:#69a276;
+    --k-warn:#e2aa5e;
+    --k-danger:#df7163;
+    --k-gold:#f5b935;
+    --k-shadow:0 12px 30px rgba(0,0,0,.24);
+  }
+
+  body{
+    background:
+      radial-gradient(circle at 8% -10%,rgba(245,185,53,.07),transparent 24rem),
+      linear-gradient(180deg,#2b2019 0%,#241a14 60%,#201711 100%) !important;
+    color:var(--k-ink) !important;
+  }
+
+  header{
+    background:linear-gradient(135deg,#1f1712 0%,#35251d 65%,#4b3527 100%) !important;
+    color:#fff1d6 !important;
+    box-shadow:0 9px 24px rgba(0,0,0,.26) !important;
+  }
+
+  .status{
+    color:#dcc8b7 !important;
+    background:rgba(255,255,255,.06);
+    border:1px solid rgba(255,255,255,.08);
+  }
+
+  .tabs{
+    background:rgba(36,26,20,.84) !important;
+  }
+
+  .tab{
+    background:#33261d !important;
+    color:#fff1d6 !important;
+    border-color:#4a382b !important;
+    box-shadow:none !important;
+  }
+
+  .tab.active{
+    background:linear-gradient(135deg,#5f4736,#7a5741) !important;
+    color:#fff !important;
+  }
+
+  .toolbar{
+    background:linear-gradient(180deg,rgba(36,26,20,.94),rgba(36,26,20,.70),transparent) !important;
+  }
+
+  .toolbar button{
+    background:#33261d !important;
+    color:#fff1d6 !important;
+    border-color:#4a382b !important;
+  }
+
+  .toolbar button.primary{
+    background:linear-gradient(135deg,#6a4d39,#805e46) !important;
+    color:#fff !important;
+    border-color:transparent !important;
+  }
+
+  .order{
+    background:linear-gradient(180deg,#35271f,#2e221b) !important;
+    color:#fff1d6 !important;
+    border-color:#4a382b !important;
+    box-shadow:var(--k-shadow) !important;
+  }
+
+  .order::before{
+    background:linear-gradient(90deg,#8e5b3e,#d59b54) !important;
+  }
+
+  .order:hover{
+    box-shadow:0 16px 34px rgba(0,0,0,.27) !important;
+    border-color:#5b4637 !important;
+  }
+
+  .order.new{
+    box-shadow:0 0 0 1px rgba(226,170,94,.28),0 13px 30px rgba(0,0,0,.24) !important;
+  }
+
+  .order-time{
+    color:#d4bfb0 !important;
+    background:#46352a !important;
+  }
+
+  .badge{
+    border-color:#5c4434 !important;
+  }
+
+  .badge.new{
+    background:#5a402d !important;
+    color:#ffe2ae !important;
+  }
+
+  .badge.printed{
+    background:#2d5137 !important;
+    color:#ddf0df !important;
+  }
+
+  .item{
+    border-bottom-color:#4a382b !important;
+  }
+
+  .item-name,
+  .add-title,
+  .total{
+    color:#fff1d6 !important;
+  }
+
+  .add{
+    color:#d1bfb2 !important;
+  }
+
+  .add-title{
+    background:#46342a !important;
+  }
+
+  .item-note{
+    background:#4b3524 !important;
+    color:#f3cd97 !important;
+    border-left-color:#c99148 !important;
+  }
+
+  .meta{
+    background:rgba(67,50,40,.70) !important;
+    color:#fff1d6 !important;
+    border-radius:14px !important;
+  }
+
+  button{
+    background:#33261d !important;
+    color:#fff1d6 !important;
+    border-color:#4a382b !important;
+  }
+
+  button.primary{
+    background:linear-gradient(135deg,#6b4d39,#846047) !important;
+    color:#fff !important;
+  }
+
+  button.danger{
+    background:linear-gradient(135deg,#a94e45,#bf6259) !important;
+    color:#fff !important;
+  }
+
+  .empty{
+    color:#cdb8aa !important;
+    border-color:#5a4436 !important;
+    background:rgba(51,38,29,.55) !important;
+  }
+
+  .auth-screen{
+    background:
+      radial-gradient(circle at 20% 0%,rgba(245,185,53,.07),transparent 24rem),
+      linear-gradient(135deg,#1f1712,#35251d) !important;
+  }
+
+  .auth-card{
+    background:#33261d !important;
+    color:#fff1d6 !important;
+    border-color:#5a4436 !important;
+    box-shadow:0 22px 60px rgba(0,0,0,.40) !important;
+  }
+
+  .auth-card p{
+    color:#cdb8aa !important;
+  }
+
+  .auth-card input{
+    background:#3a2a21 !important;
+    color:#fff1d6 !important;
+    border-color:#6b5142 !important;
+  }
+
+  .auth-card input::placeholder{
+    color:#a89182 !important;
+  }
+
+  .auth-card input:focus{
+    border-color:#a77857 !important;
+    box-shadow:0 0 0 4px rgba(167,120,87,.15) !important;
+  }
+
+  .auth-error{
+    color:#ff9e92 !important;
+  }
+
+  .dot.ok{
+    background:#69a276 !important;
+    box-shadow:0 0 0 4px rgba(105,162,118,.14),0 0 14px rgba(105,162,118,.26) !important;
+  }
+}
+
+/* =========================================================
+   Performance / movimento
+   ========================================================= */
+
+.order,
+.tab,
+.toolbar button,
+.actions button,
+.auth-card input{
+  will-change:auto;
+}
+
+@media (prefers-reduced-motion:reduce){
+  html{scroll-behavior:auto !important}
+  *,
+  *::before,
+  *::after{
+    animation-duration:.01ms !important;
+    animation-iteration-count:1 !important;
+    transition-duration:.01ms !important;
+  }
+
+  .order.new::before{
+    animation:none !important;
+  }
+}
+
+@media (max-width:650px){
+  .tabs{
+    border-radius:14px 14px 0 0;
+  }
+
+  .order{
+    border-radius:18px !important;
+  }
+
+  .auth-card{
+    border-radius:20px !important;
+  }
+}
+</style>
+
 </head>
 <body>
 <div id="loginScreen" class="auth-screen">
@@ -74,7 +638,7 @@ window.BIGLANCHE_PRINTER = {
   <button id="tabReady" class="tab" type="button" role="tab" aria-selected="false">Prontos <span id="countReady" class="tab-count">0</span></button>
 </div>
 <main>
-<div class="toolbar"><button class="primary" id="connect">🖨️ Conectar impressora</button><button id="testPrint" hidden>🧪 Testar impressão</button><button id="refresh">Atualizar</button><button id="logout">Sair</button></div>
+<div class="toolbar"><button class="primary" id="connect">🖨️ Conectar impressora</button><button id="testPrint">🧪 Testar impressão</button><button id="refresh">Atualizar</button><button id="logout">Sair</button></div>
 <div id="orders" class="orders"><div class="empty">Nenhum pedido.</div></div>
 </main>
 <script>
@@ -254,7 +818,12 @@ async function load(){try{
   }
 }catch{status("Servidor offline");}}
 $("#connect").onclick=connectPrinter;$("#testPrint").onclick=testPrintSimulation;$("#refresh").onclick=load;$("#logout").onclick=doLogout;
-if(window.BIGLANCHE_PRINTER?.bridgeAvailable()) $("#testPrint").hidden=false;$("#loginForm").addEventListener("submit",async e=>{e.preventDefault();const b=$("#loginForm button");const p=$("#loginPassword").value.trim();if(!p)return;$("#loginError").textContent="";b.disabled=true;try{await doLogin(p);$("#loginPassword").value=""}catch(err){$("#loginError").textContent=err.message||"Senha incorreta";$("#loginPassword").select()}finally{b.disabled=false}});checkAuth().then(ok=>{if(ok)load()});setInterval(()=>{if(authenticated)load()},2500);$("#tabActive").onclick=()=>setTab("active");$("#tabReady").onclick=()=>setTab("ready");
+if(window.BIGLANCHE_PRINTER?.bridgeAvailable()) $("#testPrint").hidden=false;$("#loginForm").addEventListener("submit",async e=>{e.preventDefault();const b=$("#loginForm button");const p=$("#loginPassword").value.trim();if(!p)return;$("#loginError").textContent="";b.disabled=true;try{await doLogin(p);$("#loginPassword").value=""}catch(err){$("#loginError").textContent=err.message||"Senha incorreta";$("#loginPassword").select()}finally{b.disabled=false}});let kitchenPollTimer=null;
+let kitchenPollBusy=false;
+async function pollKitchen(){if(!authenticated||document.hidden||kitchenPollBusy)return;kitchenPollBusy=true;try{await load()}finally{kitchenPollBusy=false}}
+function startKitchenPolling(){if(kitchenPollTimer)clearInterval(kitchenPollTimer);kitchenPollTimer=setInterval(pollKitchen,10000)}
+document.addEventListener("visibilitychange",()=>{if(!document.hidden&&authenticated)pollKitchen()});
+checkAuth().then(ok=>{if(ok){load();startKitchenPolling()}});$("#tabActive").onclick=()=>setTab("active");$("#tabReady").onclick=()=>setTab("ready");
 </script>
 </div></body>
 </html>
