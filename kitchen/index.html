@@ -65,7 +65,7 @@ window.BIGLANCHE_PRINTER = {
   <button id="tabReady" class="tab" type="button" role="tab" aria-selected="false">Prontos <span id="countReady" class="tab-count">0</span></button>
 </div>
 <main>
-<div class="toolbar"><button class="primary" id="connect">🖨️ Conectar impressora</button><button id="refresh">Atualizar</button><button id="logout">Sair</button></div>
+<div class="toolbar"><button class="primary" id="connect">🖨️ Conectar impressora</button><button id="testPrint">🧪 Testar impressão</button><button id="refresh">Atualizar</button><button id="logout">Sair</button></div>
 <div id="orders" class="orders"><div class="empty">Nenhum pedido.</div></div>
 </main>
 <script>
@@ -163,6 +163,21 @@ function render(){
     : `<div class="empty">${currentTab==="ready"?"Nenhum pedido pronto.":"Nenhum pedido em andamento."}</div>`;
 }
 function receipt(o){const line="-".repeat(42),a=["\x1B\x40","\x1B\x61\x01","\x1B\x45\x01","BIG LANCHE","PEDIDO #"+o.number,"\x1B\x45\x00",line,"\x1B\x61\x00"];for(const i of o.cart||[]){a.push(`${i.quantity}x ${printSafe(i.name)}`);for(const x of i.additions||[])a.push(`   + ${x.quantity||1}x ${printSafe(x.name)}`);if(i.note)a.push(`   OBS: ${printSafe(i.note)}`)}a.push(line,`Entrega: ${printSafe(o.delivery?.city)} ${o.delivery?.fee?money(o.delivery.fee):""}`,`Endereco: ${printSafe(o.delivery?.address)}`,`Pagamento: ${printSafe(o.payment)}`,o.notes?`Obs: ${printSafe(o.notes)}`:"",`TOTAL: ${money(o.total)}`,"","","","\x1D\x56\x00");return a.join("\n");}
+function simulatePrint(){
+  const o=orders.find(x=>x.status!=="ready") || orders[0];
+  if(!o){alert("Não há nenhum pedido para testar.");return;}
+  const raw=receipt(o);
+  // Remove comandos ESC/POS somente para a visualização; eles continuam sendo enviados na impressão real.
+  const preview=raw
+    .replace(/\\x1B[\\s\\S]?/g,"")
+    .replace(/\\x1D[\\s\\S]?/g,"")
+    .replace(/[\\x00-\\x08\\x0B\\x0C\\x0E-\\x1F\\x7F]/g,"")
+    .trim();
+  const w=window.open("","_blank","width=430,height=760");
+  if(!w){alert("Permita pop-ups para visualizar o teste de impressão.");return;}
+  w.document.write(`<!doctype html><html lang="pt-BR"><head><meta charset="utf-8"><title>Teste de impressão</title><style>body{font-family:Arial,sans-serif;margin:0;background:#f3eee8;color:#2c211a;padding:18px}.box{background:#fffaf5;border:1px solid #dfd3c8;border-radius:14px;padding:18px;max-width:390px;margin:auto}h2{margin:0 0 6px}p{color:#6f6259}.receipt{background:#fff;margin-top:16px;padding:16px;border:1px dashed #bbb;white-space:pre-wrap;font:14px/1.45 monospace}button{margin-top:16px;padding:10px 16px;border:0;border-radius:9px;background:#5f493a;color:#fff;font-size:15px}</style></head><body><div class="box"><h2>🧪 Simulação de impressão</h2><p>Nenhum dado foi enviado para uma impressora. Esta é apenas uma prévia.</p><div class="receipt">${esc(preview)}</div><button onclick="window.print()">🖨️ Imprimir prévia</button></div></body></html>`);
+  w.document.close();
+}
 async function printOrder(id,automatic=false){
   const o=orders.find(x=>x.id===id);
   if(!o)return;
@@ -209,7 +224,7 @@ async function load(){try{
     }
   }
 }catch{status("Servidor offline");}}
-$("#connect").onclick=connectPrinter;$("#refresh").onclick=load;$("#logout").onclick=doLogout;$("#loginForm").addEventListener("submit",async e=>{e.preventDefault();const b=$("#loginForm button");const p=$("#loginPassword").value.trim();if(!p)return;$("#loginError").textContent="";b.disabled=true;try{await doLogin(p);$("#loginPassword").value=""}catch(err){$("#loginError").textContent=err.message||"Senha incorreta";$("#loginPassword").select()}finally{b.disabled=false}});checkAuth().then(ok=>{if(ok)load()});setInterval(()=>{if(authenticated)load()},2500);$("#tabActive").onclick=()=>setTab("active");$("#tabReady").onclick=()=>setTab("ready");
+$("#connect").onclick=connectPrinter;$("#testPrint").onclick=simulatePrint;$("#refresh").onclick=load;$("#logout").onclick=doLogout;$("#loginForm").addEventListener("submit",async e=>{e.preventDefault();const b=$("#loginForm button");const p=$("#loginPassword").value.trim();if(!p)return;$("#loginError").textContent="";b.disabled=true;try{await doLogin(p);$("#loginPassword").value=""}catch(err){$("#loginError").textContent=err.message||"Senha incorreta";$("#loginPassword").select()}finally{b.disabled=false}});checkAuth().then(ok=>{if(ok)load()});setInterval(()=>{if(authenticated)load()},2500);$("#tabActive").onclick=()=>setTab("active");$("#tabReady").onclick=()=>setTab("ready");
 </script>
 </div></body>
 </html>
