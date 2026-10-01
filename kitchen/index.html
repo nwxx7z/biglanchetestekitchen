@@ -169,9 +169,9 @@ function simulatePrint(){
   const raw=receipt(o);
   // Remove comandos ESC/POS somente para a visualização; eles continuam sendo enviados na impressão real.
   const preview=raw
-    .replace(/\\x1B[\\s\\S]?/g,"")
-    .replace(/\\x1D[\\s\\S]?/g,"")
-    .replace(/[\\x00-\\x08\\x0B\\x0C\\x0E-\\x1F\\x7F]/g,"")
+    .replace(/\x1B[\s\S]?/g,"")
+    .replace(/\x1D[\s\S]?/g,"")
+    .replace(/[\x00-\x08\x0B\x0C\x0E-\x1F\x7F]/g,"")
     .trim();
   const w=window.open("","_blank","width=430,height=760");
   if(!w){alert("Permita pop-ups para visualizar o teste de impressão.");return;}
