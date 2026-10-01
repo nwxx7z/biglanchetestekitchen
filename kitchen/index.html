@@ -86,12 +86,15 @@ async function doLogin(password){const r=await fetch(API_URL+"/api/auth",{method
 async function doLogout(){try{await fetch(API_URL+"/api/auth",{method:"DELETE",credentials:"same-origin"})}catch(e){}showLogin();}
 async function connectPrinter(){
   try{
-    if(window.BIGLANCHE_PRINTER.available()){
+    // Dentro do APK, a ponte Android sempre tem prioridade.
+    // Não tente QZ Tray mesmo que nenhuma impressora esteja configurada ainda.
+    if(window.AndroidPrinter){
       await window.BIGLANCHE_PRINTER.connect();
       qzReady=false;
-      status("Impressora Android conectada",true);
+      status("Selecione a impressora no Android",true);
       return;
     }
+    // Fora do APK, mantém o QZ Tray para uso no PC.
     if(!window.qz)throw Error("QZ Tray não carregado");
     if(!qz.websocket.isActive())await qz.websocket.connect();
     const p=PRINT_PRINTER||await qz.printers.getDefault();
@@ -165,7 +168,11 @@ async function printOrder(id,automatic=false){
   if(!o)return;
   const raw=receipt(o);
   try{
-    if(window.BIGLANCHE_PRINTER.available()){
+    if(window.AndroidPrinter){
+      if(!window.BIGLANCHE_PRINTER.available()) {
+        if(!automatic) alert("Configure a impressora no botão 🖨️ antes de imprimir.");
+        return false;
+      }
       const sent=await window.BIGLANCHE_PRINTER.print(raw);
       if(!sent) throw Error("Impressora não respondeu");
       await setStatus(id,"printed");
