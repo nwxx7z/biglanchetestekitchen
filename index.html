@@ -5963,11 +5963,9 @@ img,svg,video,canvas{max-width:100%}
           </label>
         </div>
 
-        <textarea id="endereco-entrega" class="endereco-entrega"
-          placeholder="Endereço de entrega (rua, número, bairro...)"
-          aria-label="Endereço de entrega"></textarea>
-        <input id="referencia-entrega" class="endereco-entrega referencia-entrega" type="text" maxlength="160" required
-          placeholder="Ponto de referência (obrigatório)" aria-label="Ponto de referência obrigatório">
+        <textarea id="endereco-entrega" class="endereco-entrega" maxlength="320" required
+          placeholder="Endereço e ponto de referência (rua, número, bairro, referência...)"
+          aria-label="Endereço e ponto de referência"></textarea>
       </section>
 
       <section class="pagamento-box" aria-label="Forma de pagamento">
@@ -6301,28 +6299,25 @@ function enderecoEntrega(){
 }
 
 function referenciaEntrega(){
-  return $("#referencia-entrega")?.value.trim() || "";
+  return "";
 }
 
 function entregaCompleta(){
   const cidade = cidadeEntregaAtual();
   return !!cidade && (cidade.value !== "São Bento" || !!localEntregaAtual()) &&
-    !!enderecoEntrega() && !!referenciaEntrega();
+    !!enderecoEntrega();
 }
 
 function entregaFaltante(){
   const cidade = cidadeEntregaAtual();
   if (!cidade) return "Selecione a cidade de entrega";
   if (cidade.value === "São Bento" && !localEntregaAtual()) return "Escolha um local em São Bento";
-  if (!enderecoEntrega()) return "Informe o endereço de entrega";
-  if (!referenciaEntrega()) return "Informe o ponto de referência";
+  if (!enderecoEntrega()) return "Informe o endereço e ponto de referência";
   return "";
 }
 
 function enderecoEntregaParaCozinha(){
-  const endereco = enderecoEntrega();
-  const referencia = referenciaEntrega();
-  return referencia ? endereco + "\nPonto de referência: " + referencia : endereco;
+  return enderecoEntrega();
 }
 
 const total = () => cart.reduce((a,l) => a + l.q * unit(l), 0) + taxaEntrega();
@@ -6386,7 +6381,6 @@ function mensagem(){
   const pagamento = pagamentoAtual() || "Não informado";
   const cidade = cidadeEntregaAtual();
   const endereco = enderecoEntrega();
-  const referencia = referenciaEntrega();
 
   if (cidade){
     m += entregaConsultarValor()
@@ -6394,10 +6388,7 @@ function mensagem(){
       : `\nCidade de entrega: ${cidadeEntregaDescricao()} · Taxa ${brl(taxaEntrega())}`;
   }
   if (endereco){
-    m += `\nEndereço de entrega: ${endereco}`;
-  }
-  if (referencia){
-    m += `\nPonto de referência: ${referencia}`;
+    m += `\nEndereço e ponto de referência: ${endereco}`;
   }
 
   m += `\nForma de pagamento: ${pagamento}`;
@@ -6779,7 +6770,7 @@ function pedidoParaCozinha(){
       fee: entregaConsultarValor() ? null : taxaEntrega(),
       feeLabel: entregaConsultarValor() ? "Consultar valor" : brl(taxaEntrega()),
       address: enderecoEntregaParaCozinha(),
-      reference: referenciaEntrega()
+      reference: ""
     },
     payment: pagamentoAtual(),
     notes: $("#obs").value.trim(),
@@ -6867,7 +6858,7 @@ document.addEventListener("input", e => {
     if (l) l.note = note.value.slice(0, 300);
   }
 
-  if (e.target.matches("#endereco-entrega") || e.target.matches("#referencia-entrega") || e.target.matches("#troco-valor")){
+  if (e.target.matches("#endereco-entrega") || e.target.matches("#troco-valor")){
     atualizarCheckoutEntrega();
   }
 });
