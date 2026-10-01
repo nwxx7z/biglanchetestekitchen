@@ -16,6 +16,7 @@ button{border:1px solid var(--line);border-radius:10px;padding:9px 12px;backgrou
 .orders{display:grid;grid-template-columns:repeat(auto-fill,minmax(300px,1fr));gap:14px}.order{background:var(--card);border:1px solid var(--line);border-radius:16px;padding:15px;box-shadow:0 4px 15px #3223190e}.order.new{box-shadow:0 0 0 2px #b779322b,0 6px 18px #32231914}
 .order-head{display:flex;justify-content:space-between;align-items:center}.number{font-weight:800;font-size:1.15rem}.badge{padding:4px 8px;border-radius:999px;font-size:.72rem;font-weight:700;background:#eadfd4}.badge.new{background:#f3dfc2}.badge.printed{background:#dcebdd}
 .item{padding:9px 0;border-bottom:1px solid var(--line)}.item-name{font-weight:800}.add{padding-left:10px;color:var(--muted);font-size:.88rem}.item-note{margin-top:5px;padding-left:10px;color:var(--warn);font-size:.88rem}.meta{border-top:1px solid var(--line);margin-top:10px;padding-top:10px;display:grid;gap:5px}.total{font-size:1.08rem;font-weight:900;margin-top:10px}.actions{display:flex;flex-wrap:wrap;gap:7px;margin-top:13px}.empty{text-align:center;padding:36px;color:var(--muted)}
+.tabs{max-width:1100px;margin:14px auto 0;display:flex;gap:8px}.tab{border:1px solid var(--line);background:var(--card);color:var(--ink);border-radius:10px;padding:9px 14px;font-weight:800;cursor:pointer}.tab.active{background:var(--ink);color:#fff}.tab-count{opacity:.75;margin-left:5px}.order-time{font-size:.82rem;color:var(--muted);margin-top:3px}.add-title{margin-top:6px;font-weight:800;font-size:.84rem;color:var(--ink)}
 @media(max-width:650px){.head{flex-direction:column;align-items:flex-start}.orders{grid-template-columns:1fr}}
 
 .auth-screen{position:fixed;inset:0;z-index:100;background:var(--bg);display:flex;align-items:center;justify-content:center;padding:20px}
@@ -39,13 +40,17 @@ button{border:1px solid var(--line);border-radius:10px;padding:9px 12px;backgrou
 <div id="app" class="hidden">
 
 <header><div class="head"><h1>🍔 BIG LANCHE · Cozinha</h1><div class="status"><span id="dot" class="dot"></span><span id="status">Conectando...</span></div></div></header>
+<div class="tabs" role="tablist" aria-label="Pedidos">
+  <button id="tabActive" class="tab active" type="button" role="tab" aria-selected="true">Pedidos <span id="countActive" class="tab-count">0</span></button>
+  <button id="tabReady" class="tab" type="button" role="tab" aria-selected="false">Prontos <span id="countReady" class="tab-count">0</span></button>
+</div>
 <main>
 <div class="toolbar"><button class="primary" id="connect">Conectar impressora</button><button id="refresh">Atualizar</button><button id="logout">Sair</button></div>
 <div id="orders" class="orders"><div class="empty">Nenhum pedido.</div></div>
 </main>
 <script>
 const API_URL=location.origin, PRINT_PRINTER="";
-let qzReady=false, orders=[], authenticated=false;
+let qzReady=false, orders=[], authenticated=false, currentTab="active";
 const $=s=>document.querySelector(s);
 const money=v=>Number(v||0).toLocaleString("pt-BR",{style:"currency",currency:"BRL"});
 const esc=s=>String(s??"").replace(/[&<>"']/g,c=>({"&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;","'":"&#039;"}[c]));
@@ -58,15 +63,67 @@ async function checkAuth(){try{const r=await fetch(API_URL+"/api/auth",{cache:"n
 async function doLogin(password){const r=await fetch(API_URL+"/api/auth",{method:"POST",credentials:"same-origin",headers:{"Content-Type":"application/json"},body:JSON.stringify({password})});if(!r.ok){let msg="Senha incorreta";try{msg=(await r.json()).error||msg}catch(e){}throw Error(msg)}showApp();await load();}
 async function doLogout(){try{await fetch(API_URL+"/api/auth",{method:"DELETE",credentials:"same-origin"})}catch(e){}showLogin();}
 async function connectPrinter(){try{if(!window.qz)throw Error("QZ Tray não carregado");if(!qz.websocket.isActive())await qz.websocket.connect();const p=PRINT_PRINTER||await qz.printers.getDefault();if(!p)throw Error("Sem impressora");qzReady=true;status("Impressora: "+p,true);}catch(e){qzReady=false;status("Impressora não conectada");alert(e.message)}}
-function card(o){const items=(o.cart||[]).map(i=>`<div class="item"><div class="item-name">${i.quantity}x ${esc(i.name)}</div>${(i.additions||[]).map(a=>`<div class="add">+ ${a.quantity||1}x ${esc(a.name)}</div>`).join("")}${i.note?`<div class="item-note"><b>Obs.:</b> ${esc(i.note)}</div>`:""}</div>`).join("");
-return `<article class="order ${o.status==="new"?"new":""}"><div class="order-head"><div class="number">Pedido #${esc(o.number)}</div><span class="badge ${o.status==="printed"?"printed":"new"}">${o.status==="printed"?"Impresso":o.status==="ready"?"Pronto":"Novo"}</span></div>${items}<div class="meta"><div><b>Entrega:</b> ${esc(o.delivery?.city||"")} ${o.delivery?.fee? "· "+money(o.delivery.fee):""}</div><div><b>Endereço:</b> ${esc(o.delivery?.address||"")}</div><div><b>Pagamento:</b> ${esc(o.payment||"")}</div>${o.notes?`<div><b>Obs.:</b> ${esc(o.notes)}</div>`:""}</div><div class="total">Total: ${money(o.total)}</div><div class="actions"><button class="primary" onclick="printOrder('${esc(o.id)}')">🖨️ Imprimir</button><button onclick="setStatus('${esc(o.id)}','preparing')">Em preparo</button><button onclick="setStatus('${esc(o.id)}','ready')">Pronto</button></div></article>`}
-function render(){ $("#orders").innerHTML=orders.length?orders.slice().reverse().map(card).join(""):'<div class="empty">Nenhum pedido.</div>'; }
+function pedidoTime(value){
+  if(!value) return "";
+  const d = new Date(value);
+  if(Number.isNaN(d.getTime())) return "";
+  return new Intl.DateTimeFormat("pt-BR",{hour:"2-digit",minute:"2-digit"}).format(d);
+}
+function setTab(tab){
+  currentTab=tab;
+  const active=tab==="active";
+  $("#tabActive").classList.toggle("active",active);
+  $("#tabReady").classList.toggle("active",!active);
+  $("#tabActive").setAttribute("aria-selected",String(active));
+  $("#tabReady").setAttribute("aria-selected",String(!active));
+  render();
+}
+function card(o){
+  const items=(o.cart||[]).map(i=>{
+    const adds=(i.additions||[]);
+    return `<div class="item">
+      <div class="item-name">${i.quantity}x ${esc(i.name)}</div>
+      ${adds.length?`<div class="add-title">Adicionais:</div>${adds.map(a=>`<div class="add">+ ${a.quantity||1}x ${esc(a.name)}</div>`).join("")}`:""}
+      ${i.note?`<div class="item-note"><b>Obs.:</b> ${esc(i.note)}</div>`:""}
+    </div>`;
+  }).join("");
+  const time=pedidoTime(o.createdAt);
+  const isReady=o.status==="ready";
+  const actions=isReady
+    ? `<button onclick="setStatus('${esc(o.id)}','preparing')">↩️ Voltar para pedidos</button>`
+    : `<button class="primary" onclick="printOrder('${esc(o.id)}')">🖨️ Imprimir</button><button onclick="setStatus('${esc(o.id)}','preparing')">Em preparo</button><button onclick="setStatus('${esc(o.id)}','ready')">Pronto</button>`;
+  return `<article class="order ${o.status==="new"?"new":""}">
+    <div class="order-head">
+      <div><div class="number">Pedido #${esc(o.number)}</div>${time?`<div class="order-time">Feito às ${time}</div>`:""}</div>
+      <span class="badge ${o.status==="printed"?"printed":"new"}">${isReady?"Pronto":o.status==="printed"?"Impresso":o.status==="preparing"?"Em preparo":"Novo"}</span>
+    </div>
+    ${items}
+    <div class="meta">
+      <div><b>Entrega:</b> ${esc(o.delivery?.city||"")} ${o.delivery?.fee? "· "+money(o.delivery.fee):""}</div>
+      <div><b>Endereço:</b> ${esc(o.delivery?.address||"")}</div>
+      <div><b>Pagamento:</b> ${esc(o.payment||"")}</div>
+      ${o.notes?`<div><b>Obs.:</b> ${esc(o.notes)}</div>`:""}
+    </div>
+    <div class="total">Total: ${money(o.total)}</div>
+    <div class="actions">${actions}</div>
+  </article>`;
+}
+function render(){
+  const activeOrders=orders.filter(o=>o.status!=="ready");
+  const readyOrders=orders.filter(o=>o.status==="ready");
+  $("#countActive").textContent=activeOrders.length;
+  $("#countReady").textContent=readyOrders.length;
+  const list=currentTab==="ready"?readyOrders:activeOrders;
+  $("#orders").innerHTML=list.length
+    ? list.slice().sort((a,b)=>new Date(a.createdAt)-new Date(b.createdAt)).reverse().map(card).join("")
+    : `<div class="empty">${currentTab==="ready"?"Nenhum pedido pronto.":"Nenhum pedido em andamento."}</div>`;
+}
 function receipt(o){const line="-".repeat(42),a=["\x1B\x40","\x1B\x61\x01","\x1B\x45\x01","BIG LANCHE","PEDIDO #"+o.number,"\x1B\x45\x00",line,"\x1B\x61\x00"];for(const i of o.cart||[]){a.push(`${i.quantity}x ${printSafe(i.name)}`);for(const x of i.additions||[])a.push(`   + ${x.quantity||1}x ${printSafe(x.name)}`);if(i.note)a.push(`   OBS: ${printSafe(i.note)}`)}a.push(line,`Entrega: ${printSafe(o.delivery?.city)} ${o.delivery?.fee?money(o.delivery.fee):""}`,`Endereco: ${printSafe(o.delivery?.address)}`,`Pagamento: ${printSafe(o.payment)}`,o.notes?`Obs: ${printSafe(o.notes)}`:"",`TOTAL: ${money(o.total)}`,"","","","\x1D\x56\x00");return a.join("\n");}
 async function printOrder(id){const o=orders.find(x=>x.id===id);if(!o)return;if(!qzReady){browserPrint(o);return}try{const p=PRINT_PRINTER||await qz.printers.getDefault(),c=qz.configs.create(p,{jobName:`BIG LANCHE Pedido #${o.number}`});await qz.print(c,[{type:"raw",format:"command",flavor:"plain",data:receipt(o)}]);await setStatus(id,"printed");}catch(e){alert("Falha na impressão: "+e.message)}}
 function browserPrint(o){const w=window.open("","_blank","width=420,height=700");if(!w)return;w.document.write(`<style>body{font:14px monospace;width:80mm;margin:0;padding:5mm}.i{font-weight:700;margin:6px 0}.a{padding-left:10px}.t{font-size:18px;font-weight:900;margin-top:12px}</style><h2>BIG LANCHE<br>Pedido #${esc(o.number)}</h2>${(o.cart||[]).map(i=>`<div class=i>${i.quantity}x ${esc(i.name)}${(i.additions||[]).map(a=>`<div class=a>+ ${a.quantity||1}x ${esc(a.name)}</div>`).join("")}${i.note?`<div class=a><b>Obs.:</b> ${esc(i.note)}</div>`:""}</div>`).join("")}<hr>Entrega: ${esc(o.delivery?.city)}<br>Endereco: ${esc(o.delivery?.address)}<br>Pagamento: ${esc(o.payment)}<div class=t>TOTAL: ${money(o.total)}</div><script>window.print()<\/script>`);w.document.close();}
 async function setStatus(id,s){await api("/api/orders/"+encodeURIComponent(id),{method:"PATCH",body:JSON.stringify({status:s})});const o=orders.find(x=>x.id===id);if(o)o.status=s;render();}
 async function load(){try{orders=await api("/api/orders");status(qzReady?"Pedidos + impressora":"Pedidos conectados",true);render();}catch{status("Servidor offline");}}
-$("#connect").onclick=connectPrinter;$("#refresh").onclick=load;$("#logout").onclick=doLogout;$("#loginForm").addEventListener("submit",async e=>{e.preventDefault();const b=$("#loginForm button");const p=$("#loginPassword").value.trim();if(!p)return;$("#loginError").textContent="";b.disabled=true;try{await doLogin(p);$("#loginPassword").value=""}catch(err){$("#loginError").textContent=err.message||"Senha incorreta";$("#loginPassword").select()}finally{b.disabled=false}});checkAuth().then(ok=>{if(ok)load()});setInterval(()=>{if(authenticated)load()},2500);
+$("#connect").onclick=connectPrinter;$("#refresh").onclick=load;$("#logout").onclick=doLogout;$("#loginForm").addEventListener("submit",async e=>{e.preventDefault();const b=$("#loginForm button");const p=$("#loginPassword").value.trim();if(!p)return;$("#loginError").textContent="";b.disabled=true;try{await doLogin(p);$("#loginPassword").value=""}catch(err){$("#loginError").textContent=err.message||"Senha incorreta";$("#loginPassword").select()}finally{b.disabled=false}});checkAuth().then(ok=>{if(ok)load()});setInterval(()=>{if(authenticated)load()},2500);$("#tabActive").onclick=()=>setTab("active");$("#tabReady").onclick=()=>setTab("ready");
 </script>
 </div></body>
 </html>
