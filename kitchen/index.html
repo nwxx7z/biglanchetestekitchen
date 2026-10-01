@@ -26,6 +26,26 @@ button{border:1px solid var(--line);border-radius:10px;padding:9px 12px;backgrou
 .auth-card button{width:100%;margin-top:12px}.auth-error{min-height:20px;margin-top:10px!important;color:var(--danger)!important;font-size:.88rem}
 .hidden{display:none!important}
 </style>
+
+<script>
+/* BIG LANCHE Printer Bridge
+   O APK expõe window.AndroidPrinter. No navegador normal, mantém o QZ Tray.
+*/
+window.BIGLANCHE_PRINTER = {
+  available: () => !!window.AndroidPrinter,
+  connect: async () => {
+    if (!window.AndroidPrinter) throw new Error("Ponte Android não disponível");
+    const r = window.AndroidPrinter.connectPrinter();
+    return r === undefined ? true : r;
+  },
+  print: async (data) => {
+    if (!window.AndroidPrinter) throw new Error("Ponte Android não disponível");
+    const r = window.AndroidPrinter.printEscPos(String(data));
+    return r === undefined ? true : r;
+  }
+};
+</script>
+
 </head>
 <body>
 <div id="loginScreen" class="auth-screen">
@@ -45,7 +65,7 @@ button{border:1px solid var(--line);border-radius:10px;padding:9px 12px;backgrou
   <button id="tabReady" class="tab" type="button" role="tab" aria-selected="false">Prontos <span id="countReady" class="tab-count">0</span></button>
 </div>
 <main>
-<div class="toolbar"><button class="primary" id="connect">Conectar impressora</button><button id="refresh">Atualizar</button><button id="logout">Sair</button></div>
+<div class="toolbar"><button class="primary" id="connect">🖨️ Conectar impressora</button><button id="refresh">Atualizar</button><button id="logout">Sair</button></div>
 <div id="orders" class="orders"><div class="empty">Nenhum pedido.</div></div>
 </main>
 <script>
@@ -62,7 +82,26 @@ async function api(p,o={}){const r=await fetch(API_URL+p,{cache:"no-store",crede
 async function checkAuth(){try{const r=await fetch(API_URL+"/api/auth",{cache:"no-store",credentials:"same-origin"});if(r.ok){showApp();return true}}catch(e){}showLogin();return false}
 async function doLogin(password){const r=await fetch(API_URL+"/api/auth",{method:"POST",credentials:"same-origin",headers:{"Content-Type":"application/json"},body:JSON.stringify({password})});if(!r.ok){let msg="Senha incorreta";try{msg=(await r.json()).error||msg}catch(e){}throw Error(msg)}showApp();await load();}
 async function doLogout(){try{await fetch(API_URL+"/api/auth",{method:"DELETE",credentials:"same-origin"})}catch(e){}showLogin();}
-async function connectPrinter(){try{if(!window.qz)throw Error("QZ Tray não carregado");if(!qz.websocket.isActive())await qz.websocket.connect();const p=PRINT_PRINTER||await qz.printers.getDefault();if(!p)throw Error("Sem impressora");qzReady=true;status("Impressora: "+p,true);}catch(e){qzReady=false;status("Impressora não conectada");alert(e.message)}}
+async function connectPrinter(){
+  try{
+    if(window.BIGLANCHE_PRINTER.available()){
+      await window.BIGLANCHE_PRINTER.connect();
+      qzReady=false;
+      status("Impressora Android conectada",true);
+      return;
+    }
+    if(!window.qz)throw Error("QZ Tray não carregado");
+    if(!qz.websocket.isActive())await qz.websocket.connect();
+    const p=PRINT_PRINTER||await qz.printers.getDefault();
+    if(!p)throw Error("Sem impressora");
+    qzReady=true;
+    status("Impressora: "+p,true);
+  }catch(e){
+    qzReady=false;
+    status("Impressora não conectada");
+    alert(e.message);
+  }
+}
 function pedidoTime(value){
   if(!value) return "";
   const d = new Date(value);
@@ -119,7 +158,25 @@ function render(){
     : `<div class="empty">${currentTab==="ready"?"Nenhum pedido pronto.":"Nenhum pedido em andamento."}</div>`;
 }
 function receipt(o){const line="-".repeat(42),a=["\x1B\x40","\x1B\x61\x01","\x1B\x45\x01","BIG LANCHE","PEDIDO #"+o.number,"\x1B\x45\x00",line,"\x1B\x61\x00"];for(const i of o.cart||[]){a.push(`${i.quantity}x ${printSafe(i.name)}`);for(const x of i.additions||[])a.push(`   + ${x.quantity||1}x ${printSafe(x.name)}`);if(i.note)a.push(`   OBS: ${printSafe(i.note)}`)}a.push(line,`Entrega: ${printSafe(o.delivery?.city)} ${o.delivery?.fee?money(o.delivery.fee):""}`,`Endereco: ${printSafe(o.delivery?.address)}`,`Pagamento: ${printSafe(o.payment)}`,o.notes?`Obs: ${printSafe(o.notes)}`:"",`TOTAL: ${money(o.total)}`,"","","","\x1D\x56\x00");return a.join("\n");}
-async function printOrder(id){const o=orders.find(x=>x.id===id);if(!o)return;if(!qzReady){browserPrint(o);return}try{const p=PRINT_PRINTER||await qz.printers.getDefault(),c=qz.configs.create(p,{jobName:`BIG LANCHE Pedido #${o.number}`});await qz.print(c,[{type:"raw",format:"command",flavor:"plain",data:receipt(o)}]);await setStatus(id,"printed");}catch(e){alert("Falha na impressão: "+e.message)}}
+async function printOrder(id){
+  const o=orders.find(x=>x.id===id);
+  if(!o)return;
+  const raw=receipt(o);
+  try{
+    if(window.BIGLANCHE_PRINTER.available()){
+      await window.BIGLANCHE_PRINTER.print(raw);
+      await setStatus(id,"printed");
+      return;
+    }
+    if(!qzReady){browserPrint(o);return}
+    const p=PRINT_PRINTER||await qz.printers.getDefault(),
+          c=qz.configs.create(p,{jobName:`BIG LANCHE Pedido #${o.number}`});
+    await qz.print(c,[{type:"raw",format:"command",flavor:"plain",data:raw}]);
+    await setStatus(id,"printed");
+  }catch(e){
+    alert("Falha na impressão: "+e.message);
+  }
+}
 function browserPrint(o){const w=window.open("","_blank","width=420,height=700");if(!w)return;w.document.write(`<style>body{font:14px monospace;width:80mm;margin:0;padding:5mm}.i{font-weight:700;margin:6px 0}.a{padding-left:10px}.t{font-size:18px;font-weight:900;margin-top:12px}</style><h2>BIG LANCHE<br>Pedido #${esc(o.number)}</h2>${(o.cart||[]).map(i=>`<div class=i>${i.quantity}x ${esc(i.name)}${(i.additions||[]).map(a=>`<div class=a>+ ${a.quantity||1}x ${esc(a.name)}</div>`).join("")}${i.note?`<div class=a><b>Obs.:</b> ${esc(i.note)}</div>`:""}</div>`).join("")}<hr>Entrega: ${esc(o.delivery?.city)}<br>Endereco: ${esc(o.delivery?.address)}<br>Pagamento: ${esc(o.payment)}<div class=t>TOTAL: ${money(o.total)}</div><script>window.print()<\/script>`);w.document.close();}
 async function setStatus(id,s){await api("/api/orders/"+encodeURIComponent(id),{method:"PATCH",body:JSON.stringify({status:s})});const o=orders.find(x=>x.id===id);if(o)o.status=s;render();}
 async function load(){try{orders=await api("/api/orders");status(qzReady?"Pedidos + impressora":"Pedidos conectados",true);render();}catch{status("Servidor offline");}}
