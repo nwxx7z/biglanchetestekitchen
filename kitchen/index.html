@@ -2174,27 +2174,38 @@ async function printOrder(id,automatic=false){
 }
 function browserPrint(o){const w=window.open("","_blank","width=420,height=700");if(!w)return;w.document.write(`<style>body{font:14px monospace;width:80mm;margin:0;padding:5mm}.i{font-weight:700;margin:6px 0}.a{padding-left:10px}.t{font-size:18px;font-weight:900;margin-top:12px}</style><h2>BIG LANCHE<br>Pedido #${esc(o.number)}</h2>${(o.cart||[]).map(i=>`<div class=i>${i.quantity}x ${esc(i.name)}${(i.additions||[]).map(a=>`<div class=a>+ ${a.quantity||1}x ${esc(a.name)}</div>`).join("")}${i.note?`<div class=a><b>Obs.:</b> ${esc(i.note)}</div>`:""}</div>`).join("")}<hr>Entrega: ${esc(o.delivery?.city)}<br>Endereco: ${esc(o.delivery?.address)}<br>Pagamento: ${esc(o.payment)}<div class=t>TOTAL: ${money(o.total)}</div><script>window.print()<\/script>`);w.document.close();}
 async function testPrintSimulation(){
-  if(!window.BIGLANCHE_PRINTER?.bridgeAvailable() || !window.BIGLANCHE_PRINTER?.simulate){
-    alert("O modo de simulação está disponível apenas no aplicativo Android.");
-    return;
-  }
   const o=orders.find(x=>x.status!=="ready") || {
     number:"TESTE",
-    cart:[{quantity:1,name:"Pastel mistão",additions:[],note:"sem salada"}],
+    cart:[{quantity:1,name:"Pastel mistão",additions:[{quantity:1,name:"Queijo"}],note:"sem salada"}],
     delivery:{city:"Maragogi",fee:10,address:"Rua de teste, 123"},
     payment:"Pix",
     total:30
   };
+
   try{
-    // A simulação deve mostrar o texto legível, sem os bytes de controle ESC/POS.
-    // A impressão real continua usando o recibo bruto com ESC/POS.
-    const preview = receipt(o)
-      .replace(/\\x1B[@aE](?:\\x01|\\x00)?/g, "")
-      .replace(/\\x1D[Vv](?:\\x00|\\x01)?/g, "")
-      .replace(/[\\x00-\\x08\\x0B\\x0C\\x0E-\\x1F]/g, "");
-    await window.BIGLANCHE_PRINTER.simulate(preview);
+    /* Android: usa o simulador nativo já existente no APK. */
+    if(window.BIGLANCHE_PRINTER?.bridgeAvailable() &&
+       window.AndroidPrinter?.simulatePrint){
+      const preview = receipt(o)
+        .replace(/\\x1B[@aE](?:\\x01|\\x00)?/g, "")
+        .replace(/\\x1D[Vv](?:\\x00|\\x01)?/g, "")
+        .replace(/[\\x00-\\x08\\x0B\\x0C\\x0E-\\x1F]/g, "");
+
+      const r=window.AndroidPrinter.simulatePrint(String(preview));
+      if(r && typeof r.then==="function") await r;
+      return;
+    }
+
+    /* PC/navegador: mostra exatamente o conteúdo de teste sem exigir
+       impressora, QZ Tray ou qualquer instalação adicional. */
+    if(window.__openPrintTestPreview){
+      window.__openPrintTestPreview(o);
+      return;
+    }
+
+    throw new Error("Não foi possível abrir o teste de impressão.");
   }catch(e){
-    alert("Falha no modo de simulação: "+e.message);
+    alert("Falha no teste de impressão: "+(e?.message||e));
   }
 }
 async function setStatus(id,s){
@@ -2234,12 +2245,498 @@ async function load(){try{
   }
 }catch{status("Servidor offline");}}
 $("#connect").onclick=connectPrinter;$("#testPrint").onclick=testPrintSimulation;$("#refresh").onclick=load;$("#logout").onclick=doLogout;
-if(window.BIGLANCHE_PRINTER?.bridgeAvailable()) $("#testPrint").hidden=false;$("#loginForm").addEventListener("submit",async e=>{e.preventDefault();const b=$("#loginForm button");const p=$("#loginPassword").value.trim();if(!p)return;$("#loginError").textContent="";b.disabled=true;try{await doLogin(p);$("#loginPassword").value=""}catch(err){$("#loginError").textContent=err.message||"Senha incorreta";$("#loginPassword").select()}finally{b.disabled=false}});let kitchenPollTimer=null;
+$("#testPrint").hidden=false;$("#loginForm").addEventListener("submit",async e=>{e.preventDefault();const b=$("#loginForm button");const p=$("#loginPassword").value.trim();if(!p)return;$("#loginError").textContent="";b.disabled=true;try{await doLogin(p);$("#loginPassword").value=""}catch(err){$("#loginError").textContent=err.message||"Senha incorreta";$("#loginPassword").select()}finally{b.disabled=false}});let kitchenPollTimer=null;
 let kitchenPollBusy=false;
 async function pollKitchen(){if(!authenticated||document.hidden||kitchenPollBusy)return;kitchenPollBusy=true;try{await load()}finally{kitchenPollBusy=false}}
 function startKitchenPolling(){if(kitchenPollTimer)clearInterval(kitchenPollTimer);kitchenPollTimer=setInterval(pollKitchen,10000)}
 document.addEventListener("visibilitychange",()=>{if(!document.hidden&&authenticated)pollKitchen()});
 checkAuth().then(ok=>{if(ok){load();startKitchenPolling()}});$("#tabActive").onclick=()=>setTab("active");$("#tabReady").onclick=()=>setTab("ready");
 </script>
-</div></body>
+</div>
+<style id="kitchen-mobile-final">
+/* =========================================================
+   BIG LANCHE • COZINHA — MOBILE/PC FINAL
+   - Mobile compacto e organizado
+   - Tema claro/escuro sincronizado com o sistema
+   - Teste de impressão disponível em qualquer dispositivo
+   ========================================================= */
+
+html{
+  color-scheme:light;
+}
+
+/* Theme explicitado pelo JS para tornar o comportamento do WebView
+   consistente, inclusive quando o Android/WebView demora a atualizar
+   prefers-color-scheme. */
+html[data-theme="light"]{
+  color-scheme:light !important;
+}
+
+html[data-theme="dark"]{
+  color-scheme:dark !important;
+}
+
+/* ---------- MOBILE: cabeçalho em uma única linha ---------- */
+@media(max-width:760px){
+  header{
+    position:sticky !important;
+    top:0 !important;
+    z-index:100 !important;
+  }
+
+  .head{
+    min-height:64px !important;
+    height:auto !important;
+    padding:9px 12px !important;
+    flex-direction:row !important;
+    align-items:center !important;
+    gap:9px !important;
+  }
+
+  .head h1{
+    min-width:0 !important;
+    flex:1 1 auto !important;
+    display:flex !important;
+    align-items:center !important;
+    white-space:nowrap !important;
+    overflow:hidden !important;
+    text-overflow:ellipsis !important;
+    font-size:.98rem !important;
+  }
+
+  h1::before{
+    flex:0 0 auto !important;
+    width:34px !important;
+    height:34px !important;
+  }
+
+  .status{
+    flex:0 0 auto !important;
+    max-width:42vw !important;
+    overflow:hidden !important;
+    text-overflow:ellipsis !important;
+    white-space:nowrap !important;
+    font-size:.74rem !important;
+    padding:7px 9px !important;
+  }
+
+  .tabs{
+    position:sticky !important;
+    top:64px !important;
+    z-index:90 !important;
+    margin:0 !important;
+    padding:10px 12px 7px !important;
+    overflow-x:auto !important;
+    flex-wrap:nowrap !important;
+    scrollbar-width:none !important;
+    background:var(--ui-bg) !important;
+  }
+
+  .tabs::-webkit-scrollbar{
+    display:none !important;
+  }
+
+  .tab{
+    flex:0 0 auto !important;
+    min-height:40px !important;
+    padding:9px 14px !important;
+  }
+
+  main{
+    padding:10px 12px 30px !important;
+  }
+
+  /* Em vez de uma linha cortada, 2x2 deixa todos os controles
+     acessíveis sem sacrificar o espaço do pedido. */
+  .toolbar{
+    position:static !important;
+    display:grid !important;
+    grid-template-columns:1fr 1fr !important;
+    gap:8px !important;
+    margin:8px 0 16px !important;
+    padding:0 !important;
+    overflow:visible !important;
+  }
+
+  .toolbar button{
+    width:100% !important;
+    min-width:0 !important;
+    min-height:43px !important;
+    padding:9px 8px !important;
+    white-space:nowrap !important;
+    overflow:hidden !important;
+    text-overflow:ellipsis !important;
+  }
+
+  .orders{
+    grid-template-columns:1fr !important;
+    gap:12px !important;
+  }
+
+  .order{
+    padding:14px !important;
+    border-radius:17px !important;
+  }
+
+  .actions{
+    gap:6px !important;
+  }
+}
+
+@media(max-width:390px){
+  .head{
+    padding-left:10px !important;
+    padding-right:10px !important;
+  }
+
+  h1::before{
+    width:31px !important;
+    height:31px !important;
+    border-radius:10px !important;
+  }
+
+  .head h1{
+    font-size:.91rem !important;
+  }
+
+  .status{
+    max-width:39vw !important;
+    font-size:.69rem !important;
+    padding:6px 8px !important;
+  }
+
+  .toolbar button{
+    font-size:.82rem !important;
+  }
+}
+
+/* ---------- TESTE DE IMPRESSÃO ---------- */
+#printTestModal{
+  position:fixed;
+  inset:0;
+  z-index:99999;
+  display:grid;
+  place-items:center;
+  padding:18px;
+  background:rgba(20,14,10,.58);
+  backdrop-filter:blur(5px);
+  -webkit-backdrop-filter:blur(5px);
+  opacity:0;
+  visibility:hidden;
+  pointer-events:none;
+  transition:opacity .16s ease,visibility 0s linear .16s;
+}
+
+#printTestModal.open{
+  opacity:1;
+  visibility:visible;
+  pointer-events:auto;
+  transition:opacity .16s ease,visibility 0s linear 0s;
+}
+
+#printTestCard{
+  width:min(430px,100%);
+  max-height:min(82vh,700px);
+  display:flex;
+  flex-direction:column;
+  overflow:hidden;
+  border-radius:22px;
+  background:var(--ui-surface);
+  color:var(--ui-text);
+  border:1px solid var(--ui-line);
+  box-shadow:0 24px 70px rgba(0,0,0,.22);
+  transform:translateY(8px) scale(.985);
+  transition:transform .18s cubic-bezier(.2,.8,.2,1);
+}
+
+#printTestModal.open #printTestCard{
+  transform:translateY(0) scale(1);
+}
+
+.print-test-head{
+  display:flex;
+  align-items:center;
+  justify-content:space-between;
+  gap:12px;
+  padding:15px 16px;
+  border-bottom:1px solid var(--ui-line);
+}
+
+.print-test-title{
+  font-weight:900;
+  letter-spacing:-.015em;
+}
+
+.print-test-subtitle{
+  margin-top:2px;
+  color:var(--ui-muted);
+  font-size:.78rem;
+}
+
+.print-test-close{
+  flex:0 0 auto;
+  width:36px;
+  height:36px;
+  border-radius:50%;
+  border:1px solid var(--ui-line);
+  background:var(--ui-surface-alt);
+  color:var(--ui-text);
+  font-size:1.1rem;
+  cursor:pointer;
+}
+
+#printTestPaper{
+  margin:14px;
+  padding:18px 15px;
+  overflow:auto;
+  border:1px dashed var(--ui-line);
+  border-radius:13px;
+  background:var(--ui-surface-alt);
+  font:13px/1.45 ui-monospace,SFMono-Regular,Menlo,Monaco,Consolas,"Liberation Mono",monospace;
+  white-space:normal;
+}
+
+.print-paper-brand{
+  text-align:center;
+  font-weight:900;
+  font-size:17px;
+  margin-bottom:2px;
+}
+
+.print-paper-center{
+  text-align:center;
+  color:var(--ui-muted);
+}
+
+.print-paper-line{
+  height:1px;
+  margin:9px 0;
+  background:var(--ui-line);
+}
+
+.print-paper-item{
+  margin:8px 0;
+}
+
+.print-paper-add{
+  padding-left:12px;
+  color:var(--ui-muted);
+}
+
+.print-paper-total{
+  margin-top:9px;
+  padding-top:9px;
+  border-top:1px dashed var(--ui-line);
+  font-size:16px;
+  font-weight:900;
+}
+
+.print-test-foot{
+  display:flex;
+  justify-content:flex-end;
+  padding:0 14px 14px;
+}
+
+.print-test-foot button{
+  min-height:40px;
+  padding:9px 14px;
+  border:1px solid var(--ui-line);
+  border-radius:11px;
+  background:var(--ui-brand);
+  color:#fff;
+  font-weight:800;
+  cursor:pointer;
+}
+
+@media(max-width:430px){
+  #printTestModal{
+    padding:10px;
+  }
+
+  #printTestCard{
+    max-height:88vh;
+    border-radius:19px;
+  }
+}
+
+@media(prefers-reduced-motion:reduce){
+  #printTestModal,
+  #printTestCard{
+    transition:none !important;
+  }
+}
+
+/* ---------- DARK explicit ---------- */
+html[data-theme="dark"] body{
+  background:#241a14 !important;
+  color:#fff1d6 !important;
+}
+
+html[data-theme="dark"] header{
+  background:rgba(36,26,20,.94) !important;
+  border-bottom-color:#443227 !important;
+}
+
+html[data-theme="dark"] .tabs{
+  background:#241a14 !important;
+}
+
+html[data-theme="dark"] .toolbar button{
+  background:#2b2019 !important;
+  color:#fff1d6 !important;
+  border-color:#4b382c !important;
+}
+
+html[data-theme="dark"] .toolbar button.primary{
+  background:#6a4c38 !important;
+  color:#fff !important;
+  border-color:#6a4c38 !important;
+}
+
+html[data-theme="dark"] #printTestModal{
+  background:rgba(0,0,0,.66);
+}
+
+html[data-theme="dark"] #printTestCard{
+  background:#30231c;
+  color:#fff1d6;
+  border-color:#4b382c;
+}
+
+html[data-theme="dark"] .print-test-head{
+  border-bottom-color:#4b382c;
+}
+
+html[data-theme="dark"] .print-test-close{
+  background:#2b2019;
+  color:#fff1d6;
+  border-color:#4b382c;
+}
+
+html[data-theme="dark"] #printTestPaper{
+  background:#261c16;
+  border-color:#5a4334;
+}
+
+html[data-theme="dark"] .print-paper-line{
+  background:#4b382c;
+}
+
+html[data-theme="dark"] .print-paper-add,
+html[data-theme="dark"] .print-paper-center{
+  color:#cdb9ac;
+}
+
+html[data-theme="dark"] .print-paper-total{
+  border-top-color:#5a4334;
+}
+</style>
+
+<div id="printTestModal" aria-hidden="true">
+  <div id="printTestCard" role="dialog" aria-modal="true" aria-labelledby="printTestTitle">
+    <div class="print-test-head">
+      <div>
+        <div id="printTestTitle" class="print-test-title">🧪 Teste de impressão</div>
+        <div class="print-test-subtitle">Visualização do cupom — nenhum pedido real será alterado.</div>
+      </div>
+      <button id="printTestClose" class="print-test-close" type="button" aria-label="Fechar">×</button>
+    </div>
+    <div id="printTestPaper"></div>
+    <div class="print-test-foot">
+      <button id="printTestClose2" type="button">Fechar</button>
+    </div>
+  </div>
+</div>
+
+<script>
+(function(){
+  const root=document.documentElement;
+  const mq=window.matchMedia ? window.matchMedia("(prefers-color-scheme: dark)") : null;
+
+  function syncSystemTheme(){
+    root.setAttribute("data-theme",mq && mq.matches ? "dark" : "light");
+  }
+
+  syncSystemTheme();
+
+  if(mq){
+    if(mq.addEventListener) mq.addEventListener("change",syncSystemTheme);
+    else if(mq.addListener) mq.addListener(syncSystemTheme);
+  }
+
+  function escT(s){
+    return String(s??"").replace(/[&<>"']/g,c=>({
+      "&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;","'":"&#039;"
+    }[c]));
+  }
+
+  function testOrder(){
+    return (window.orders && window.orders.find(x=>x.status!=="ready")) || {
+      number:"TESTE",
+      cart:[{
+        quantity:1,
+        name:"Pastel mistão",
+        additions:[{quantity:1,name:"Queijo"}],
+        note:"sem salada"
+      }],
+      delivery:{city:"Maragogi",fee:10,address:"Rua de teste, 123"},
+      payment:"Pix",
+      total:30
+    };
+  }
+
+  function buildPreview(o){
+    const cart=(o.cart||[]).map(i=>`
+      <div class="print-paper-item">
+        <b>${escT(i.quantity||1)}x ${escT(i.name)}</b>
+        ${(i.additions||[]).map(a=>`<div class="print-paper-add">+ ${escT(a.quantity||1)}x ${escT(a.name)}</div>`).join("")}
+        ${i.note?`<div class="print-paper-add"><b>Obs.:</b> ${escT(i.note)}</div>`:""}
+      </div>
+    `).join("");
+
+    return `
+      <div class="print-paper-brand">BIG LANCHE</div>
+      <div class="print-paper-center">Pedido #${escT(o.number)}</div>
+      <div class="print-paper-line"></div>
+      ${cart || `<div class="print-paper-center">Nenhum item</div>`}
+      <div class="print-paper-line"></div>
+      <div>Entrega: <b>${escT(o.delivery?.city || "—")}</b></div>
+      <div>Endereço: ${escT(o.delivery?.address || "—")}</div>
+      <div>Pagamento: ${escT(o.payment || "—")}</div>
+      <div class="print-paper-total">TOTAL: ${escT(money(o.total))}</div>
+    `;
+  }
+
+  function closePreview(){
+    const modal=document.getElementById("printTestModal");
+    if(!modal)return;
+    modal.classList.remove("open");
+    modal.setAttribute("aria-hidden","true");
+  }
+
+  function openPreview(o){
+    const modal=document.getElementById("printTestModal");
+    const paper=document.getElementById("printTestPaper");
+    if(!modal || !paper)return;
+    paper.innerHTML=buildPreview(o);
+    modal.classList.add("open");
+    modal.setAttribute("aria-hidden","false");
+    document.getElementById("printTestClose")?.focus();
+  }
+
+  window.__openPrintTestPreview=openPreview;
+  window.__closePrintTestPreview=closePreview;
+
+  document.getElementById("printTestClose")?.addEventListener("click",closePreview);
+  document.getElementById("printTestClose2")?.addEventListener("click",closePreview);
+  document.getElementById("printTestModal")?.addEventListener("click",e=>{
+    if(e.target.id==="printTestModal")closePreview();
+  });
+  document.addEventListener("keydown",e=>{
+    if(e.key==="Escape")closePreview();
+  });
+})();
+</script>
+
+</body>
 </html>
