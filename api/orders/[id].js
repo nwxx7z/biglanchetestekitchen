@@ -5,10 +5,22 @@ module.exports = async function handler(req, res) {
   if (req.method === "OPTIONS") return res.status(204).end();
 
   try {
-    if (req.method !== "PATCH") return send(res, 405, { error: "Método não permitido" });
+    if (!["PATCH", "DELETE"].includes(req.method)) return send(res, 405, { error: "Método não permitido" });
     if (!requireKitchenAuth(req, res)) return;
     const id = String(req.query.id || "");
     if (!id) return send(res, 400, { error: "ID ausente" });
+
+    // Exclusão individual do pedido, sempre protegida pela autenticação da cozinha.
+    if (req.method === "DELETE") {
+      const sql = getSql();
+      const rows = await sql`
+        DELETE FROM orders
+        WHERE id = ${id}
+        RETURNING id, number
+      `;
+      if (!rows.length) return send(res, 404, { error: "Pedido não encontrado" });
+      return send(res, 200, { ok: true, id: rows[0].id, number: rows[0].number });
+    }
 
     const status = String(req.body?.status || "");
     const allowed = ["new", "preparing", "ready", "cancelled", "printed"];
