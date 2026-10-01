@@ -2035,6 +2035,186 @@ main{
 }
 </style>
 
+
+<style id="manual-theme-toggle">
+/* ===== MODO ESCURO MANUAL ===== */
+.head-actions{
+  display:flex !important;
+  align-items:center !important;
+  justify-content:flex-end !important;
+  gap:8px !important;
+  min-width:0 !important;
+}
+
+.theme-toggle{
+  display:inline-flex !important;
+  align-items:center !important;
+  justify-content:center !important;
+  gap:7px !important;
+  min-height:38px !important;
+  padding:7px 11px !important;
+  border-radius:999px !important;
+  border:1px solid var(--ui-line) !important;
+  background:var(--ui-surface) !important;
+  color:var(--ui-text) !important;
+  font:inherit !important;
+  font-size:.78rem !important;
+  font-weight:800 !important;
+  cursor:pointer !important;
+  box-shadow:none !important;
+  -webkit-tap-highlight-color:transparent !important;
+  transition:
+    background-color .16s ease,
+    border-color .16s ease,
+    color .16s ease,
+    transform .16s ease !important;
+}
+
+.theme-toggle:hover{
+  transform:translateY(-1px) !important;
+}
+
+.theme-toggle:active{
+  transform:scale(.97) !important;
+}
+
+.theme-toggle:focus-visible{
+  outline:3px solid rgba(71,120,90,.25) !important;
+  outline-offset:2px !important;
+}
+
+#themeIcon{
+  font-size:1rem !important;
+  line-height:1 !important;
+}
+
+@media(max-width:760px){
+  .head-actions{
+    gap:6px !important;
+  }
+
+  .theme-toggle{
+    min-height:36px !important;
+    width:38px !important;
+    padding:0 !important;
+    border-radius:50% !important;
+  }
+
+  #themeLabel{
+    display:none !important;
+  }
+}
+
+@media(max-width:390px){
+  .theme-toggle{
+    width:34px !important;
+    min-height:34px !important;
+  }
+
+  .head-actions .status{
+    max-width:35vw !important;
+  }
+}
+
+/* ===== TEMA ESCURO FORÇADO PELO BOTÃO =====
+   Essas regras usam data-theme no HTML e não dependem do
+   prefers-color-scheme do Android/WebView. */
+html[data-theme="dark"]{
+  color-scheme:dark !important;
+}
+
+html[data-theme="dark"] body{
+  background:#241a14 !important;
+  color:#fff1d6 !important;
+}
+
+html[data-theme="dark"] header{
+  background:rgba(36,26,20,.96) !important;
+  border-bottom-color:#443227 !important;
+}
+
+html[data-theme="dark"] .tabs{
+  background:#241a14 !important;
+}
+
+html[data-theme="dark"] .theme-toggle{
+  background:#33261d !important;
+  color:#fff1d6 !important;
+  border-color:#5a4334 !important;
+}
+
+html[data-theme="dark"] .status{
+  background:#33261d !important;
+  color:#cdb9ac !important;
+  border-color:#4b382c !important;
+}
+
+html[data-theme="dark"] .tab{
+  color:#fff1d6 !important;
+  border-color:#4b382c !important;
+  background:transparent !important;
+}
+
+html[data-theme="dark"] .tab.active{
+  background:#6a4c38 !important;
+  border-color:#6a4c38 !important;
+  color:#fff !important;
+}
+
+html[data-theme="dark"] .toolbar button{
+  background:#2b2019 !important;
+  color:#fff1d6 !important;
+  border-color:#4b382c !important;
+}
+
+html[data-theme="dark"] .toolbar button.primary{
+  background:#6a4c38 !important;
+  border-color:#6a4c38 !important;
+  color:#fff !important;
+}
+
+html[data-theme="dark"] .order{
+  background:#30231c !important;
+  color:#fff1d6 !important;
+  border-color:#4b382c !important;
+}
+
+html[data-theme="dark"] .order-time,
+html[data-theme="dark"] .meta,
+html[data-theme="dark"] .add-title{
+  background:#2b2019 !important;
+  color:#cdb9ac !important;
+  border-color:#4b382c !important;
+}
+
+html[data-theme="dark"] .item{
+  border-bottom-color:#4b382c !important;
+}
+
+html[data-theme="dark"] .item-name,
+html[data-theme="dark"] .number,
+html[data-theme="dark"] .total{
+  color:#fff1d6 !important;
+}
+
+html[data-theme="dark"] .actions button{
+  background:#2b2019 !important;
+  color:#fff1d6 !important;
+  border-color:#4b382c !important;
+}
+
+html[data-theme="dark"] .actions button.primary{
+  background:#6a4c38 !important;
+  color:#fff !important;
+  border-color:#6a4c38 !important;
+}
+
+html[data-theme="dark"] .empty{
+  color:#c7b3a5 !important;
+  border-color:#554033 !important;
+}
+</style>
+
 </head>
 <body>
 <div id="loginScreen" class="auth-screen">
@@ -2048,7 +2228,13 @@ main{
 </div>
 <div id="app" class="hidden">
 
-<header><div class="head"><h1>🍔 BIG LANCHE · Cozinha</h1><div class="status"><span id="dot" class="dot"></span><span id="status">Conectando...</span></div></div></header>
+<header><div class="head"><h1>🍔 BIG LANCHE · Cozinha</h1><div class="head-actions">
+  <button id="themeToggle" class="theme-toggle" type="button" aria-label="Ativar modo escuro" title="Modo escuro">
+    <span id="themeIcon" aria-hidden="true">🌙</span>
+    <span id="themeLabel">Escuro</span>
+  </button>
+  <div class="status"><span id="dot" class="dot"></span><span id="status">Conectando...</span></div>
+</div></div></header>
 <div class="tabs" role="tablist" aria-label="Pedidos">
   <button id="tabActive" class="tab active" type="button" role="tab" aria-selected="true">Pedidos <span id="countActive" class="tab-count">0</span></button>
   <button id="tabReady" class="tab" type="button" role="tab" aria-selected="false">Prontos <span id="countReady" class="tab-count">0</span></button>
@@ -2652,16 +2838,60 @@ html[data-theme="dark"] .print-paper-total{
 (function(){
   const root=document.documentElement;
   const mq=window.matchMedia ? window.matchMedia("(prefers-color-scheme: dark)") : null;
+  const STORAGE_KEY="biglanche-kitchen-theme";
 
-  function syncSystemTheme(){
-    root.setAttribute("data-theme",mq && mq.matches ? "dark" : "light");
+  function systemTheme(){
+    return mq && mq.matches ? "dark" : "light";
   }
 
-  syncSystemTheme();
+  function applyTheme(theme, save=true){
+    const chosen = theme === "dark" || theme === "light" ? theme : systemTheme();
+    root.setAttribute("data-theme", chosen);
+
+    const btn=document.getElementById("themeToggle");
+    const icon=document.getElementById("themeIcon");
+    const label=document.getElementById("themeLabel");
+
+    const isDark=chosen==="dark";
+    if(icon) icon.textContent=isDark ? "☀️" : "🌙";
+    if(label) label.textContent=isDark ? "Claro" : "Escuro";
+    if(btn){
+      btn.setAttribute(
+        "aria-label",
+        isDark ? "Ativar modo claro" : "Ativar modo escuro"
+      );
+      btn.title=isDark ? "Modo claro" : "Modo escuro";
+    }
+
+    if(save){
+      try{localStorage.setItem(STORAGE_KEY,chosen)}catch(e){}
+    }
+  }
+
+  function getSavedTheme(){
+    try{
+      const saved=localStorage.getItem(STORAGE_KEY);
+      if(saved==="dark" || saved==="light") return saved;
+    }catch(e){}
+    return null;
+  }
+
+  /* Primeiro uso: acompanha o sistema. Depois que o usuário toca no
+     botão, a escolha fica salva e passa a ter prioridade. */
+  applyTheme(getSavedTheme() || systemTheme(), false);
+
+  document.getElementById("themeToggle")?.addEventListener("click",()=>{
+    const current=root.getAttribute("data-theme") || systemTheme();
+    applyTheme(current==="dark" ? "light" : "dark", true);
+  });
 
   if(mq){
-    if(mq.addEventListener) mq.addEventListener("change",syncSystemTheme);
-    else if(mq.addListener) mq.addListener(syncSystemTheme);
+    const onSystemChange=()=>{
+      /* Só acompanha o sistema se o usuário ainda não escolheu manualmente. */
+      if(!getSavedTheme()) applyTheme(systemTheme(),false);
+    };
+    if(mq.addEventListener) mq.addEventListener("change",onSystemChange);
+    else if(mq.addListener) mq.addListener(onSystemChange);
   }
 
   function escT(s){
