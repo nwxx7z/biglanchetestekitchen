@@ -9,7 +9,9 @@
 :root{--bg:#f3eee8;--card:#fffaf5;--ink:#2c211a;--muted:#7a6b61;--line:#dfd3c8;--accent:#5f493a;--ok:#4f7b5c;--warn:#b77932;--danger:#a6473d}
 *{box-sizing:border-box}body{margin:0;background:var(--bg);color:var(--ink);font:15px/1.4 Arial,sans-serif}
 header{position:sticky;top:0;z-index:5;background:#fffaf5eF;border-bottom:1px solid var(--line);padding:14px 18px}
-.head{max-width:1100px;margin:auto;display:flex;justify-content:space-between;align-items:center;gap:12px}h1{font-size:1.1rem;margin:0}
+.head{max-width:1100px;margin:auto;display:flex;justify-content:space-between;align-items:center;gap:12px}h1{font-size:1.1rem;margin:0;min-width:0}
+.head-right{margin-left:auto;display:flex;flex-direction:column;align-items:flex-end;gap:6px;min-width:0}
+.theme-toggle{min-height:38px;padding:6px 10px;font-size:.82rem;line-height:1.1;white-space:nowrap}
 .status{color:var(--muted);font-size:.85rem}.dot{display:inline-block;width:9px;height:9px;border-radius:50%;background:#999;margin-right:6px}.dot.ok{background:var(--ok)}
 main{max-width:1100px;margin:20px auto;padding:0 14px 40px}.toolbar{display:flex;flex-wrap:wrap;gap:8px;margin-bottom:16px}
 button{border:1px solid var(--line);border-radius:10px;padding:9px 12px;background:#fff;cursor:pointer}button.primary{background:var(--accent);border-color:var(--accent);color:#fff}
@@ -17,7 +19,7 @@ button{border:1px solid var(--line);border-radius:10px;padding:9px 12px;backgrou
 .order-head{display:flex;justify-content:space-between;align-items:center}.number{font-weight:800;font-size:1.15rem}.badge{padding:4px 8px;border-radius:999px;font-size:.72rem;font-weight:700;background:#eadfd4}.badge.new{background:#f3dfc2}.badge.printed{background:#dcebdd}
 .item{padding:9px 0;border-bottom:1px solid var(--line)}.item-name{font-weight:800}.add{padding-left:10px;color:var(--muted);font-size:.88rem}.item-note{margin-top:5px;padding-left:10px;color:var(--warn);font-size:.88rem}.meta{border-top:1px solid var(--line);margin-top:10px;padding-top:10px;display:grid;gap:5px}.total{font-size:1.08rem;font-weight:900;margin-top:10px}.actions{display:flex;flex-wrap:wrap;gap:7px;margin-top:13px}.empty{text-align:center;padding:36px;color:var(--muted)}
 .tabs{max-width:1100px;margin:14px auto 0;display:flex;gap:8px}.tab{border:1px solid var(--line);background:var(--card);color:var(--ink);border-radius:10px;padding:9px 14px;font-weight:800;cursor:pointer}.tab.active{background:var(--ink);color:#fff}.tab-count{opacity:.75;margin-left:5px}.order-time{font-size:.82rem;color:var(--muted);margin-top:3px}.add-title{margin-top:6px;font-weight:800;font-size:.84rem;color:var(--ink)}
-@media(max-width:650px){.head{flex-direction:column;align-items:flex-start}.orders{grid-template-columns:1fr}}
+@media(max-width:650px){.head{flex-direction:row;align-items:flex-start}.head h1{flex:1}.head-right{flex:0 0 auto}.head-right .status{max-width:145px;text-align:right;font-size:.72rem;white-space:nowrap}.theme-toggle{min-height:38px;padding:5px 8px;font-size:.76rem}.orders{grid-template-columns:1fr}}
 
 .auth-screen{position:fixed;inset:0;z-index:100;background:var(--bg);display:flex;align-items:center;justify-content:center;padding:20px}
 .auth-card{width:min(420px,100%);background:var(--card);border:1px solid var(--line);border-radius:18px;padding:26px;box-shadow:0 12px 40px #32231918}
@@ -45,8 +47,9 @@ button{border:1px solid var(--line);border-radius:10px;padding:9px 12px;backgrou
   body{min-width:320px;overflow-x:hidden;font-size:16px;padding-bottom:env(safe-area-inset-bottom)}
   header{padding:12px max(12px,env(safe-area-inset-left))}
   main{margin:12px auto;padding:0 max(12px,env(safe-area-inset-right)) calc(24px + env(safe-area-inset-bottom)) max(12px,env(safe-area-inset-left))}
-  .head{width:100%;gap:6px}
+  .head{width:100%;gap:8px}
   .head h1{font-size:1.05rem;line-height:1.25}
+  .head-right{gap:5px}
   .toolbar{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:8px}
   .toolbar button{width:100%;min-height:46px;padding:10px 8px;white-space:normal}
   #connect{grid-column:1/-1}
@@ -65,10 +68,16 @@ button{border:1px solid var(--line);border-radius:10px;padding:9px 12px;backgrou
 }
 @media(max-width:380px){
   .head h1{font-size:.98rem}
+  .head-right .status{font-size:.68rem}
+  .theme-toggle{font-size:.72rem;padding:5px 7px}
   .order{padding:11px}
   .store-mode-buttons{gap:4px}
   .store-mode-buttons button{font-size:.9rem}
 }
+button.delete-order{background:#fff0ee;border-color:var(--danger);color:#8d3229;font-weight:800}
+button.delete-order:hover{background:#f9e0dd}
+:root[data-theme="dark"] button.delete-order{background:#432725;color:#f2aaa1}
+button.delete-order:disabled{opacity:.55;cursor:wait}
 </style>
 
 <script>
@@ -103,19 +112,19 @@ window.BIGLANCHE_PRINTER = {
 </div>
 <div id="app" class="hidden">
 
-<header><div class="head"><h1>🍔 BIG LANCHE · Cozinha</h1><div class="status"><span id="dot" class="dot"></span><span id="status">Conectando...</span></div></div></header>
+<header><div class="head"><h1>🍔 BIG LANCHE · Cozinha</h1><div class="head-right"><div class="status"><span id="dot" class="dot"></span><span id="status">Conectando...</span></div><button id="themeToggle" class="theme-toggle" type="button" aria-label="Alternar tema claro e escuro" aria-pressed="false">🌙 Modo escuro</button></div></div></header>
 <div class="tabs" role="tablist" aria-label="Pedidos">
   <button id="tabActive" class="tab active" type="button" role="tab" aria-selected="true">Pedidos <span id="countActive" class="tab-count">0</span></button>
   <button id="tabReady" class="tab" type="button" role="tab" aria-selected="false">Prontos <span id="countReady" class="tab-count">0</span></button>
 </div>
 <main>
-<div class="toolbar"><button class="primary" id="connect">🖨️ Conectar impressora</button><button id="refresh">Atualizar</button><button id="themeToggle" type="button" aria-pressed="false">🌙 Modo escuro</button><button id="logout">Sair</button></div>
+<div class="toolbar"><button class="primary" id="connect">🖨️ Conectar impressora</button><button id="refresh">Atualizar</button><button id="logout">Sair</button></div>
 <section class="store-controls" aria-label="Controle de pedidos">
   <div class="store-controls-head"><strong>Recebimento de pedidos</strong><span id="storeStatus" class="store-controls-status" role="status">Carregando modo...</span></div>
   <div class="store-mode-buttons" role="group" aria-label="Modo de recebimento de pedidos">
     <button class="store-mode-button" type="button" data-store-mode="open" aria-pressed="false">Aberto</button>
     <button class="store-mode-button" type="button" data-store-mode="closed" aria-pressed="false">Fechado</button>
-    <button class="store-mode-button" type="button" data-store-mode="auto" aria-pressed="false">Automático</button>
+    <button class="store-mode-button" type="button" data-store-mode="automatic" aria-pressed="false">Automático</button>
   </div>
   <div id="storeModeMessage" class="store-mode-message" aria-live="polite"></div>
 </section>
@@ -126,12 +135,13 @@ const API_URL=location.origin, PRINT_PRINTER="";
 let qzReady=false, orders=[], authenticated=false, currentTab="active";
 let autoPrintSeen=new Set();
 let autoPrintBusy=new Set();
-let storeMode="auto", storeOpenState=null;
+let storeMode="automatic", storeOpenState=null, themeMode="system";
 const STORE_OPEN_MINUTES=18*60, STORE_CLOSE_MINUTES=23*60+40;
 const $=s=>document.querySelector(s);
 const money=v=>Number(v||0).toLocaleString("pt-BR",{style:"currency",currency:"BRL"});
 const esc=s=>String(s??"").replace(/[&<>"']/g,c=>({"&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;","'":"&#039;"}[c]));
 const printSafe=s=>String(s??"").normalize("NFD").replace(/[\u0300-\u036f]/g,"").replace(/[^\x20-\x7E\n\r]/g,"");
+function normalizeStoreMode(mode){const value=String(mode||"");return value==="open"||value==="closed"?value:"automatic";}
 function status(t,ok=false){$("#status").textContent=t;$("#dot").className="dot "+(ok?"ok":"");}
 function showLogin(message=""){authenticated=false;$("#app").classList.add("hidden");$("#loginScreen").classList.remove("hidden");$("#loginError").textContent=message;setTimeout(()=>$("#loginPassword").focus(),0)}
 function showApp(){authenticated=true;$("#loginScreen").classList.add("hidden");$("#app").classList.remove("hidden")}
@@ -195,21 +205,28 @@ function aplicarTema(theme){
 }
 function iniciarTema(){
   let saved="";
-  try{saved=localStorage.getItem("big-lanche-kitchen-theme")||"";}catch(e){}
-  const theme=saved==="dark"||saved==="light"?saved:(window.matchMedia&&window.matchMedia("(prefers-color-scheme: dark)").matches?"dark":"light");
-  aplicarTema(theme);
+  try{saved=localStorage.getItem("big-lanche-kitchen-theme-v2")||"";}catch(e){}
+  themeMode=saved==="dark"||saved==="light"?saved:"system";
+  const systemTheme=window.matchMedia&&window.matchMedia("(prefers-color-scheme: dark)").matches?"dark":"light";
+  aplicarTema(themeMode==="system"?systemTheme:themeMode);
+  const preference=window.matchMedia?window.matchMedia("(prefers-color-scheme: dark)"):null;
+  if(preference){
+    const followSystem=event=>{if(themeMode==="system")aplicarTema(event.matches?"dark":"light")};
+    if(preference.addEventListener)preference.addEventListener("change",followSystem);
+    else if(preference.addListener)preference.addListener(followSystem);
+  }
 }
 function alternarTema(){
-  const theme=document.documentElement.dataset.theme==="dark"?"light":"dark";
-  aplicarTema(theme);
-  try{localStorage.setItem("big-lanche-kitchen-theme",theme);}catch(e){}
+  themeMode=document.documentElement.dataset.theme==="dark"?"light":"dark";
+  aplicarTema(themeMode);
+  try{localStorage.setItem("big-lanche-kitchen-theme-v2",themeMode);}catch(e){}
 }
 async function carregarModoLoja(){
   try{
     const response=await fetch(`${API_URL}/api/store-status`,{cache:"no-store",credentials:"same-origin"});
     if(!response.ok)throw new Error("Não foi possível consultar o modo de pedidos.");
     const data=await response.json();
-    storeMode=["open","closed","auto"].includes(String(data.mode))?String(data.mode):"auto";
+    storeMode=normalizeStoreMode(data.mode);
     storeOpenState=typeof data.open==="boolean"?data.open:null;
     $("#storeModeMessage").textContent="";
     atualizarControlesLoja();
@@ -219,7 +236,7 @@ async function carregarModoLoja(){
   }
 }
 async function definirModoLoja(mode){
-  if(!["open","closed","auto"].includes(mode))return;
+  if(!["open","closed","automatic"].includes(mode))return;
   const buttons=[...document.querySelectorAll("[data-store-mode]")];
   buttons.forEach(button=>button.disabled=true);
   $("#storeModeMessage").textContent="Salvando...";
@@ -228,7 +245,7 @@ async function definirModoLoja(mode){
     let data={};
     try{data=await response.json();}catch(e){}
     if(!response.ok)throw new Error(data.error||"O servidor não aceitou a alteração.");
-    storeMode=["open","closed","auto"].includes(String(data.mode))?String(data.mode):mode;
+    storeMode=normalizeStoreMode(data.mode||mode);
     storeOpenState=typeof data.open==="boolean"?data.open:null;
     $("#storeModeMessage").textContent="Modo atualizado.";
     atualizarControlesLoja();
@@ -255,6 +272,7 @@ function card(o){
     </div>`;
   }).join("");
   const time=pedidoTime(o.createdAt);
+  const deleteAction='<button class="delete-order" type="button" data-delete-order="'+esc(o.id)+'">🗑️ Excluir pedido</button>';
   const isReady=o.status==="ready";
   const actions=isReady
     ? `<button onclick="setStatus('${esc(o.id)}','preparing')">↩️ Voltar para pedidos</button>`
@@ -273,7 +291,7 @@ function card(o){
       ${o.notes?`<div><b>Obs.:</b> ${esc(o.notes)}</div>`:""}
     </div>
     <div class="total">Total: ${money(o.total)}</div>
-    <div class="actions">${actions}</div>
+    <div class="actions">${actions}${deleteAction}</div>
   </article>`;
 }
 function render(){
@@ -327,6 +345,32 @@ function browserPrint(o){
   w.document.close();
 }
 async function setStatus(id,s){await api("/api/orders/"+encodeURIComponent(id),{method:"PATCH",body:JSON.stringify({status:s})});const o=orders.find(x=>x.id===id);if(o)o.status=s;render();}
+async function excluirPedido(id){
+  const pedido=orders.find(item=>String(item.id)===String(id));
+  if(!pedido)return;
+  if(!window.confirm("Excluir definitivamente o pedido #"+pedido.number+" do banco? Esta ação não poderá ser desfeita."))return;
+  const button=Array.from(document.querySelectorAll("[data-delete-order]")).find(item=>item.dataset.deleteOrder===String(id));
+  if(button){button.disabled=true;button.textContent="Excluindo...";}
+  try{
+    const response=await fetch(API_URL+"/api/orders/"+encodeURIComponent(id),{method:"DELETE",credentials:"same-origin"});
+    if(response.status===401){showLogin("Sua sessão expirou. Entre novamente.");return;}
+    let data={},raw="";
+    try{raw=await response.text();if(raw){try{data=JSON.parse(raw)}catch(e){}}}catch(e){}
+    if(!response.ok){
+      if(response.status===404||response.status===405)throw new Error("O servidor ainda não oferece exclusão permanente. O pedido continua salvo no Neon.");
+      throw new Error(data.error||data.message||raw||"O servidor não confirmou a exclusão; o pedido continua salvo.");
+    }
+    if(data.error||data.success===false)throw new Error(data.error||data.message||"O servidor não confirmou a exclusão; o pedido continua salvo.");
+    orders=orders.filter(item=>String(item.id)!==String(id));
+    autoPrintSeen.delete(id);
+    autoPrintBusy.delete(id);
+    render();
+    status("Pedido #"+pedido.number+" excluído do banco",true);
+  }catch(error){
+    if(button){button.disabled=false;button.textContent="🗑️ Excluir pedido";}
+    window.alert(error.message||"Não foi possível excluir o pedido.");
+  }
+}
 async function load(){try{
   const previous=orders;
   orders=await api("/api/orders");
@@ -345,6 +389,10 @@ async function load(){try{
   }
 }catch{status("Servidor offline");}}
 $("#connect").onclick=connectPrinter;$("#refresh").onclick=load;$("#logout").onclick=doLogout;$("#themeToggle").addEventListener("click",alternarTema);document.querySelectorAll("[data-store-mode]").forEach(button=>button.addEventListener("click",()=>definirModoLoja(button.dataset.storeMode)));$("#loginForm").addEventListener("submit",async e=>{e.preventDefault();const b=$("#loginForm button");const p=$("#loginPassword").value.trim();if(!p)return;$("#loginError").textContent="";b.disabled=true;try{await doLogin(p);$("#loginPassword").value=""}catch(err){$("#loginError").textContent=err.message||"Senha incorreta";$("#loginPassword").select()}finally{b.disabled=false}});iniciarTema();atualizarControlesLoja();checkAuth().then(ok=>{if(ok){load();carregarModoLoja()}});setInterval(()=>{if(authenticated)load()},2500);setInterval(()=>{if(authenticated)carregarModoLoja()},15000);$("#tabActive").onclick=()=>setTab("active");$("#tabReady").onclick=()=>setTab("ready");
+document.addEventListener("click",event=>{
+  const button=event.target.closest("[data-delete-order]");
+  if(button)excluirPedido(button.dataset.deleteOrder);
+});
 </script>
 </div></body>
 </html>
