@@ -2570,6 +2570,97 @@ html[data-theme="light"] .theme-toggle{
 }
 </style>
 
+
+<style id="transparent-header-logo">
+/* BIG LANCHE — marca compacta transparente para o cabeçalho */
+h1::before{
+  content:"" !important;
+  position:relative !important;
+  display:inline-block !important;
+  flex:0 0 40px !important;
+  width:40px !important;
+  height:40px !important;
+  margin-right:10px !important;
+  border-radius:12px !important;
+  background:transparent !important;
+  border:0 !important;
+  box-shadow:none !important;
+}
+
+/* Hambúrguer minimalista, sem fundo, usando a própria paleta do site. */
+h1::after{
+  content:"" !important;
+  position:absolute !important;
+  left:0 !important;
+  width:40px !important;
+  height:40px !important;
+  pointer-events:none !important;
+  background:
+    radial-gradient(ellipse 4px 2.5px at 31% 27%, #f1c56a 98%, transparent 100%),
+    radial-gradient(ellipse 4px 2.5px at 51% 23%, #f1c56a 98%, transparent 100%),
+    radial-gradient(ellipse 3px 2px at 68% 29%, #f1c56a 98%, transparent 100%),
+    linear-gradient(#e6aa3d,#e6aa3d) 7px 35px / 27px 3px no-repeat,
+    linear-gradient(#47785a,#47785a) 7px 30px / 27px 4px no-repeat,
+    linear-gradient(#b85a43,#b85a43) 6px 24px / 29px 5px no-repeat,
+    linear-gradient(#f0c15e,#f0c15e) 7px 16px / 27px 7px no-repeat;
+  border-radius:50%;
+  filter:drop-shadow(0 2px 3px rgba(0,0,0,.16));
+}
+
+/* O topo do pão fica arredondado, dando aspecto de logo em vez de ícone. */
+@media(max-width:760px){
+  .head h1::before{
+    flex-basis:38px !important;
+    width:38px !important;
+    height:38px !important;
+    margin-right:9px !important;
+  }
+
+  .head h1::after{
+    width:38px !important;
+    height:38px !important;
+    left:0 !important;
+  }
+}
+
+/* Como o h1 já é flex, o pseudo-elemento de logo precisa acompanhar
+   corretamente o fluxo sem criar uma caixa de fundo. */
+.head h1{
+  position:relative !important;
+}
+</style>
+
+
+<style id="transparent-logo-final-override">
+.head h1::before,
+h1::before{
+  background:transparent !important;
+  border:0 !important;
+  box-shadow:none !important;
+}
+
+@media(max-width:760px){
+  .head h1::before{
+    background:transparent !important;
+    border:0 !important;
+    box-shadow:none !important;
+  }
+}
+</style>
+
+
+<style id="print-test-mobile-fix">
+/* Preview nativo: garante leitura confortável em telas pequenas. */
+@media(max-width:760px){
+  #printTestPaper{
+    font-size:13px !important;
+    line-height:1.5 !important;
+    overflow-wrap:anywhere !important;
+    word-break:break-word !important;
+  }
+}
+</style>
+
 </head>
 <body>
 <div id="loginScreen" class="auth-screen">
@@ -2717,28 +2808,76 @@ function browserPrint(o){const w=window.open("","_blank","width=420,height=700")
 async function testPrintSimulation(){
   const o=orders.find(x=>x.status!=="ready") || {
     number:"TESTE",
-    cart:[{quantity:1,name:"Pastel mistão",additions:[{quantity:1,name:"Queijo"}],note:"sem salada"}],
-    delivery:{city:"Maragogi",fee:10,address:"Rua de teste, 123"},
+    cart:[{
+      quantity:1,
+      name:"Pastel mistão",
+      additions:[{quantity:1,name:"Queijo"}],
+      note:"sem salada"
+    }],
+    delivery:{
+      city:"Maragogi",
+      fee:10,
+      address:"Rua de teste, 123"
+    },
     payment:"Pix",
     total:30
   };
 
   try{
-    /* Android: usa o simulador nativo já existente no APK. */
+    /* Android: o simulador NÃO recebe ESC/POS.
+       Ele recebe somente texto legível. Antes estávamos passando
+       receipt(o), que contém comandos ESC/POS e por isso apareciam
+       caracteres/trechos quebrados no preview. */
     if(window.BIGLANCHE_PRINTER?.bridgeAvailable() &&
        window.AndroidPrinter?.simulatePrint){
-      const preview = receipt(o)
-        .replace(/\\x1B[@aE](?:\\x01|\\x00)?/g, "")
-        .replace(/\\x1D[Vv](?:\\x00|\\x01)?/g, "")
-        .replace(/[\\x00-\\x08\\x0B\\x0C\\x0E-\\x1F]/g, "");
 
-      const r=window.AndroidPrinter.simulatePrint(String(preview));
+      const linhas = [
+        "BIG LANCHE",
+        `PEDIDO #${o.number ?? "TESTE"}`,
+        "------------------------------------------"
+      ];
+
+      for(const i of (o.cart || [])){
+        linhas.push(`${i.quantity || 1}x ${printSafe(i.name || "")}`);
+
+        for(const x of (i.additions || [])){
+          linhas.push(`   + ${x.quantity || 1}x ${printSafe(x.name || "")}`);
+        }
+
+        if(i.note){
+          linhas.push(`   OBS: ${printSafe(i.note)}`);
+        }
+      }
+
+      linhas.push(
+        "------------------------------------------",
+        `Entrega: ${printSafe(o.delivery?.city || "")} ${o.delivery?.fee ? money(o.delivery.fee) : ""}`.trim(),
+        `Endereco: ${printSafe(o.delivery?.address || "")}`,
+        `Pagamento: ${printSafe(o.payment || "")}`
+      );
+
+      if(o.notes){
+        linhas.push(`Obs: ${printSafe(o.notes)}`);
+      }
+
+      linhas.push(
+        `TOTAL: ${money(o.total || 0)}`,
+        "",
+        "",
+        ""
+      );
+
+      /* Remove somente caracteres de controle acidentais.
+         Quebras de linha e caracteres Unicode normais são preservados. */
+      const texto = linhas.join("\n")
+        .replace(/[\x00-\x08\x0B\x0C\x0E-\x1F\x7F]/g, "");
+
+      const r=window.AndroidPrinter.simulatePrint(texto);
       if(r && typeof r.then==="function") await r;
       return;
     }
 
-    /* PC/navegador: mostra exatamente o conteúdo de teste sem exigir
-       impressora, QZ Tray ou qualquer instalação adicional. */
+    /* PC/navegador: preview visual. */
     if(window.__openPrintTestPreview){
       window.__openPrintTestPreview(o);
       return;
