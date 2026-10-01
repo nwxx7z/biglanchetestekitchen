@@ -241,7 +241,7 @@ async function definirModoLoja(mode){
   buttons.forEach(button=>button.disabled=true);
   $("#storeModeMessage").textContent="Salvando...";
   try{
-    const response=await fetch(`${API_URL}/api/store-status`,{method:"POST",credentials:"same-origin",headers:{"Content-Type":"application/json"},body:JSON.stringify({mode})});
+    const response=await fetch(`${API_URL}/api/store-status`,{method:"PATCH",credentials:"same-origin",headers:{"Content-Type":"application/json"},body:JSON.stringify({mode})});
     let data={};
     try{data=await response.json();}catch(e){}
     if(!response.ok)throw new Error(data.error||"O servidor não aceitou a alteração.");
