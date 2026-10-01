@@ -111,6 +111,11 @@ function pedidoTime(value){
   if(Number.isNaN(d.getTime())) return "";
   return new Intl.DateTimeFormat("pt-BR",{hour:"2-digit",minute:"2-digit"}).format(d);
 }
+function referenciaSeparada(o){
+  const referencia=String(o.delivery?.reference||"").trim();
+  const endereco=String(o.delivery?.address||"").toLowerCase();
+  return referencia && !endereco.includes(referencia.toLowerCase()) ? referencia : "";
+}
 function setTab(tab){
   currentTab=tab;
   const active=tab==="active";
@@ -141,7 +146,7 @@ function card(o){
     <div class="meta">
       <div><b>Entrega:</b> ${esc(o.delivery?.city||"")} ${o.delivery?.fee? "· "+money(o.delivery.fee):""}</div>
       <div><b>Endereço:</b> ${esc(o.delivery?.address||"")}</div>
-      ${o.delivery?.reference?`<div><b>Ponto de referência:</b> ${esc(o.delivery.reference)}</div>`:""}
+      ${referenciaSeparada(o)?`<div><b>Ponto de referência:</b> ${esc(referenciaSeparada(o))}</div>`:""}
       <div><b>Pagamento:</b> ${esc(o.payment||"")}</div>
       ${o.notes?`<div><b>Obs.:</b> ${esc(o.notes)}</div>`:""}
     </div>
@@ -166,7 +171,7 @@ function receipt(o){
     if(i.note)a.push(`   OBS: ${printSafe(i.note)}`);
   }
   a.push(line,`Entrega: ${printSafe(o.delivery?.city)} ${o.delivery?.fee?money(o.delivery.fee):""}`,`Endereco: ${printSafe(o.delivery?.address)}`);
-  if(o.delivery?.reference)a.push(`Ponto de referencia: ${printSafe(o.delivery.reference)}`);
+  if(referenciaSeparada(o))a.push(`Ponto de referencia: ${printSafe(referenciaSeparada(o))}`);
   a.push(`Pagamento: ${printSafe(o.payment)}`,o.notes?`Obs: ${printSafe(o.notes)}`:"",`TOTAL: ${money(o.total)}`,"","","","\x1D\x56\x00");
   return a.join("\n");
 }
@@ -196,7 +201,7 @@ async function printOrder(id,automatic=false){
 function browserPrint(o){
   const w=window.open("","_blank","width=420,height=700");
   if(!w)return;
-  w.document.write(`<style>body{font:14px monospace;width:80mm;margin:0;padding:5mm}.i{font-weight:700;margin:6px 0}.a{padding-left:10px}.t{font-size:18px;font-weight:900;margin-top:12px}</style><h2>BIG LANCHE<br>Pedido #${esc(o.number)}</h2>${(o.cart||[]).map(i=>`<div class=i>${i.quantity}x ${esc(i.name)}${i.note?`<div class=a><b>Obs.:</b> ${esc(i.note)}</div>`:""}</div>`).join("")}<hr>Entrega: ${esc(o.delivery?.city)}<br>Endereco: ${esc(o.delivery?.address)}${o.delivery?.reference?`<br>Ponto de referência: ${esc(o.delivery.reference)}`:""}<br>Pagamento: ${esc(o.payment)}<div class=t>TOTAL: ${money(o.total)}</div><script>window.print()<\/script>`);
+  w.document.write(`<style>body{font:14px monospace;width:80mm;margin:0;padding:5mm}.i{font-weight:700;margin:6px 0}.a{padding-left:10px}.t{font-size:18px;font-weight:900;margin-top:12px}</style><h2>BIG LANCHE<br>Pedido #${esc(o.number)}</h2>${(o.cart||[]).map(i=>`<div class=i>${i.quantity}x ${esc(i.name)}${i.note?`<div class=a><b>Obs.:</b> ${esc(i.note)}</div>`:""}</div>`).join("")}<hr>Entrega: ${esc(o.delivery?.city)}<br>Endereco: ${esc(o.delivery?.address)}${referenciaSeparada(o)?`<br>Ponto de referência: ${esc(referenciaSeparada(o))}`:""}<br>Pagamento: ${esc(o.payment)}<div class=t>TOTAL: ${money(o.total)}</div><script>window.print()<\/script>`);
   w.document.close();
 }
 async function setStatus(id,s){await api("/api/orders/"+encodeURIComponent(id),{method:"PATCH",body:JSON.stringify({status:s})});const o=orders.find(x=>x.id===id);if(o)o.status=s;render();}
