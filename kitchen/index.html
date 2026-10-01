@@ -2215,6 +2215,167 @@ html[data-theme="dark"] .empty{
 }
 </style>
 
+
+<style id="mobile-header-final">
+/* =========================================================
+   CABEÇALHO MOBILE — FINAL
+   Mais alto, respirado e legível. O tema fica em uma segunda
+   linha para nunca disputar espaço com o nome/status.
+   ========================================================= */
+
+@media(max-width:760px){
+  header{
+    position:sticky !important;
+    top:0 !important;
+    min-height:0 !important;
+    padding-top:max(8px, env(safe-area-inset-top)) !important;
+    background:rgba(36,26,20,.97) !important;
+  }
+
+  .head{
+    min-height:106px !important;
+    height:auto !important;
+    padding:10px 13px 11px !important;
+    display:grid !important;
+    grid-template-columns:minmax(0,1fr) auto !important;
+    grid-template-rows:auto auto !important;
+    align-items:center !important;
+    column-gap:10px !important;
+    row-gap:8px !important;
+  }
+
+  .head h1{
+    grid-column:1 !important;
+    grid-row:1 !important;
+    min-width:0 !important;
+    width:auto !important;
+    display:flex !important;
+    align-items:center !important;
+    white-space:nowrap !important;
+    overflow:hidden !important;
+    text-overflow:ellipsis !important;
+    margin:0 !important;
+    font-size:1rem !important;
+    line-height:1.2 !important;
+    color:var(--ui-text) !important;
+  }
+
+  .head h1::before{
+    flex:0 0 auto !important;
+    width:37px !important;
+    height:37px !important;
+    margin-right:9px !important;
+    border-radius:12px !important;
+  }
+
+  .head-actions{
+    display:contents !important;
+  }
+
+  .head-actions .status{
+    grid-column:2 !important;
+    grid-row:1 !important;
+    align-self:center !important;
+    justify-self:end !important;
+    width:auto !important;
+    max-width:43vw !important;
+    min-width:0 !important;
+    overflow:hidden !important;
+    text-overflow:ellipsis !important;
+    white-space:nowrap !important;
+    margin:0 !important;
+    font-size:.74rem !important;
+    padding:8px 10px !important;
+  }
+
+  .head-actions .theme-toggle{
+    grid-column:1 !important;
+    grid-row:2 !important;
+    justify-self:start !important;
+    align-self:center !important;
+    width:auto !important;
+    min-width:88px !important;
+    min-height:36px !important;
+    padding:7px 12px !important;
+    border-radius:999px !important;
+    font-size:.78rem !important;
+  }
+
+  .head-actions #themeLabel{
+    display:inline !important;
+  }
+
+  /* A segunda linha ganha espaço próprio; as abas começam depois
+     do cabeçalho completo, sem sobreposição. */
+  .tabs{
+    top:0 !important;
+    position:static !important;
+    margin:0 !important;
+    padding:10px 12px 7px !important;
+  }
+
+  main{
+    padding-top:10px !important;
+  }
+}
+
+/* Celulares estreitos: mantém tudo legível sem espremer. */
+@media(max-width:390px){
+  .head{
+    min-height:108px !important;
+    padding-left:11px !important;
+    padding-right:11px !important;
+    column-gap:8px !important;
+  }
+
+  .head h1{
+    font-size:.92rem !important;
+  }
+
+  .head h1::before{
+    width:34px !important;
+    height:34px !important;
+    margin-right:8px !important;
+  }
+
+  .head-actions .status{
+    max-width:40vw !important;
+    font-size:.68rem !important;
+    padding:7px 8px !important;
+  }
+
+  .head-actions .theme-toggle{
+    min-width:84px !important;
+    min-height:35px !important;
+    padding:6px 10px !important;
+  }
+}
+
+/* Claro: cabeçalho continua claro e com contraste correto. */
+@media(max-width:760px){
+  html[data-theme="light"] header{
+    background:rgba(245,241,236,.97) !important;
+    border-bottom-color:#e5d9ce !important;
+  }
+
+  html[data-theme="light"] .head h1{
+    color:#2b211b !important;
+  }
+
+  html[data-theme="light"] .head-actions .status{
+    background:#fffdf9 !important;
+    color:#796b60 !important;
+    border-color:#e5d9ce !important;
+  }
+
+  html[data-theme="light"] .head-actions .theme-toggle{
+    background:#fffdf9 !important;
+    color:#2b211b !important;
+    border-color:#e5d9ce !important;
+  }
+}
+</style>
+
 </head>
 <body>
 <div id="loginScreen" class="auth-screen">
