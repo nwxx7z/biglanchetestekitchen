@@ -2806,86 +2806,71 @@ async function printOrder(id,automatic=false){
 }
 function browserPrint(o){const w=window.open("","_blank","width=420,height=700");if(!w)return;w.document.write(`<style>body{font:14px monospace;width:80mm;margin:0;padding:5mm}.i{font-weight:700;margin:6px 0}.a{padding-left:10px}.t{font-size:18px;font-weight:900;margin-top:12px}</style><h2>BIG LANCHE<br>Pedido #${esc(o.number)}</h2>${(o.cart||[]).map(i=>`<div class=i>${i.quantity}x ${esc(i.name)}${(i.additions||[]).map(a=>`<div class=a>+ ${a.quantity||1}x ${esc(a.name)}</div>`).join("")}${i.note?`<div class=a><b>Obs.:</b> ${esc(i.note)}</div>`:""}</div>`).join("")}<hr>Entrega: ${esc(o.delivery?.city)}<br>Endereco: ${esc(o.delivery?.address)}<br>Pagamento: ${esc(o.payment)}<div class=t>TOTAL: ${money(o.total)}</div><script>window.print()<\/script>`);w.document.close();}
 async function testPrintSimulation(){
-  const o=orders.find(x=>x.status!=="ready") || {
-    number:"TESTE",
-    cart:[{
-      quantity:1,
-      name:"Pastel mistão",
-      additions:[{quantity:1,name:"Queijo"}],
-      note:"sem salada"
-    }],
-    delivery:{
-      city:"Maragogi",
-      fee:10,
-      address:"Rua de teste, 123"
-    },
-    payment:"Pix",
-    total:30
-  };
+  /*
+    TESTE REAL DA IMPRESSORA.
+    O texto é fixo de propósito: serve somente para validar a conexão,
+    o envio ESC/POS e se a impressora consegue receber/alimentar o papel.
+  */
+  const rawTest =
+    "\x1B\x40" +                  // inicializa ESC/POS
+    "\x1B\x61\x00" +              // alinhamento à esquerda
+    "Teste App big lanche\n" +
+    "\n" +
+    "pedido 000\n" +
+    "\n" +
+    "teste\n" +
+    "\n" +
+    "Endereço:\n" +
+    "\n" +
+    "\n" +
+    "\x1D\x56\x00";                // corte, se suportado
 
   try{
-    /* Android: o simulador NÃO recebe ESC/POS.
-       Ele recebe somente texto legível. Antes estávamos passando
-       receipt(o), que contém comandos ESC/POS e por isso apareciam
-       caracteres/trechos quebrados no preview. */
-    if(window.BIGLANCHE_PRINTER?.bridgeAvailable() &&
-       window.AndroidPrinter?.simulatePrint){
-
-      const linhas = [
-        "BIG LANCHE",
-        `PEDIDO #${o.number ?? "TESTE"}`,
-        "------------------------------------------"
-      ];
-
-      for(const i of (o.cart || [])){
-        linhas.push(`${i.quantity || 1}x ${printSafe(i.name || "")}`);
-
-        for(const x of (i.additions || [])){
-          linhas.push(`   + ${x.quantity || 1}x ${printSafe(x.name || "")}`);
-        }
-
-        if(i.note){
-          linhas.push(`   OBS: ${printSafe(i.note)}`);
-        }
-      }
-
-      linhas.push(
-        "------------------------------------------",
-        `Entrega: ${printSafe(o.delivery?.city || "")} ${o.delivery?.fee ? money(o.delivery.fee) : ""}`.trim(),
-        `Endereco: ${printSafe(o.delivery?.address || "")}`,
-        `Pagamento: ${printSafe(o.payment || "")}`
-      );
-
-      if(o.notes){
-        linhas.push(`Obs: ${printSafe(o.notes)}`);
-      }
-
-      linhas.push(
-        `TOTAL: ${money(o.total || 0)}`,
-        "",
-        "",
-        ""
-      );
-
-      /* Remove somente caracteres de controle acidentais.
-         Quebras de linha e caracteres Unicode normais são preservados. */
-      const texto = linhas.join("\n")
-        .replace(/[\x00-\x08\x0B\x0C\x0E-\x1F\x7F]/g, "");
-
-      const r=window.AndroidPrinter.simulatePrint(texto);
-      if(r && typeof r.then==="function") await r;
-      return;
+    /* Android / RP80-PLUS: envia para a impressora física. */
+    if(window.BIGLANCHE_PRINTER?.available()){
+      const sent=await window.BIGLANCHE_PRINTER.print(rawTest);
+      if(!sent) throw Error("A impressora não respondeu.");
+      status("Teste de impressão enviado",true);
+      return true;
     }
 
-    /* PC/navegador: preview visual. */
-    if(window.__openPrintTestPreview){
-      window.__openPrintTestPreview(o);
-      return;
+    if(window.BIGLANCHE_PRINTER?.bridgeAvailable()){
+      throw Error("Conecte a impressora antes de testar.");
     }
 
-    throw new Error("Não foi possível abrir o teste de impressão.");
+    /* PC + QZ Tray: também imprime fisicamente. */
+    if(window.qz){
+      if(!qzReady){
+        if(!qz.websocket.isActive()) await qz.websocket.connect();
+        const detected=PRINT_PRINTER || await qz.printers.getDefault();
+        if(!detected) throw Error("Nenhuma impressora encontrada.");
+        qzReady=true;
+      }
+
+      const printer=PRINT_PRINTER || await qz.printers.getDefault();
+      if(!printer) throw Error("Nenhuma impressora encontrada.");
+
+      const config=qz.configs.create(
+        printer,
+        {jobName:"BIG LANCHE - Teste de impressão"}
+      );
+
+      await qz.print(config,[{
+        type:"raw",
+        format:"command",
+        flavor:"plain",
+        data:rawTest
+      }]);
+
+      status("Teste de impressão enviado",true);
+      return true;
+    }
+
+    throw Error("Conecte a impressora primeiro.");
   }catch(e){
-    alert("Falha no teste de impressão: "+(e?.message||e));
+    status("Falha no teste de impressão");
+    alert("Falha no teste de impressão: "+(e?.message || e));
+    return false;
   }
 }
 async function setStatus(id,s){
