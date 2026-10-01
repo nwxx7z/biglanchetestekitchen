@@ -122,18 +122,6 @@ main{margin:0 auto;padding:22px 14px 48px}
 }
 @media(prefers-reduced-motion:reduce){html{scroll-behavior:auto}.order,.toolbar button,.tab{transition:none!important}.order.new::before{animation:none}.auth-card{animation:none}}
 
-
-<style id="printer-path-status-style">
-.printer-paths{margin:0 0 18px;padding:12px 14px;border:1px solid var(--k-line);background:var(--k-card);border-radius:16px;display:grid;gap:7px;box-shadow:0 6px 20px rgba(44,33,26,.05)}
-.printer-path-title{font-size:12px;font-weight:900;text-transform:uppercase;letter-spacing:.08em;color:var(--k-muted);margin-bottom:2px}
-.printer-path{display:grid;grid-template-columns:22px 1fr auto;align-items:center;gap:8px;min-height:30px;font-size:13px;color:var(--k-ink)}
-.printer-path strong{font-size:12px;font-weight:800;color:var(--k-muted)}
-.printer-path.ok strong{color:#3f704d}
-.printer-path.none strong{color:#a36b28}
-.printer-path.none.alert strong{color:#a43f3f}
-.path-icon{font-size:14px;line-height:1}
-@media(max-width:600px){.printer-paths{border-radius:14px;padding:11px 12px}.printer-path{font-size:12px}}
-</style>
 </style>
 
 <script>
@@ -2583,92 +2571,145 @@ html[data-theme="light"] .theme-toggle{
 </style>
 
 
-<style id="transparent-header-logo">
-/* BIG LANCHE — marca compacta transparente para o cabeçalho */
-h1::before{
-  content:"" !important;
-  position:relative !important;
-  display:inline-block !important;
-  flex:0 0 40px !important;
-  width:40px !important;
-  height:40px !important;
-  margin-right:10px !important;
-  border-radius:12px !important;
-  background:transparent !important;
-  border:0 !important;
-  box-shadow:none !important;
+<style id="order-control-final">
+.order-control{
+  margin:0 0 18px;
+  padding:14px 15px;
+  display:flex;
+  align-items:center;
+  justify-content:space-between;
+  gap:16px;
+  border:1px solid var(--ui-line);
+  border-radius:16px;
+  background:var(--ui-surface);
+  color:var(--ui-text);
+  box-shadow:none;
 }
 
-/* Hambúrguer minimalista, sem fundo, usando a própria paleta do site. */
-h1::after{
-  content:"" !important;
-  position:absolute !important;
-  left:0 !important;
-  width:40px !important;
-  height:40px !important;
-  pointer-events:none !important;
-  background:
-    radial-gradient(ellipse 4px 2.5px at 31% 27%, #f1c56a 98%, transparent 100%),
-    radial-gradient(ellipse 4px 2.5px at 51% 23%, #f1c56a 98%, transparent 100%),
-    radial-gradient(ellipse 3px 2px at 68% 29%, #f1c56a 98%, transparent 100%),
-    linear-gradient(#e6aa3d,#e6aa3d) 7px 35px / 27px 3px no-repeat,
-    linear-gradient(#47785a,#47785a) 7px 30px / 27px 4px no-repeat,
-    linear-gradient(#b85a43,#b85a43) 6px 24px / 29px 5px no-repeat,
-    linear-gradient(#f0c15e,#f0c15e) 7px 16px / 27px 7px no-repeat;
-  border-radius:50%;
-  filter:drop-shadow(0 2px 3px rgba(0,0,0,.16));
+.order-control-info{
+  min-width:0;
+  display:flex;
+  flex-direction:column;
+  gap:2px;
 }
 
-/* O topo do pão fica arredondado, dando aspecto de logo em vez de ícone. */
-@media(max-width:760px){
-  .head h1::before{
-    flex-basis:38px !important;
-    width:38px !important;
-    height:38px !important;
-    margin-right:9px !important;
+.order-control-kicker{
+  color:var(--ui-muted);
+  font-size:.72rem;
+  font-weight:800;
+  text-transform:uppercase;
+  letter-spacing:.055em;
+}
+
+.order-control-info strong{
+  font-size:1rem;
+  line-height:1.25;
+}
+
+.order-control-info small{
+  color:var(--ui-muted);
+  font-size:.76rem;
+}
+
+.order-mode-buttons{
+  display:flex;
+  flex:0 0 auto;
+  gap:6px;
+  padding:4px;
+  border-radius:13px;
+  background:var(--ui-surface-alt);
+  border:1px solid var(--ui-line);
+}
+
+.order-mode{
+  min-height:37px;
+  padding:8px 11px;
+  border:1px solid transparent;
+  border-radius:9px;
+  background:transparent;
+  color:var(--ui-muted);
+  font:inherit;
+  font-size:.78rem;
+  font-weight:850;
+  cursor:pointer;
+  white-space:nowrap;
+  transition:background-color .16s ease,color .16s ease,border-color .16s ease,transform .16s ease;
+}
+
+.order-mode:hover{
+  transform:translateY(-1px);
+  color:var(--ui-text);
+}
+
+.order-mode.active[data-order-mode="auto"]{
+  background:var(--ui-brand);
+  color:#fff;
+}
+
+.order-mode.active[data-order-mode="open"]{
+  background:#47785a;
+  color:#fff;
+}
+
+.order-mode.active[data-order-mode="closed"]{
+  background:#a84d44;
+  color:#fff;
+}
+
+.order-control.is-open{
+  border-color:rgba(71,120,90,.35);
+}
+
+.order-control.is-closed{
+  border-color:rgba(168,77,68,.35);
+}
+
+@media(prefers-color-scheme:dark){
+  .order-mode-buttons{
+    background:#2b2019;
+    border-color:#4b382c;
   }
-
-  .head h1::after{
-    width:38px !important;
-    height:38px !important;
-    left:0 !important;
+  .order-mode{
+    color:#cdb9ac;
+  }
+  .order-control.is-open{
+    border-color:#41684c;
+  }
+  .order-control.is-closed{
+    border-color:#6d3e39;
   }
 }
 
-/* Como o h1 já é flex, o pseudo-elemento de logo precisa acompanhar
-   corretamente o fluxo sem criar uma caixa de fundo. */
-.head h1{
-  position:relative !important;
+html[data-theme="dark"] .order-control{
+  background:#30231c !important;
+  color:#fff1d6 !important;
+  border-color:#4b382c !important;
 }
-</style>
-
-
-<style id="transparent-logo-final-override">
-.head h1::before,
-h1::before{
-  background:transparent !important;
-  border:0 !important;
-  box-shadow:none !important;
+html[data-theme="dark"] .order-mode-buttons{
+  background:#2b2019 !important;
+  border-color:#4b382c !important;
+}
+html[data-theme="dark"] .order-mode{
+  color:#cdb9ac !important;
 }
 
 @media(max-width:760px){
-  .head h1::before{
-    background:transparent !important;
-    border:0 !important;
-    box-shadow:none !important;
+  .order-control{
+    align-items:stretch;
+    flex-direction:column;
+    gap:11px;
+    padding:13px;
   }
-}
-</style>
-
-
-<style id="print-test-mobile-fix">
-/* Preview nativo: garante leitura confortável em telas pequenas. */
-@media(max-width:760px){
-  #printTestPaper{
-    font-size:13px !important;
-    line-height:1.5 !important;
-    overflow-wrap:anywhere !important;
-    word-break:break-word !important;
+  .order-mode-buttons{
+    width:100%;
+    display:grid;
+    grid-template-columns:repeat(3,1fr);
+  }
+  .order-mode{
+    width:100%;
+    padding-left:5px;
+    padding-right:5px;
+    font-size:.75rem;
   }
 }
 </style>
@@ -2699,11 +2740,17 @@ h1::before{
 </div>
 <main>
 <div class="toolbar"><button class="primary" id="connect">🖨️ Conectar impressora</button><button id="testPrint">🧪 Testar impressão</button><button id="refresh">Atualizar</button><button id="logout">Sair</button></div>
-<div id="printerPaths" class="printer-paths" aria-live="polite" aria-label="Status das impressoras">
-  <div class="printer-path-title">Caminho de impressão</div>
-  <div id="pathBluetooth" class="printer-path"><span class="path-icon">🔴</span><span>Bluetooth</span><strong>Indisponível</strong></div>
-  <div id="pathUsb" class="printer-path"><span class="path-icon">🔴</span><span>USB / QZ Tray</span><strong>Indisponível</strong></div>
-  <div id="pathNone" class="printer-path none"><span class="path-icon">🟡</span><span>Status geral</span><strong>Detectando...</strong></div>
+<div class="order-control" id="orderControl">
+  <div class="order-control-info">
+    <span class="order-control-kicker">Status dos pedidos</span>
+    <strong id="orderControlTitle">Automático</strong>
+    <small id="orderControlHint">18:30 às 23:30 · Brasília</small>
+  </div>
+  <div class="order-mode-buttons" role="group" aria-label="Controle de pedidos">
+    <button type="button" class="order-mode active" data-order-mode="auto" id="modeAuto">◷ Automático</button>
+    <button type="button" class="order-mode" data-order-mode="open" id="modeOpen">Aberto</button>
+    <button type="button" class="order-mode" data-order-mode="closed" id="modeClosed">Fechado</button>
+  </div>
 </div>
 <div id="orders" class="orders"><div class="empty">Nenhum pedido.</div></div>
 </main>
@@ -2723,66 +2770,26 @@ async function api(p,o={}){const r=await fetch(API_URL+p,{cache:"no-store",crede
 async function checkAuth(){try{const r=await fetch(API_URL+"/api/auth",{cache:"no-store",credentials:"same-origin"});if(r.ok){showApp();return true}}catch(e){}showLogin();return false}
 async function doLogin(password){const r=await fetch(API_URL+"/api/auth",{method:"POST",credentials:"same-origin",headers:{"Content-Type":"application/json"},body:JSON.stringify({password})});if(!r.ok){let msg="Senha incorreta";try{msg=(await r.json()).error||msg}catch(e){}throw Error(msg)}showApp();await load();}
 async function doLogout(){try{await fetch(API_URL+"/api/auth",{method:"DELETE",credentials:"same-origin"})}catch(e){}showLogin();}
-async function detectPrinterPaths(){
-  const bluetooth = !!window.BIGLANCHE_PRINTER?.bridgeAvailable?.();
-  let bluetoothReady = false;
-  if(bluetooth){
-    try{ bluetoothReady = !!window.BIGLANCHE_PRINTER.ready?.(); }catch(e){}
-  }
-
-  let usb = false, usbName = "";
-  try{
-    if(globalThis["qz"]){
-      if(!globalThis["qz"].websocket.isActive()) await globalThis["qz"].websocket.connect();
-      usbName = PRINT_PRINTER || await globalThis["qz"].printers.getDefault() || "";
-      usb = !!usbName;
-    }
-  }catch(e){
-    usb = false;
-  }
-
-  const btEl=$("#pathBluetooth"), usbEl=$("#pathUsb"), noneEl=$("#pathNone");
-  btEl.classList.toggle("ok", bluetoothReady);
-  btEl.querySelector(".path-icon").textContent = bluetoothReady ? "🟢" : "🔴";
-  btEl.querySelector("strong").textContent = bluetoothReady ? "Conectada" : (bluetooth ? "Bridge disponível · não conectada" : "Indisponível");
-
-  usbEl.classList.toggle("ok", usb);
-  usbEl.querySelector(".path-icon").textContent = usb ? "🟢" : "🔴";
-  usbEl.querySelector("strong").textContent = usb ? `Conectada${usbName ? " · "+usbName : ""}` : "Indisponível";
-
-  const any = bluetoothReady || usb;
-  noneEl.classList.toggle("alert", !any);
-  noneEl.querySelector(".path-icon").textContent = any ? "🟢" : "🔴";
-  noneEl.querySelector("span:nth-child(2)").textContent = any ? "Caminho disponível" : "Nenhuma impressora disponível";
-  noneEl.querySelector("strong").textContent = any ? (bluetoothReady && usb ? "Bluetooth + USB/QZ Tray" : bluetoothReady ? "Bluetooth" : "USB/QZ Tray") : "Conecte uma impressora";
-
-  return {bluetooth, bluetoothReady, usb, usbName, any};
-}
-
 async function connectPrinter(){
   try{
     if(window.BIGLANCHE_PRINTER.bridgeAvailable()){
       await window.BIGLANCHE_PRINTER.connect();
       qzReady=false;
-      status("Impressora conectada — Bluetooth",true);
-      await detectPrinterPaths();
+      status("Impressora Android conectada",true);
       return;
     }
-    if(!globalThis["qz"])throw Error("QZ Tray não carregado");
-    if(!globalThis["qz"].websocket.isActive())await globalThis["qz"].websocket.connect();
-    const p=PRINT_PRINTER||await globalThis["qz"].printers.getDefault();
-    if(!p)throw Error("Nenhuma impressora USB/QZ Tray encontrada");
+    if(!window.qz)throw Error("QZ Tray não carregado");
+    if(!qz.websocket.isActive())await qz.websocket.connect();
+    const p=PRINT_PRINTER||await qz.printers.getDefault();
+    if(!p)throw Error("Sem impressora");
     qzReady=true;
-    status("Impressora conectada — USB/QZ Tray",true);
-    await detectPrinterPaths();
+    status("Impressora: "+p,true);
   }catch(e){
     qzReady=false;
-    await detectPrinterPaths();
-    status("Nenhuma impressora disponível");
+    status("Impressora não conectada");
     alert(e.message);
   }
 }
-
 function pedidoTime(value){
   if(!value) return "";
   const d = new Date(value);
@@ -2852,9 +2859,9 @@ async function printOrder(id,automatic=false){
       return true;
     }
     if(!qzReady){browserPrint(o);return}
-    const p=PRINT_PRINTER||await globalThis["qz"].printers.getDefault(),
-          c=globalThis["qz"].configs.create(p,{jobName:`BIG LANCHE Pedido #${o.number}`});
-    await globalThis["qz"].print(c,[{type:"raw",format:"command",flavor:"plain",data:raw}]);
+    const p=PRINT_PRINTER||await qz.printers.getDefault(),
+          c=qz.configs.create(p,{jobName:`BIG LANCHE Pedido #${o.number}`});
+    await qz.print(c,[{type:"raw",format:"command",flavor:"plain",data:raw}]);
     await setStatus(id,"printed");
     return true;
   }catch(e){
@@ -2864,73 +2871,38 @@ async function printOrder(id,automatic=false){
 }
 function browserPrint(o){const w=window.open("","_blank","width=420,height=700");if(!w)return;w.document.write(`<style>body{font:14px monospace;width:80mm;margin:0;padding:5mm}.i{font-weight:700;margin:6px 0}.a{padding-left:10px}.t{font-size:18px;font-weight:900;margin-top:12px}</style><h2>BIG LANCHE<br>Pedido #${esc(o.number)}</h2>${(o.cart||[]).map(i=>`<div class=i>${i.quantity}x ${esc(i.name)}${(i.additions||[]).map(a=>`<div class=a>+ ${a.quantity||1}x ${esc(a.name)}</div>`).join("")}${i.note?`<div class=a><b>Obs.:</b> ${esc(i.note)}</div>`:""}</div>`).join("")}<hr>Entrega: ${esc(o.delivery?.city)}<br>Endereco: ${esc(o.delivery?.address)}<br>Pagamento: ${esc(o.payment)}<div class=t>TOTAL: ${money(o.total)}</div><script>window.print()<\/script>`);w.document.close();}
 async function testPrintSimulation(){
-  /*
-    TESTE REAL DA IMPRESSORA.
-    O texto é fixo de propósito: serve somente para validar a conexão,
-    o envio ESC/POS e se a impressora consegue receber/alimentar o papel.
-  */
-  const rawTest =
-    "\x1B\x40" +                  // inicializa ESC/POS
-    "\x1B\x61\x00" +              // alinhamento à esquerda
-    "Teste App big lanche\n" +
-    "\n" +
-    "pedido 000\n" +
-    "\n" +
-    "teste\n" +
-    "\n" +
-    "Endereço:\n" +
-    "\n" +
-    "\n" +
-    "\x1D\x56\x00";                // corte, se suportado
+  const o=orders.find(x=>x.status!=="ready") || {
+    number:"TESTE",
+    cart:[{quantity:1,name:"Pastel mistão",additions:[{quantity:1,name:"Queijo"}],note:"sem salada"}],
+    delivery:{city:"Maragogi",fee:10,address:"Rua de teste, 123"},
+    payment:"Pix",
+    total:30
+  };
 
   try{
-    const paths = await detectPrinterPaths();
+    /* Android: usa o simulador nativo já existente no APK. */
+    if(window.BIGLANCHE_PRINTER?.bridgeAvailable() &&
+       window.AndroidPrinter?.simulatePrint){
+      const preview = receipt(o)
+        .replace(/\\x1B[@aE](?:\\x01|\\x00)?/g, "")
+        .replace(/\\x1D[Vv](?:\\x00|\\x01)?/g, "")
+        .replace(/[\\x00-\\x08\\x0B\\x0C\\x0E-\\x1F]/g, "");
 
-    /* Android / RP80-PLUS: envia para a impressora física. */
-    if(window.BIGLANCHE_PRINTER?.available()){
-      const sent=await window.BIGLANCHE_PRINTER.print(rawTest);
-      if(!sent) throw Error("A impressora não respondeu.");
-      status("Teste de impressão enviado",true);
-      return true;
+      const r=window.AndroidPrinter.simulatePrint(String(preview));
+      if(r && typeof r.then==="function") await r;
+      return;
     }
 
-    if(window.BIGLANCHE_PRINTER?.bridgeAvailable()){
-      throw Error("Conecte a impressora antes de testar.");
+    /* PC/navegador: mostra exatamente o conteúdo de teste sem exigir
+       impressora, QZ Tray ou qualquer instalação adicional. */
+    if(window.__openPrintTestPreview){
+      window.__openPrintTestPreview(o);
+      return;
     }
 
-    /* PC + QZ Tray: também imprime fisicamente. */
-    if(globalThis["qz"]){
-      if(!qzReady){
-        if(!globalThis["qz"].websocket.isActive()) await globalThis["qz"].websocket.connect();
-        const detected=PRINT_PRINTER || await globalThis["qz"].printers.getDefault();
-        if(!detected) throw Error("Nenhuma impressora encontrada.");
-        qzReady=true;
-      }
-
-      const printer=PRINT_PRINTER || await globalThis["qz"].printers.getDefault();
-      if(!printer) throw Error("Nenhuma impressora encontrada.");
-
-      const config=globalThis["qz"].configs.create(
-        printer,
-        {jobName:"BIG LANCHE - Teste de impressão"}
-      );
-
-      await globalThis["qz"].print(config,[{
-        type:"raw",
-        format:"command",
-        flavor:"plain",
-        data:rawTest
-      }]);
-
-      status("Teste de impressão enviado",true);
-      return true;
-    }
-
-    throw Error("Conecte a impressora primeiro.");
+    throw new Error("Não foi possível abrir o teste de impressão.");
   }catch(e){
-    status("Falha no teste de impressão");
-    alert("Falha no teste de impressão: "+(e?.message || e));
-    return false;
+    alert("Falha no teste de impressão: "+(e?.message||e));
   }
 }
 async function setStatus(id,s){
@@ -2952,11 +2924,94 @@ async function deleteOrder(id,number){
     if(e.message!=="AUTH_REQUIRED") alert("Não foi possível excluir o pedido: "+e.message);
   }
 }
+
+let orderMode="auto";
+let orderModeLoaded=false;
+let orderModeTimer=null;
+
+function modeLabel(mode){
+  return mode==="open" ? "Aberto" : mode==="closed" ? "Fechado" : "Automático";
+}
+
+function updateOrderModeUI(data){
+  const mode=String(data?.mode || "auto");
+  const openNow=!!data?.open;
+  orderMode=mode;
+  orderModeLoaded=true;
+
+  const control=$("#orderControl");
+  const title=$("#orderControlTitle");
+  const hint=$("#orderControlHint");
+
+  document.querySelectorAll("[data-order-mode]").forEach(b=>{
+    b.classList.toggle("active",b.dataset.orderMode===mode);
+  });
+
+  control?.classList.toggle("is-open",openNow);
+  control?.classList.toggle("is-closed",!openNow);
+
+  if(title) title.textContent = modeLabel(mode);
+  if(hint){
+    if(mode==="auto"){
+      hint.textContent = openNow
+        ? "Aberto agora · horário automático 18:30–23:30"
+        : "Fechado pelo horário · abre às 18:30";
+    }else if(mode==="open"){
+      hint.textContent = "Aberto manualmente · ignora o horário";
+    }else{
+      hint.textContent = "Fechado manualmente · ignora o horário";
+    }
+  }
+}
+
+async function loadOrderMode(){
+  try{
+    const data=await api("/api/store-status");
+    updateOrderModeUI(data);
+    return data;
+  }catch(e){
+    return null;
+  }
+}
+
+async function setOrderMode(mode){
+  if(!["auto","open","closed"].includes(mode)) return;
+
+  document.querySelectorAll("[data-order-mode]").forEach(b=>b.disabled=true);
+  try{
+    const data=await api("/api/store-status",{
+      method:"PATCH",
+      body:JSON.stringify({mode})
+    });
+    updateOrderModeUI(data);
+    status(
+      mode==="open" ? "Pedidos liberados" :
+      mode==="closed" ? "Pedidos fechados" :
+      "Horário automático ativado",
+      true
+    );
+  }catch(e){
+    if(e.message!=="AUTH_REQUIRED"){
+      alert("Não foi possível alterar o status dos pedidos: "+e.message);
+    }
+  }finally{
+    document.querySelectorAll("[data-order-mode]").forEach(b=>b.disabled=false);
+  }
+}
+
+function startOrderModePolling(){
+  if(orderModeTimer) clearInterval(orderModeTimer);
+  orderModeTimer=setInterval(loadOrderMode,30000);
+}
+
+document.querySelectorAll("[data-order-mode]").forEach(b=>{
+  b.addEventListener("click",()=>setOrderMode(b.dataset.orderMode));
+});
+
 async function load(){try{
   const previous=orders;
   orders=await api("/api/orders");
-  const paths=await detectPrinterPaths();
-  status(paths.any?`Pedidos + impressora — ${paths.bluetoothReady&&paths.usb?"Bluetooth + USB/QZ Tray":paths.bluetoothReady?"Bluetooth":"USB/QZ Tray"}`:"Nenhuma impressora disponível",paths.any);
+  status(qzReady||window.BIGLANCHE_PRINTER?.ready()?"Pedidos + impressora":"Pedidos conectados",true);
   render();
   if(window.BIGLANCHE_PRINTER?.ready()){
     for(const o of orders){
@@ -2976,7 +3031,7 @@ let kitchenPollBusy=false;
 async function pollKitchen(){if(!authenticated||document.hidden||kitchenPollBusy)return;kitchenPollBusy=true;try{await load()}finally{kitchenPollBusy=false}}
 function startKitchenPolling(){if(kitchenPollTimer)clearInterval(kitchenPollTimer);kitchenPollTimer=setInterval(pollKitchen,10000)}
 document.addEventListener("visibilitychange",()=>{if(!document.hidden&&authenticated)pollKitchen()});
-checkAuth().then(ok=>{if(ok){load();startKitchenPolling()}});$("#tabActive").onclick=()=>setTab("active");$("#tabReady").onclick=()=>setTab("ready");
+checkAuth().then(ok=>{if(ok){load();loadOrderMode();startKitchenPolling();startOrderModePolling()}});$("#tabActive").onclick=()=>setTab("active");$("#tabReady").onclick=()=>setTab("ready");
 </script>
 </div>
 <style id="kitchen-mobile-final">
