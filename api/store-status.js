@@ -19,8 +19,8 @@ function brasiliaMinutes() {
 function automaticOpen() {
   const now = brasiliaMinutes();
 
-  return now >= (18 * 60 + 30) &&
-         now <= (23 * 60 + 30);
+  return now >= (18 * 60) &&
+       now <= (23 * 60 + 40);
 }
 
 module.exports = async function handler(req, res) {
@@ -55,8 +55,8 @@ module.exports = async function handler(req, res) {
         mode,
         open,
         schedule: {
-          start: "18:30",
-          end: "23:30",
+          start: "18:00",
+            end: "23:40",
           timezone: "America/Sao_Paulo"
         }
       });
