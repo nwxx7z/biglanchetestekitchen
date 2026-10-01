@@ -32,7 +32,7 @@ button{border:1px solid var(--line);border-radius:10px;padding:9px 12px;backgrou
    O APK expõe window.AndroidPrinter. No navegador normal, mantém o QZ Tray.
 */
 window.BIGLANCHE_PRINTER = {
-  available: () => !!window.AndroidPrinter,
+  available: () => !!window.AndroidPrinter && !!window.AndroidPrinter.isReady && window.AndroidPrinter.isReady(),
   connect: async () => {
     if (!window.AndroidPrinter) throw new Error("Ponte Android não disponível");
     const r = window.AndroidPrinter.connectPrinter();
