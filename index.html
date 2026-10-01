@@ -1413,6 +1413,13 @@ textarea{resize:vertical;min-height:76px}
   box-shadow:0 0 0 3px rgba(202,167,142,.13);
 }
 
+.referencia-entrega{
+  min-height:44px;
+  height:44px;
+  margin-top:8px;
+  resize:none;
+}
+
 @media (max-width:650px){
   .entrega-cidades{
     grid-template-columns:1fr;
@@ -5901,8 +5908,10 @@ header.hero-freefire{position:relative!important;width:100%!important;padding:0!
         </div>
 
         <textarea id="endereco-entrega" class="endereco-entrega"
-          placeholder="Endereço de entrega (rua, número, bairro, referência...)"
+          placeholder="Endereço de entrega (rua, número, bairro...)"
           aria-label="Endereço de entrega"></textarea>
+        <input id="referencia-entrega" class="endereco-entrega referencia-entrega" type="text" maxlength="160"
+          placeholder="Ponto de referência (opcional)" aria-label="Ponto de referência">
       </section>
 
       <section class="pagamento-box" aria-label="Forma de pagamento">
@@ -6210,6 +6219,10 @@ function enderecoEntrega(){
   return $("#endereco-entrega")?.value.trim() || "";
 }
 
+function referenciaEntrega(){
+  return $("#referencia-entrega")?.value.trim() || "";
+}
+
 const total = () => cart.reduce((a,l) => a + l.q * unit(l), 0) + taxaEntrega();
 const juntar = a => a.length < 2 ? a.join("") : a.slice(0,-1).join(", ") + " e " + a[a.length-1];
 const nome = l => {
@@ -6271,6 +6284,7 @@ function mensagem(){
   const pagamento = pagamentoAtual() || "Não informado";
   const cidade = cidadeEntregaAtual();
   const endereco = enderecoEntrega();
+  const referencia = referenciaEntrega();
 
   if (cidade){
     m += entregaConsultarValor()
@@ -6279,6 +6293,9 @@ function mensagem(){
   }
   if (endereco){
     m += `\nEndereço de entrega: ${endereco}`;
+  }
+  if (referencia){
+    m += `\nPonto de referência: ${referencia}`;
   }
 
   m += `\nForma de pagamento: ${pagamento}`;
@@ -6652,17 +6669,14 @@ function pedidoParaCozinha(){
       quantity: Number(l.q || 0),
       price: Number(l.p || 0),
       note: String(l.note || "").trim().slice(0, 300),
-      additions: (l.adds || []).map(a => ({
-        name: a[0],
-        price: Number(a[1] || 0),
-        quantity: Number(a[2] || 1)
-      }))
+      additions: []
     })),
     delivery: {
       city: cidadeEntregaAtual()?.value || "",
       fee: entregaConsultarValor() ? null : taxaEntrega(),
       feeLabel: entregaConsultarValor() ? "Consultar valor" : brl(taxaEntrega()),
-      address: enderecoEntrega()
+      address: enderecoEntrega(),
+      reference: referenciaEntrega()
     },
     payment: pagamentoAtual(),
     notes: $("#obs").value.trim(),
@@ -6748,7 +6762,7 @@ document.addEventListener("input", e => {
     if (l) l.note = note.value.slice(0, 300);
   }
 
-  if (e.target.matches("#endereco-entrega") || e.target.matches("#troco-valor")){
+  if (e.target.matches("#endereco-entrega") || e.target.matches("#referencia-entrega") || e.target.matches("#troco-valor")){
     atualizarCheckoutEntrega();
   }
 });
