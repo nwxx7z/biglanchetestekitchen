@@ -30,8 +30,8 @@ function automaticOpen() {
   const now = brasiliaMinutes();
 
   // Horário automático:
-  // 18:00 até 23:40
-  return now >= (18 * 60) && now <= (23 * 60 + 40);
+  // 17:30 até 23:45
+  return now >= (17 * 60 + 30) && now <= (23 * 60 + 45);
 }
 
 module.exports = async function handler(req, res) {
@@ -42,10 +42,6 @@ module.exports = async function handler(req, res) {
   }
 
   try {
-
-    // =========================
-    // CONSULTAR STATUS
-    // =========================
     if (req.method === "GET") {
       const sql = getSql();
 
@@ -70,16 +66,13 @@ module.exports = async function handler(req, res) {
         mode,
         open,
         schedule: {
-          start: "18:00",
-          end: "23:40",
+          start: "17:30",
+          end: "23:45",
           timezone: "America/Sao_Paulo"
         }
       });
     }
 
-    // =========================
-    // ALTERAR STATUS
-    // =========================
     if (req.method !== "PATCH") {
       return send(res, 405, {
         error: "Método não permitido"
@@ -90,7 +83,9 @@ module.exports = async function handler(req, res) {
       return;
     }
 
-    const requestedMode = String(req.body?.mode || "").trim().toLowerCase();
+    const requestedMode = String(req.body?.mode || "")
+      .trim()
+      .toLowerCase();
 
     if (!MODES.has(requestedMode)) {
       return send(res, 400, {
@@ -137,8 +132,8 @@ module.exports = async function handler(req, res) {
       mode: savedMode,
       open,
       schedule: {
-        start: "18:00",
-        end: "23:40",
+        start: "17:30",
+        end: "23:45",
         timezone: "America/Sao_Paulo"
       }
     });
