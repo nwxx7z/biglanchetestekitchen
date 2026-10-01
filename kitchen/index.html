@@ -141,7 +141,7 @@ const $=s=>document.querySelector(s);
 const money=v=>Number(v||0).toLocaleString("pt-BR",{style:"currency",currency:"BRL"});
 const esc=s=>String(s??"").replace(/[&<>"']/g,c=>({"&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;","'":"&#039;"}[c]));
 const printSafe=s=>String(s??"").normalize("NFD").replace(/[\u0300-\u036f]/g,"").replace(/[^\x20-\x7E\n\r]/g,"");
-function normalizeStoreMode(mode){const value=String(mode||"");return value==="open"||value==="closed"?value:"automatic";}
+function normalizeStoreMode(mode){const value=String(mode||"");return value==="open"||value==="closed"||value==="auto"?(value==="auto"?"automatic":value):"automatic";}
 function status(t,ok=false){$("#status").textContent=t;$("#dot").className="dot "+(ok?"ok":"");}
 function showLogin(message=""){authenticated=false;$("#app").classList.add("hidden");$("#loginScreen").classList.remove("hidden");$("#loginError").textContent=message;setTimeout(()=>$("#loginPassword").focus(),0)}
 function showApp(){authenticated=true;$("#loginScreen").classList.add("hidden");$("#app").classList.remove("hidden")}
@@ -205,21 +205,14 @@ function aplicarTema(theme){
 }
 function iniciarTema(){
   let saved="";
-  try{saved=localStorage.getItem("big-lanche-kitchen-theme-v2")||"";}catch(e){}
-  themeMode=saved==="dark"||saved==="light"?saved:"system";
-  const systemTheme=window.matchMedia&&window.matchMedia("(prefers-color-scheme: dark)").matches?"dark":"light";
-  aplicarTema(themeMode==="system"?systemTheme:themeMode);
-  const preference=window.matchMedia?window.matchMedia("(prefers-color-scheme: dark)"):null;
-  if(preference){
-    const followSystem=event=>{if(themeMode==="system")aplicarTema(event.matches?"dark":"light")};
-    if(preference.addEventListener)preference.addEventListener("change",followSystem);
-    else if(preference.addListener)preference.addListener(followSystem);
-  }
+  try{saved=localStorage.getItem("big-lanche-kitchen-theme-v3")||"";}catch(e){}
+  themeMode=saved==="dark"||saved==="light"?saved:"light";
+  aplicarTema(themeMode);
 }
 function alternarTema(){
   themeMode=document.documentElement.dataset.theme==="dark"?"light":"dark";
   aplicarTema(themeMode);
-  try{localStorage.setItem("big-lanche-kitchen-theme-v2",themeMode);}catch(e){}
+  try{localStorage.setItem("big-lanche-kitchen-theme-v3",themeMode);}catch(e){}
 }
 async function carregarModoLoja(){
   try{
@@ -241,7 +234,7 @@ async function definirModoLoja(mode){
   buttons.forEach(button=>button.disabled=true);
   $("#storeModeMessage").textContent="Salvando...";
   try{
-    const response=await fetch(`${API_URL}/api/store-status`,{method:"PATCH",credentials:"same-origin",headers:{"Content-Type":"application/json"},body:JSON.stringify({mode})});
+    const response=await fetch(`${API_URL}/api/store-status`,{method:"PATCH",credentials:"same-origin",headers:{"Content-Type":"application/json"},body:JSON.stringify({mode:mode==="automatic"?"auto":mode})});
     let data={};
     try{data=await response.json();}catch(e){}
     if(!response.ok)throw new Error(data.error||"O servidor não aceitou a alteração.");
