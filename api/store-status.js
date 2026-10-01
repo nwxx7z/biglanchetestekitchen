@@ -1,6 +1,16 @@
 const { getSql, cors, send, requireKitchenAuth } = require("./_lib");
 
-const MODES = new Set(["auto", "open", "closed"]);
+const MODES = new Set(["auto", "automatic", "open", "closed"]);
+
+function normalizeMode(mode) {
+  const value = String(mode || "").trim().toLowerCase();
+
+  if (value === "automatic") return "auto";
+  if (value === "open") return "open";
+  if (value === "closed") return "closed";
+
+  return "auto";
+}
 
 function brasiliaMinutes() {
   const parts = new Intl.DateTimeFormat("en-US", {
@@ -19,8 +29,9 @@ function brasiliaMinutes() {
 function automaticOpen() {
   const now = brasiliaMinutes();
 
-  return now >= (18 * 60) &&
-       now <= (23 * 60 + 40);
+  // Horário automático:
+  // 18:00 até 23:40
+  return now >= (18 * 60) && now <= (23 * 60 + 40);
 }
 
 module.exports = async function handler(req, res) {
@@ -31,7 +42,10 @@ module.exports = async function handler(req, res) {
   }
 
   try {
-    // Consultar status da loja
+
+    // =========================
+    // CONSULTAR STATUS
+    // =========================
     if (req.method === "GET") {
       const sql = getSql();
 
@@ -42,7 +56,8 @@ module.exports = async function handler(req, res) {
         LIMIT 1
       `;
 
-      const mode = String(rows[0]?.mode || "auto");
+      const rawMode = String(rows[0]?.mode || "auto");
+      const mode = normalizeMode(rawMode);
 
       const open =
         mode === "open"
@@ -56,37 +71,50 @@ module.exports = async function handler(req, res) {
         open,
         schedule: {
           start: "18:00",
-            end: "23:40",
+          end: "23:40",
           timezone: "America/Sao_Paulo"
         }
       });
     }
 
-    // Alterar status da loja
+    // =========================
+    // ALTERAR STATUS
+    // =========================
     if (req.method !== "PATCH") {
       return send(res, 405, {
         error: "Método não permitido"
       });
     }
 
-    // Somente a cozinha pode alterar
     if (!requireKitchenAuth(req, res)) {
       return;
     }
 
-    const mode = String(req.body?.mode || "");
+    const requestedMode = String(req.body?.mode || "").trim().toLowerCase();
 
-    if (!MODES.has(mode)) {
+    if (!MODES.has(requestedMode)) {
       return send(res, 400, {
-        error: "Modo inválido"
+        error: "Modo inválido",
+        received: requestedMode,
+        allowed: ["auto", "automatic", "open", "closed"]
       });
     }
+
+    const mode = normalizeMode(requestedMode);
 
     const sql = getSql();
 
     const rows = await sql`
-      INSERT INTO store_settings (id, mode, updated_at)
-      VALUES (1, ${mode}, NOW())
+      INSERT INTO store_settings (
+        id,
+        mode,
+        updated_at
+      )
+      VALUES (
+        1,
+        ${mode},
+        NOW()
+      )
       ON CONFLICT (id)
       DO UPDATE SET
         mode = EXCLUDED.mode,
@@ -94,7 +122,9 @@ module.exports = async function handler(req, res) {
       RETURNING mode
     `;
 
-    const savedMode = String(rows[0]?.mode || mode);
+    const savedMode = normalizeMode(
+      String(rows[0]?.mode || mode)
+    );
 
     const open =
       savedMode === "open"
@@ -107,8 +137,8 @@ module.exports = async function handler(req, res) {
       mode: savedMode,
       open,
       schedule: {
-        start: "18:30",
-        end: "23:30",
+        start: "18:00",
+        end: "23:40",
         timezone: "America/Sao_Paulo"
       }
     });
