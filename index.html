@@ -5859,6 +5859,18 @@ img,svg,video,canvas{max-width:100%}
   .cart-panel{width:calc(100vw - 4px)!important}
 }
 </style>
+<style id="delivery-location-dropdown">
+.cidade-opcao-sao-bento,.local-entrega{grid-column:1/-1}
+.local-entrega{display:grid;grid-template-rows:0fr;opacity:0;margin:0;visibility:hidden;pointer-events:none;transition:grid-template-rows .28s ease,opacity .2s ease,margin .28s ease,visibility .28s}
+.local-entrega.is-visible{grid-template-rows:1fr;opacity:1;margin:1px 0 2px;visibility:visible;pointer-events:auto}
+.local-entrega-inner{min-height:0;overflow:hidden}
+.local-entrega-label{display:block;margin:0 0 6px;color:#fff2e8;font-size:.76rem;font-weight:750}
+.local-entrega-select{width:100%;min-height:46px;box-sizing:border-box;border:1px solid #987a64;border-radius:11px;padding:9px 11px;background:#3f3027;color:#fff2e8;font:600 .84rem/1.3 "DM Sans",sans-serif}
+.local-entrega-select:focus{outline:none;border-color:#e0b78f;box-shadow:0 0 0 3px rgba(224,183,143,.16)}
+.local-entrega-select option{background:#3f3027;color:#fff2e8}
+@media(max-width:650px){.cidade-opcao-sao-bento,.local-entrega{grid-column:1}}
+@media(prefers-reduced-motion:reduce){.local-entrega{transition:none}}
+</style>
 </head>
 <body>
 <header class="hero-freefire" aria-label="BIG LANCHE">
@@ -5907,14 +5919,32 @@ img,svg,video,canvas{max-width:100%}
         <div class="entrega-title">Entrega</div>
         <div class="entrega-subtitle">Selecione a cidade e informe o endereço de entrega.</div>
 
-        <div class="entrega-cidades" role="radiogroup" aria-label="Cidade de entrega">
-          <label class="cidade-opcao">
-            <input type="radio" name="cidade-entrega" value="São Bento" data-fee="0" data-consulta="true">
+        <div class="entrega-cidades" role="group" aria-label="Cidade de entrega">
+          <label class="cidade-opcao cidade-opcao-sao-bento">
+            <input type="radio" name="cidade-entrega" value="São Bento" data-fee="0">
             <span class="cidade-info">
               <strong>São Bento</strong>
-              <small>Consultar valor</small>
+              <small>Escolha o local abaixo</small>
             </span>
           </label>
+
+          <div id="sao-bento-local-wrap" class="local-entrega" aria-hidden="true">
+            <div class="local-entrega-inner">
+              <label class="local-entrega-label" for="sao-bento-local">Local de entrega em São Bento</label>
+              <select id="sao-bento-local" class="local-entrega-select" aria-label="Local de entrega em São Bento" disabled>
+                <option value="" selected>Selecione o local de entrega</option>
+                <option value="Rua da pista" data-fee="3">Rua da pista · R$ 3,00</option>
+                <option value="Rua da praia" data-fee="3">Rua da praia · R$ 3,00</option>
+                <option value="Rua de trás" data-fee="3">Rua de trás · R$ 3,00</option>
+                <option value="Concórdia" data-fee="4">Concórdia · R$ 4,00</option>
+                <option value="Depois da rua da discoteca" data-fee="4">Depois da rua da discoteca · R$ 4,00</option>
+                <option value="Pousada" data-fee="4">Pousada · R$ 4,00</option>
+                <option value="Depois do loteamento do jura" data-fee="5">Depois do loteamento do jura · R$ 5,00</option>
+                <option value="Maruim" data-fee="5">Maruim · R$ 5,00</option>
+                <option value="Sítio passagem" data-fee="6">Sítio passagem · R$ 6,00</option>
+              </select>
+            </div>
+          </div>
 
           <label class="cidade-opcao">
             <input type="radio" name="cidade-entrega" value="Maragogi" data-fee="10">
@@ -5936,8 +5966,8 @@ img,svg,video,canvas{max-width:100%}
         <textarea id="endereco-entrega" class="endereco-entrega"
           placeholder="Endereço de entrega (rua, número, bairro...)"
           aria-label="Endereço de entrega"></textarea>
-        <input id="referencia-entrega" class="endereco-entrega referencia-entrega" type="text" maxlength="160"
-          placeholder="Ponto de referência (opcional)" aria-label="Ponto de referência">
+        <input id="referencia-entrega" class="endereco-entrega referencia-entrega" type="text" maxlength="160" required
+          placeholder="Ponto de referência (obrigatório)" aria-label="Ponto de referência obrigatório">
       </section>
 
       <section class="pagamento-box" aria-label="Forma de pagamento">
@@ -6221,19 +6251,44 @@ function iniciarStatusPedidos(){
 
 const unit = l => Number(l.p || 0) + l.adds.reduce((a,x) => a + Number(x[1] || 0) * Math.max(1, Number(x[2] || 1)), 0);
 
-const CIDADES_ENTREGA = {
-  "São Bento": null,
-  "Maragogi": 10,
-  "Japaratinga": 10
-};
+const CIDADES_ENTREGA = Object.freeze({"Maragogi":10,"Japaratinga":10});
 
 function cidadeEntregaAtual(){
   return document.querySelector('input[name="cidade-entrega"]:checked');
 }
 
+function localEntregaAtual(){
+  return $("#sao-bento-local")?.value || "";
+}
+
+function cidadeEntregaDescricao(){
+  const cidade = cidadeEntregaAtual()?.value || "";
+  const local = localEntregaAtual();
+  return cidade === "São Bento" && local ? cidade + " · " + local : cidade;
+}
+
+function atualizarLocalSaoBento(){
+  const mostrar = cidadeEntregaAtual()?.value === "São Bento";
+  const wrap = $("#sao-bento-local-wrap");
+  const select = $("#sao-bento-local");
+  if (wrap){
+    wrap.classList.toggle("is-visible", mostrar);
+    wrap.setAttribute("aria-hidden", String(!mostrar));
+  }
+  if (select){
+    select.disabled = !mostrar;
+    if (!mostrar) select.value = "";
+  }
+}
+
 function taxaEntrega(){
   const cidade = cidadeEntregaAtual();
-  return cidade ? Number(cidade.dataset.fee || 0) : 0;
+  if (!cidade) return 0;
+  if (cidade.value === "São Bento"){
+    const local = $("#sao-bento-local")?.selectedOptions[0];
+    return local ? Number(local.dataset.fee || 0) : 0;
+  }
+  return Number(CIDADES_ENTREGA[cidade.value] ?? cidade.dataset.fee ?? 0);
 }
 
 function entregaConsultarValor(){
@@ -6249,10 +6304,25 @@ function referenciaEntrega(){
   return $("#referencia-entrega")?.value.trim() || "";
 }
 
+function entregaCompleta(){
+  const cidade = cidadeEntregaAtual();
+  return !!cidade && (cidade.value !== "São Bento" || !!localEntregaAtual()) &&
+    !!enderecoEntrega() && !!referenciaEntrega();
+}
+
+function entregaFaltante(){
+  const cidade = cidadeEntregaAtual();
+  if (!cidade) return "Selecione a cidade de entrega";
+  if (cidade.value === "São Bento" && !localEntregaAtual()) return "Escolha um local em São Bento";
+  if (!enderecoEntrega()) return "Informe o endereço de entrega";
+  if (!referenciaEntrega()) return "Informe o ponto de referência";
+  return "";
+}
+
 function enderecoEntregaParaCozinha(){
   const endereco = enderecoEntrega();
   const referencia = referenciaEntrega();
-  return referencia ? `${endereco}\nPonto de referência: ${referencia}` : endereco;
+  return referencia ? endereco + "\nPonto de referência: " + referencia : endereco;
 }
 
 const total = () => cart.reduce((a,l) => a + l.q * unit(l), 0) + taxaEntrega();
@@ -6320,8 +6390,8 @@ function mensagem(){
 
   if (cidade){
     m += entregaConsultarValor()
-      ? `\nCidade de entrega: ${cidade.value} · Taxa: Consultar valor`
-      : `\nCidade de entrega: ${cidade.value} · Taxa ${brl(taxaEntrega())}`;
+      ? `\nCidade de entrega: ${cidadeEntregaDescricao()} · Taxa: Consultar valor`
+      : `\nCidade de entrega: ${cidadeEntregaDescricao()} · Taxa ${brl(taxaEntrega())}`;
   }
   if (endereco){
     m += `\nEndereço de entrega: ${endereco}`;
@@ -6451,7 +6521,7 @@ function refresh(){
       : `<button data-u="${l.u}" data-d="-1" aria-label="Remover um ${esc(l.n)}">−</button><button data-u="${l.u}" data-d="1" aria-label="Adicionar um ${esc(l.n)}">+</button>`;
     return `<div class="linha"><div class="lt"><b>${l.q}x ${esc(l.n)}</b>${l.juice && l.flavor ? ` <span class="suco-sabor-resumo">· ${esc(l.flavor)}</span>` : ""} · ${brl(l.q * unit(l))}${juiceOptions}${chips}<textarea class="item-note" data-note-u="${l.u}" maxlength="300" placeholder="Observação deste item (ex.: sem salada, sem bacon, sem tomate)">${esc(l.note || "")}</textarea></div>${btns}</div>`;
   }).join("") + `<div id="total">Total: ${brl(total())}</div>` : `<p class="nota">Nenhum item escolhido ainda.</p>`;
-  const entregaValida = !!cidadeEntregaAtual() && !!enderecoEntrega();
+  const entregaValida = entregaCompleta();
   const pagamentoValido = !!document.querySelector('input[name="pagamento"]:checked') && trocoValido();
   const horarioValido = pedidosAbertos();
   const saboresValidos = cart.every(l => !l.juice || !!l.flavor);
@@ -6466,7 +6536,7 @@ function refresh(){
       : !saboresValidos
         ? "Escolha o sabor do suco"
         : !entregaValida
-          ? "Informe a entrega para continuar"
+          ? entregaFaltante()
           : !pagamentoValido
             ? "Escolha a forma de pagamento"
             : `Enviar pelo WhatsApp · ${brl(total())}`;
@@ -6704,7 +6774,8 @@ function pedidoParaCozinha(){
       additions: []
     })),
     delivery: {
-      city: cidadeEntregaAtual()?.value || "",
+      city: cidadeEntregaDescricao(),
+      locality: localEntregaAtual(),
       fee: entregaConsultarValor() ? null : taxaEntrega(),
       feeLabel: entregaConsultarValor() ? "Consultar valor" : brl(taxaEntrega()),
       address: enderecoEntregaParaCozinha(),
@@ -6751,7 +6822,7 @@ $("#copiar").addEventListener("click", async () => {
 });
 
 function atualizarCheckoutEntrega(){
-  const entregaValida = !!cidadeEntregaAtual() && !!enderecoEntrega();
+  const entregaValida = entregaCompleta();
   const pagamentoValido = !!document.querySelector('input[name="pagamento"]:checked') && trocoValido();
   const checkoutValido = entregaValida && pagamentoValido;
 
@@ -6761,7 +6832,7 @@ function atualizarCheckoutEntrega(){
   $("#enviar").textContent = !cart.length
     ? "Escolha um item para enviar"
     : !entregaValida
-      ? "Informe a entrega para continuar"
+      ? entregaFaltante()
       : !document.querySelector('input[name="pagamento"]:checked')
         ? "Escolha a forma de pagamento"
         : !trocoValido()
@@ -6777,8 +6848,10 @@ function atualizarCheckoutEntrega(){
 }
 
 document.addEventListener("change", e => {
+  if (e.target.matches('input[name="cidade-entrega"]')) atualizarLocalSaoBento();
   if (
     e.target.matches('input[name="cidade-entrega"]') ||
+    e.target.matches("#sao-bento-local") ||
     e.target.matches('input[name="pagamento"]') ||
     e.target.matches('input[name="troco"]')
   ){
@@ -6821,6 +6894,7 @@ function initPremiumReveal(){
 }
 
 atualizarTrocoUI();
+atualizarLocalSaoBento();
 buildMenu(); refresh(); initPremiumReveal();
 // ===== LOCALIZAÇÃO =====
 const LOJA = {lat:-9.0586965, lng:-35.2420895};
