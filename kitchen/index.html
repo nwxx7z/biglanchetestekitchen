@@ -167,16 +167,40 @@ function simulatePrint(){
   const o=orders.find(x=>x.status!=="ready") || orders[0];
   if(!o){alert("Não há nenhum pedido para testar.");return;}
   const raw=receipt(o);
-  // Remove comandos ESC/POS somente para a visualização; eles continuam sendo enviados na impressão real.
+  // Remove os bytes de controle ESC/POS apenas da visualização.
   const preview=raw
-    .replace(/\x1B[\s\S]?/g,"")
-    .replace(/\x1D[\s\S]?/g,"")
+    .replace(/\x1B(?:[\x00-\xFF])/g,"")
+    .replace(/\x1D(?:[\x00-\xFF])/g,"")
     .replace(/[\x00-\x08\x0B\x0C\x0E-\x1F\x7F]/g,"")
     .trim();
-  const w=window.open("","_blank","width=430,height=760");
-  if(!w){alert("Permita pop-ups para visualizar o teste de impressão.");return;}
-  w.document.write(`<!doctype html><html lang="pt-BR"><head><meta charset="utf-8"><title>Teste de impressão</title><style>body{font-family:Arial,sans-serif;margin:0;background:#f3eee8;color:#2c211a;padding:18px}.box{background:#fffaf5;border:1px solid #dfd3c8;border-radius:14px;padding:18px;max-width:390px;margin:auto}h2{margin:0 0 6px}p{color:#6f6259}.receipt{background:#fff;margin-top:16px;padding:16px;border:1px dashed #bbb;white-space:pre-wrap;font:14px/1.45 monospace}button{margin-top:16px;padding:10px 16px;border:0;border-radius:9px;background:#5f493a;color:#fff;font-size:15px}</style></head><body><div class="box"><h2>🧪 Simulação de impressão</h2><p>Nenhum dado foi enviado para uma impressora. Esta é apenas uma prévia.</p><div class="receipt">${esc(preview)}</div><button onclick="window.print()">🖨️ Imprimir prévia</button></div></body></html>`);
-  w.document.close();
+
+  let modal=document.getElementById("printTestModal");
+  if(modal) modal.remove();
+
+  modal=document.createElement("div");
+  modal.id="printTestModal";
+  modal.style.cssText="position:fixed;inset:0;z-index:9999;background:rgba(0,0,0,.58);display:flex;align-items:center;justify-content:center;padding:18px";
+  modal.innerHTML=`
+    <div style="width:min(560px,100%);max-height:90vh;overflow:auto;background:#fffaf5;color:#2c211a;border:1px solid #dfd3c8;border-radius:16px;padding:20px;box-shadow:0 18px 50px rgba(0,0,0,.3)">
+      <h2 style="margin:0 0 6px">🧪 Simulação de impressão</h2>
+      <p style="color:#6f6259;margin:0 0 14px">Nenhum dado foi enviado para uma impressora. Esta é apenas uma prévia.</p>
+      <div style="background:#fff;margin-top:10px;padding:16px;border:1px dashed #bbb;white-space:pre-wrap;font:14px/1.45 monospace;overflow:auto">${esc(preview)}</div>
+      <div style="display:flex;gap:8px;flex-wrap:wrap;margin-top:16px">
+        <button id="closePrintTest" style="padding:10px 16px;border:1px solid #dfd3c8;border-radius:9px;background:#fff;color:#2c211a;font-size:15px">Fechar</button>
+        <button id="printPreview" style="padding:10px 16px;border:0;border-radius:9px;background:#5f493a;color:#fff;font-size:15px">🖨️ Imprimir prévia</button>
+      </div>
+    </div>`;
+  document.body.appendChild(modal);
+
+  const close=()=>modal.remove();
+  document.getElementById("closePrintTest").onclick=close;
+  document.getElementById("printPreview").onclick=()=>{
+    const w=window.open("","_blank","width=430,height=760");
+    if(!w){alert("Permita pop-ups para imprimir a prévia.");return;}
+    w.document.write(`<!doctype html><html lang="pt-BR"><head><meta charset="utf-8"><title>Teste de impressão</title><style>body{font:14px monospace;width:80mm;margin:0;padding:5mm}.t{font-size:18px;font-weight:900}</style></head><body>${esc(preview).replace(/\n/g,"<br>")}<script>window.print()<\/script></body></html>`);
+    w.document.close();
+  };
+  modal.addEventListener("click",e=>{if(e.target===modal)close()});
 }
 async function printOrder(id,automatic=false){
   const o=orders.find(x=>x.id===id);
