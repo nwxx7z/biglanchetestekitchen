@@ -2673,13 +2673,13 @@ h1::before{
 }
 </style>
 
-<style id="auto-print-toggle-style">
-#autoPrintToggle{font-weight:800}
-#autoPrintToggle.auto-print-off{opacity:.78}
-#autoPrintToggle.auto-print-on{border-color:#4f7b5c}
-@media(max-width:760px){
-  #autoPrintToggle{flex:1 1 100%}
-}
+<style id="store-controls-mobile">
+.store-control{margin:10px 0 14px;padding:13px 14px;border:1px solid var(--ui-border,#d9cec5);border-radius:16px;background:var(--ui-card,#fff);box-shadow:0 3px 12px rgba(0,0,0,.05)}
+.store-control-head{display:flex;align-items:center;justify-content:space-between;gap:10px;margin-bottom:10px}.store-control-head strong{display:block;font-size:.96rem}.store-control-head small{display:block;margin-top:2px;opacity:.7;font-size:.76rem}.store-status-dot{width:11px;height:11px;flex:0 0 11px;border-radius:50%;background:#d94b3d;box-shadow:0 0 0 4px rgba(217,75,61,.12)}.store-status-dot.open{background:#4d9b68;box-shadow:0 0 0 4px rgba(77,155,104,.13)}
+.store-modes{display:grid;grid-template-columns:repeat(3,1fr);gap:8px}.store-modes button{min-height:44px;border:1px solid var(--ui-border,#d9cec5);border-radius:12px;background:var(--ui-bg,#f7f3ef);color:var(--ui-text,#3b3029);font:700 .82rem/1.1 inherit;padding:8px;cursor:pointer;touch-action:manipulation}.store-modes button.selected{border-color:#b94a38;background:#fff0eb;color:#b53e2d;box-shadow:0 0 0 2px rgba(185,74,56,.08)}.store-modes button:disabled{opacity:.55;cursor:wait}
+#autoPrintToggle.auto-print-on{border-color:#4d9b68;background:#edf8f0;color:#28613b}#autoPrintToggle.auto-print-off{border-color:#d9cec5;background:#f4f0ec;color:#5f544d}
+@media(max-width:760px){.store-control{margin:8px 0 12px;padding:11px}.store-modes{grid-template-columns:1fr 1fr}.store-modes button:last-child{grid-column:1/-1}.toolbar{display:grid!important;grid-template-columns:1fr 1fr!important;gap:8px!important}.toolbar button{min-height:44px!important;width:100%!important;margin:0!important}.toolbar #connect{grid-column:1/-1}.store-control-head strong{font-size:.92rem}}
+@media(max-width:390px){.store-modes button{font-size:.78rem}.toolbar{gap:7px!important}}
 </style>
 </head>
 <body>
@@ -2707,11 +2707,18 @@ h1::before{
 </div>
 <main>
 <div class="toolbar">
-  <button class="primary" id="connect">🖨️ Conectar impressora</button>
-  <button id="testPrint">🧪 Testar impressão</button>
-  <button id="autoPrintToggle" type="button" aria-pressed="true">⚡ Impressão automática: ON</button>
-  <button id="refresh">Atualizar</button>
-  <button id="logout">Sair</button>
+<button class="primary" id="connect">🖨️ Conectar impressora</button>
+<button id="testPrint">🧪 Testar impressão</button>
+<button id="autoPrintToggle" type="button" aria-pressed="true">⚡ Impressão automática: ON</button>
+<button id="refresh">Atualizar</button><button id="logout">Sair</button>
+</div>
+<div class="store-control" id="storeControl">
+  <div class="store-control-head"><div><strong>Controle dos pedidos</strong><small id="storeStatusText">Carregando status...</small></div><span id="storeStatusDot" class="store-status-dot"></span></div>
+  <div class="store-modes" role="group" aria-label="Modo dos pedidos">
+    <button type="button" data-store-mode="open">🟢 Aberto</button>
+    <button type="button" data-store-mode="closed">🔴 Fechado</button>
+    <button type="button" data-store-mode="automatic">◷ Automático</button>
+  </div>
 </div>
 <div id="printerPaths" class="printer-paths" aria-live="polite" aria-label="Status das impressoras">
   <div class="printer-path-title">Caminho de impressão</div>
@@ -2728,7 +2735,8 @@ let autoPrintSeen=new Set();
 let autoPrintBusy=new Set();
 let autoPrintEnabled=true;
 let autoPrintInitialized=false;
-let autoPrintStorageKey="big-lanche-auto-print-v1";
+const autoPrintStorageKey="big-lanche-auto-print-v1";
+let storeMode="auto";
 const $=s=>document.querySelector(s);
 const money=v=>Number(v||0).toLocaleString("pt-BR",{style:"currency",currency:"BRL"});
 const esc=s=>String(s??"").replace(/[&<>"']/g,c=>({"&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;","'":"&#039;"}[c]));
@@ -2800,6 +2808,78 @@ async function connectPrinter(){
   }
 }
 
+function normalizeStoreMode(mode){
+  const v=String(mode||"").trim().toLowerCase();
+  return v==="automatic"?"automatic":v==="open"?"open":v==="closed"?"closed":"automatic";
+}
+function renderStoreMode(){
+  const normalized=normalizeStoreMode(storeMode);
+  document.querySelectorAll("[data-store-mode]").forEach(b=>b.classList.toggle("selected",b.dataset.storeMode===normalized));
+  const text=$("#storeStatusText"),dot=$("#storeStatusDot");
+  if(!text||!dot)return;
+  let label="";
+  if(normalized==="open") label="Pedidos abertos manualmente";
+  else if(normalized==="closed") label="Pedidos fechados manualmente";
+  else label="Automático · 18:00 às 23:40";
+  text.textContent=label;
+  dot.className="store-status-dot "+(normalized==="closed"?"closed":"open");
+}
+async function loadStoreMode(){
+  try{
+    const r=await fetch(API_URL+"/api/store-status",{cache:"no-store",credentials:"same-origin"});
+    if(!r.ok)throw Error("status");
+    const data=await r.json();
+    storeMode=normalizeStoreMode(data.mode);
+    renderStoreMode();
+  }catch(e){
+    const text=$("#storeStatusText"); if(text)text.textContent="Não foi possível consultar o status";
+  }
+}
+async function setStoreMode(mode){
+  const requested=normalizeStoreMode(mode);
+  const apiMode=requested==="automatic"?"auto":requested;
+  document.querySelectorAll("[data-store-mode]").forEach(b=>b.disabled=true);
+  try{
+    const r=await fetch(API_URL+"/api/store-status",{method:"PATCH",cache:"no-store",credentials:"same-origin",headers:{"Content-Type":"application/json"},body:JSON.stringify({mode:apiMode})});
+    const data=await r.json().catch(()=>({}));
+    if(!r.ok)throw Error(data.error||"Não foi possível alterar o modo");
+    storeMode=normalizeStoreMode(data.mode);
+    renderStoreMode();
+    status(storeMode==="open"?"Pedidos abertos manualmente":storeMode==="closed"?"Pedidos fechados manualmente":"Pedidos em modo automático",true);
+  }catch(e){
+    await loadStoreMode();
+    if(e.message!=="AUTH_REQUIRED") alert(e.message||"Não foi possível alterar o modo dos pedidos.");
+  }finally{document.querySelectorAll("[data-store-mode]").forEach(b=>b.disabled=false)}
+}
+function loadAutoPrintSetting(){
+  try{const v=localStorage.getItem(autoPrintStorageKey); autoPrintEnabled=v===null?true:v==="1";}catch(e){autoPrintEnabled=true}
+  renderAutoPrintToggle();
+}
+function renderAutoPrintToggle(){
+  const b=$("#autoPrintToggle"); if(!b)return;
+  b.classList.toggle("auto-print-on",autoPrintEnabled); b.classList.toggle("auto-print-off",!autoPrintEnabled);
+  b.setAttribute("aria-pressed",String(autoPrintEnabled));
+  b.textContent=autoPrintEnabled?"⚡ Impressão automática: ON":"⚡ Impressão automática: OFF";
+}
+function toggleAutoPrint(){
+  autoPrintEnabled=!autoPrintEnabled;
+  try{localStorage.setItem(autoPrintStorageKey,autoPrintEnabled?"1":"0")}catch(e){}
+  renderAutoPrintToggle();
+  if(!autoPrintEnabled)autoPrintBusy.clear();
+  status(autoPrintEnabled?"Impressão automática ativada":"Impressão automática desativada",true);
+}
+function markAutoPrintBaseline(list){for(const o of list){if(o?.id)autoPrintSeen.add(o.id)} autoPrintInitialized=true;}
+async function autoPrintNewOrders(previous,next){
+  if(!autoPrintEnabled || !window.BIGLANCHE_PRINTER?.ready?.())return;
+  if(!autoPrintInitialized){markAutoPrintBaseline(next);return;}
+  const prevIds=new Set((previous||[]).map(o=>o.id));
+  for(const o of next){
+    if(o.status!=="new"||prevIds.has(o.id)||autoPrintSeen.has(o.id)||autoPrintBusy.has(o.id))continue;
+    autoPrintBusy.add(o.id);
+    try{if(await printOrder(o.id,true))autoPrintSeen.add(o.id)}finally{autoPrintBusy.delete(o.id)}
+  }
+}
+
 function pedidoTime(value){
   if(!value) return "";
   const d = new Date(value);
@@ -2856,72 +2936,6 @@ function render(){
     : `<div class="empty">${currentTab==="ready"?"Nenhum pedido pronto.":"Nenhum pedido em andamento."}</div>`;
 }
 function receipt(o){const line="-".repeat(42),a=["\x1B\x40","\x1B\x61\x01","\x1B\x45\x01","BIG LANCHE","PEDIDO #"+o.number,"\x1B\x45\x00",line,"\x1B\x61\x00"];for(const i of o.cart||[]){a.push(`${i.quantity}x ${printSafe(i.name)}`);for(const x of i.additions||[])a.push(`   + ${x.quantity||1}x ${printSafe(x.name)}`);if(i.note)a.push(`   OBS: ${printSafe(i.note)}`)}a.push(line,`Entrega: ${printSafe(o.delivery?.city)} ${o.delivery?.fee?money(o.delivery.fee):""}`,`Endereco: ${printSafe(o.delivery?.address)}`,`Pagamento: ${printSafe(o.payment)}`,o.notes?`Obs: ${printSafe(o.notes)}`:"",`TOTAL: ${money(o.total)}`,"","","","\x1D\x56\x00");return a.join("\n");}
-function loadAutoPrintSetting(){
-  try{
-    const saved=localStorage.getItem(autoPrintStorageKey);
-    autoPrintEnabled=saved===null ? true : saved==="1";
-  }catch(e){
-    autoPrintEnabled=true;
-  }
-  renderAutoPrintToggle();
-}
-
-function renderAutoPrintToggle(){
-  const b=$("#autoPrintToggle");
-  if(!b)return;
-  b.classList.toggle("auto-print-on",autoPrintEnabled);
-  b.classList.toggle("auto-print-off",!autoPrintEnabled);
-  b.setAttribute("aria-pressed",String(autoPrintEnabled));
-  b.textContent=autoPrintEnabled
-    ?"⚡ Impressão automática: ON"
-    :"⚡ Impressão automática: OFF";
-}
-
-function toggleAutoPrint(){
-  autoPrintEnabled=!autoPrintEnabled;
-  try{localStorage.setItem(autoPrintStorageKey,autoPrintEnabled?"1":"0")}catch(e){}
-  renderAutoPrintToggle();
-  status(
-    autoPrintEnabled
-      ?"Impressão automática ativada"
-      :"Impressão automática desativada",
-    true
-  );
-}
-
-function markInitialOrdersAsSeen(list){
-  for(const o of list){
-    if(o?.id)autoPrintSeen.add(o.id);
-  }
-}
-
-async function autoPrintNewOrders(previousOrders, nextOrders){
-  if(!autoPrintEnabled || !window.BIGLANCHE_PRINTER?.ready?.())return;
-  if(!autoPrintInitialized){
-    markInitialOrdersAsSeen(nextOrders);
-    autoPrintInitialized=true;
-    return;
-  }
-
-  const previousIds=new Set((previousOrders||[]).map(o=>o.id));
-  for(const o of nextOrders){
-    if(
-      o.status!=="new" ||
-      previousIds.has(o.id) ||
-      autoPrintSeen.has(o.id) ||
-      autoPrintBusy.has(o.id)
-    )continue;
-
-    autoPrintBusy.add(o.id);
-    try{
-      const ok=await printOrder(o.id,true);
-      if(ok)autoPrintSeen.add(o.id);
-    }finally{
-      autoPrintBusy.delete(o.id);
-    }
-  }
-}
-
 async function printOrder(id,automatic=false){
   const o=orders.find(x=>x.id===id);
   if(!o)return;
@@ -3035,37 +3049,18 @@ async function deleteOrder(id,number){
     if(e.message!=="AUTH_REQUIRED") alert("Não foi possível excluir o pedido: "+e.message);
   }
 }
-async function load(){
-  try{
-    const previous=orders;
-    const nextOrders=await api("/api/orders");
-    orders=nextOrders;
-
-    const paths=await detectPrinterPaths();
-    status(
-      paths.any
-        ? `Pedidos + impressora — ${paths.bluetoothReady&&paths.usb?"Bluetooth + USB/QZ Tray":paths.bluetoothReady?"Bluetooth":"USB/QZ Tray"}`
-        : "Nenhuma impressora disponível",
-      paths.any
-    );
-
-    render();
-
-    // Só tenta impressão automática quando:
-    // 1) o recurso está ligado;
-    // 2) a ponte já está pronta;
-    // 3) o pedido acabou de aparecer na lista.
-    await autoPrintNewOrders(previous,nextOrders);
-  }catch{
-    status("Servidor offline");
-  }
-}
-$("#connect").onclick=connectPrinter;
-$("#testPrint").onclick=testPrintSimulation;
-$("#autoPrintToggle").onclick=toggleAutoPrint;
-$("#refresh").onclick=load;
-$("#logout").onclick=doLogout;
-loadAutoPrintSetting();
+async function load(){try{
+  const previous=orders;
+  const nextOrders=await api("/api/orders");
+  orders=nextOrders;
+  const paths=await detectPrinterPaths();
+  status(paths.any?`Pedidos + impressora — ${paths.bluetoothReady&&paths.usb?"Bluetooth + USB/QZ Tray":paths.bluetoothReady?"Bluetooth":"USB/QZ Tray"}`:"Nenhuma impressora disponível",paths.any);
+  render();
+  await autoPrintNewOrders(previous,nextOrders);
+}catch{status("Servidor offline");}}
+$("#connect").onclick=connectPrinter;$("#testPrint").onclick=testPrintSimulation;$("#autoPrintToggle").onclick=toggleAutoPrint;$("#refresh").onclick=load;$("#logout").onclick=doLogout;
+document.querySelectorAll("[data-store-mode]").forEach(b=>b.addEventListener("click",()=>setStoreMode(b.dataset.storeMode)));
+loadAutoPrintSetting(); loadStoreMode();
 $("#testPrint").hidden=false;$("#loginForm").addEventListener("submit",async e=>{e.preventDefault();const b=$("#loginForm button");const p=$("#loginPassword").value.trim();if(!p)return;$("#loginError").textContent="";b.disabled=true;try{await doLogin(p);$("#loginPassword").value=""}catch(err){$("#loginError").textContent=err.message||"Senha incorreta";$("#loginPassword").select()}finally{b.disabled=false}});let kitchenPollTimer=null;
 let kitchenPollBusy=false;
 async function pollKitchen(){if(!authenticated||document.hidden||kitchenPollBusy)return;kitchenPollBusy=true;try{await load()}finally{kitchenPollBusy=false}}
