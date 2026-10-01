@@ -76,9 +76,25 @@ public class MainActivity extends Activity {
         s.setDatabaseEnabled(true);
         s.setAllowFileAccess(false);
         s.setMediaPlaybackRequiresUserGesture(false);
+        s.setCacheMode(WebSettings.LOAD_DEFAULT);
+        s.setBlockNetworkLoads(false);
+        web.setNetworkAvailable(true);
         web.setWebViewClient(new WebViewClient() {
             @Override public void onPageFinished(WebView v, String url) {
                 injectBridgeScript();
+            }
+
+            @Override public void onReceivedError(WebView v, WebResourceRequest request, WebResourceError error) {
+                if (request != null && request.isForMainFrame()) {
+                    String desc = error == null ? "" : String.valueOf(error.getDescription());
+                    if (desc.contains("ERR_CACHE_MISS")) {
+                        v.getSettings().setCacheMode(WebSettings.LOAD_NO_CACHE);
+                        v.postDelayed(() -> {
+                            v.loadUrl(DEFAULT_URL);
+                            v.getSettings().setCacheMode(WebSettings.LOAD_DEFAULT);
+                        }, 150);
+                    }
+                }
             }
         });
         web.addJavascriptInterface(new PrinterBridge(this), "AndroidPrinter");
@@ -88,7 +104,7 @@ public class MainActivity extends Activity {
         String js = "javascript:(function(){"
             + "window.BIGLANCHE_ANDROID_PRINTER=true;"
             + "window.bigLanchePrint=function(order){"
-            + " try{AndroidPrinter.printOrder(typeof order==='string'?order:JSON.stringify(order));}"
+            + " try{AndroidPrinter.printEscPos(typeof order==='string'?order:JSON.stringify(order));}"
             + " catch(e){console.log(e)}"
             + "};"
             + "})();";
