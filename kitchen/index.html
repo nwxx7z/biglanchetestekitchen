@@ -2376,6 +2376,200 @@ html[data-theme="dark"] .empty{
 }
 </style>
 
+
+<style id="mobile-header-polish">
+/* =========================================================
+   CABEÇALHO MOBILE — POLIMENTO FINAL
+   ========================================================= */
+
+.theme-icon{
+  position:relative !important;
+  display:inline-block !important;
+  width:17px !important;
+  height:17px !important;
+  flex:0 0 17px !important;
+  border-radius:50% !important;
+  background:currentColor !important;
+  box-shadow:0 0 0 2px color-mix(in srgb,currentColor 16%,transparent) !important;
+}
+
+/* Lua: recorte feito com pseudo-elemento, sem emoji. */
+html[data-theme="dark"] .theme-icon{
+  background:#f3c96a !important;
+  box-shadow:0 0 0 3px rgba(243,201,106,.10) !important;
+}
+
+html[data-theme="dark"] .theme-icon::after{
+  content:"" !important;
+  position:absolute !important;
+  width:15px !important;
+  height:15px !important;
+  left:5px !important;
+  top:-2px !important;
+  border-radius:50% !important;
+  background:var(--ui-surface) !important;
+}
+
+/* Sol: círculo + quatro raios discretos. */
+html[data-theme="light"] .theme-icon{
+  width:15px !important;
+  height:15px !important;
+  flex-basis:15px !important;
+  background:#d99b35 !important;
+  box-shadow:
+    0 -8px 0 -6px #d99b35,
+    0 8px 0 -6px #d99b35,
+    8px 0 0 -6px #d99b35,
+    -8px 0 0 -6px #d99b35,
+    0 0 0 2px rgba(217,155,53,.10) !important;
+}
+
+html[data-theme="light"] .theme-icon::after{
+  display:none !important;
+}
+
+/* O estado visual representa o tema ATUAL, não a ação inversa. */
+html[data-theme="dark"] .theme-toggle{
+  color:#f3dfb2 !important;
+}
+
+html[data-theme="light"] .theme-toggle{
+  color:#5a4030 !important;
+}
+
+/* ===== Mobile ===== */
+@media(max-width:760px){
+  header{
+    padding-top:max(8px,env(safe-area-inset-top)) !important;
+  }
+
+  .head{
+    min-height:112px !important;
+    padding:10px 13px 12px !important;
+    display:grid !important;
+    grid-template-columns:minmax(0,1fr) !important;
+    grid-template-rows:auto auto !important;
+    gap:10px !important;
+  }
+
+  /* Marca ocupa a primeira linha inteira. */
+  .head h1{
+    grid-column:1 !important;
+    grid-row:1 !important;
+    min-width:0 !important;
+    width:100% !important;
+    margin:0 !important;
+    display:flex !important;
+    align-items:center !important;
+    white-space:nowrap !important;
+    overflow:hidden !important;
+    text-overflow:ellipsis !important;
+    color:#fff1d6 !important;
+    font-size:1.02rem !important;
+    line-height:1.2 !important;
+    text-shadow:0 1px 1px rgba(0,0,0,.18) !important;
+  }
+
+  .head h1::before{
+    flex:0 0 38px !important;
+    width:38px !important;
+    height:38px !important;
+    margin-right:9px !important;
+  }
+
+  /* Mantém os dois controles na segunda linha, em lados opostos. */
+  .head-actions{
+    display:flex !important;
+    grid-column:1 !important;
+    grid-row:2 !important;
+    width:100% !important;
+    min-width:0 !important;
+    align-items:center !important;
+    justify-content:space-between !important;
+    gap:10px !important;
+  }
+
+  .head-actions .theme-toggle{
+    order:1 !important;
+    flex:0 0 auto !important;
+    width:auto !important;
+    min-width:112px !important;
+    min-height:38px !important;
+    padding:7px 13px !important;
+    border-radius:999px !important;
+    justify-content:center !important;
+  }
+
+  .head-actions .status{
+    order:2 !important;
+    flex:0 1 auto !important;
+    width:auto !important;
+    max-width:58% !important;
+    min-width:0 !important;
+    margin:0 !important;
+    padding:8px 11px !important;
+    font-size:.75rem !important;
+    overflow:hidden !important;
+    text-overflow:ellipsis !important;
+    white-space:nowrap !important;
+  }
+
+  #themeLabel{
+    display:inline !important;
+    white-space:nowrap !important;
+  }
+
+  .tabs{
+    position:static !important;
+    top:auto !important;
+    margin:0 !important;
+    padding:10px 12px 7px !important;
+  }
+}
+
+/* Celulares estreitos: não deixa o status esmagar o botão. */
+@media(max-width:390px){
+  .head{
+    min-height:110px !important;
+    padding-left:10px !important;
+    padding-right:10px !important;
+  }
+
+  .head h1{
+    font-size:.96rem !important;
+  }
+
+  .head h1::before{
+    flex-basis:35px !important;
+    width:35px !important;
+    height:35px !important;
+  }
+
+  .head-actions{
+    gap:7px !important;
+  }
+
+  .head-actions .theme-toggle{
+    min-width:106px !important;
+    padding-left:10px !important;
+    padding-right:10px !important;
+  }
+
+  .head-actions .status{
+    max-width:57% !important;
+    font-size:.69rem !important;
+    padding:7px 8px !important;
+  }
+}
+
+/* Desktop mantém uma linha, mas melhora o contraste do título. */
+@media(min-width:761px){
+  .head h1{
+    color:var(--ui-text) !important;
+  }
+}
+</style>
+
 </head>
 <body>
 <div id="loginScreen" class="auth-screen">
@@ -2390,9 +2584,9 @@ html[data-theme="dark"] .empty{
 <div id="app" class="hidden">
 
 <header><div class="head"><h1>🍔 BIG LANCHE · Cozinha</h1><div class="head-actions">
-  <button id="themeToggle" class="theme-toggle" type="button" aria-label="Ativar modo escuro" title="Modo escuro">
-    <span id="themeIcon" aria-hidden="true">🌙</span>
-    <span id="themeLabel">Escuro</span>
+  <button id="themeToggle" class="theme-toggle" type="button" aria-label="Modo escuro" title="Modo escuro">
+    <span id="themeIcon" class="theme-icon" aria-hidden="true"></span>
+    <span id="themeLabel">Modo escuro</span>
   </button>
   <div class="status"><span id="dot" class="dot"></span><span id="status">Conectando...</span></div>
 </div></div></header>
@@ -3014,14 +3208,15 @@ html[data-theme="dark"] .print-paper-total{
     const label=document.getElementById("themeLabel");
 
     const isDark=chosen==="dark";
-    if(icon) icon.textContent=isDark ? "☀️" : "🌙";
-    if(label) label.textContent=isDark ? "Claro" : "Escuro";
+    /* O botão informa o modo ATUAL; o toque alterna para o outro. */
+    if(icon) icon.textContent="";
+    if(label) label.textContent=isDark ? "Modo escuro" : "Modo claro";
     if(btn){
       btn.setAttribute(
         "aria-label",
-        isDark ? "Ativar modo claro" : "Ativar modo escuro"
+        isDark ? "Modo escuro — tocar para usar modo claro" : "Modo claro — tocar para usar modo escuro"
       );
-      btn.title=isDark ? "Modo claro" : "Modo escuro";
+      btn.title=isDark ? "Modo escuro — tocar para mudar para claro" : "Modo claro — tocar para mudar para escuro";
     }
 
     if(save){
