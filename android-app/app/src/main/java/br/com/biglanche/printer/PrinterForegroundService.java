@@ -35,7 +35,6 @@ public class PrinterForegroundService extends Service {
 
     private final ExecutorService executor = Executors.newSingleThreadExecutor();
     private volatile boolean running = true;
-    private boolean initialized = false;
     private final Set<String> printed = new HashSet<>();
 
     @Override public void onCreate() {
@@ -97,33 +96,37 @@ public class PrinterForegroundService extends Service {
         if (response == null || response.isEmpty()) return;
 
         JSONArray orders = new JSONArray(response);
-        if (!initialized) {
-            for (int i = 0; i < orders.length(); i++) {
-                JSONObject o = orders.optJSONObject(i);
-                if (o != null) printed.add(o.optString("id", ""));
-            }
-            initialized = true;
-            savePrinted();
-            return;
-        }
 
+        // O servidor é a fonte da verdade para pedidos: somente "new" entra
+        // na fila de impressão. O conjunto local evita reimpressão se o
+        // PATCH do servidor falhar ou o serviço reiniciar logo após imprimir.
         for (int i = orders.length() - 1; i >= 0; i--) {
             JSONObject o = orders.optJSONObject(i);
             if (o == null) continue;
+
             String id = o.optString("id", "");
             String status = o.optString("status", "");
             if (id.isEmpty() || printed.contains(id) || !"new".equalsIgnoreCase(status)) continue;
 
-            String mac = getSharedPreferences("printer", MODE_PRIVATE).getString("printer_mac", "");
+            String mac = getSharedPreferences("printer", MODE_PRIVATE)
+                    .getString("printer_mac", "");
             if (mac.isEmpty()) return;
 
             JSONObject printable = toPrintableOrder(o);
             String receipt = OrderFormatter.format(printable);
+
+            // Só marcamos localmente como impresso depois que o Bluetooth
+            // concluir o envio do cupom.
             print(mac, receipt);
-            request("PATCH", API_BASE + "/api/orders/" + id, cookie,
-                    "{\"status\":\"printed\"}");
             printed.add(id);
             savePrinted();
+
+            // O PATCH é feito depois do envio físico. Se a rede falhar aqui,
+            // o ID local impede que o mesmo pedido seja enviado novamente.
+            try {
+                request("PATCH", API_BASE + "/api/orders/" + id, cookie,
+                        "{\"status\":\"printed\"}");
+            } catch (Exception ignored) {}
         }
     }
 
