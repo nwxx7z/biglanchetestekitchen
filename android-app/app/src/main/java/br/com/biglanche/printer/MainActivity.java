@@ -39,7 +39,7 @@ public class MainActivity extends Activity {
         loadKitchen();
         requestNotificationPermission();
         requestBluetoothPermissions();
-        startPrinterService();
+        if (hasBtPermission()) startPrinterService();
     }
 
     private void buildUi() {
@@ -82,6 +82,7 @@ public class MainActivity extends Activity {
         web.setWebViewClient(new WebViewClient() {
             @Override public void onPageFinished(WebView v, String url) {
                 pageLoaded = true;
+                try { android.webkit.CookieManager.getInstance().flush(); } catch (Exception ignored) {}
                 injectBridgeScript();
             }
             @Override public void onReceivedError(WebView v, WebResourceRequest r, WebResourceError e) {
@@ -93,7 +94,11 @@ public class MainActivity extends Activity {
     }
 
     private void injectBridgeScript() {
-        web.evaluateJavascript("window.BIGLANCHE_ANDROID_PRINTER=true;", null);
+        web.evaluateJavascript(
+                "window.BIGLANCHE_ANDROID_PRINTER=true;" +
+                "window.BIGLANCHE_ANDROID_BACKGROUND_PRINTER=true;",
+                null
+        );
     }
 
     private void loadKitchen() {
@@ -114,6 +119,13 @@ public class MainActivity extends Activity {
             else startService(intent);
         } catch (Exception e) {
             status.setText("Serviço de impressão indisponível");
+        }
+    }
+
+    @Override public void onRequestPermissionsResult(int requestCode, String[] permissions, int[] grantResults) {
+        super.onRequestPermissionsResult(requestCode, permissions, grantResults);
+        if (requestCode == REQ_BT && hasBtPermission()) {
+            startPrinterService();
         }
     }
 
@@ -144,7 +156,7 @@ public class MainActivity extends Activity {
     }
 
     private boolean isPrinterConfigured() {
-        return !getPreferences(0).getString("printer_mac", "").isEmpty();
+        return !getSharedPreferences(PREFS, MODE_PRIVATE).getString("printer_mac", "").isEmpty();
     }
 
     private void showPrinterDialog() {
@@ -183,7 +195,7 @@ public class MainActivity extends Activity {
                 .setTitle("Escolha a impressora")
                 .setItems(names, (dialog, which) -> {
                     BluetoothDevice d = devices.get(which);
-                    getPreferences(0).edit()
+                    getSharedPreferences(PREFS, MODE_PRIVATE).edit()
                             .putString("printer_mac", d.getAddress())
                             .putString("printer_name", safeName(d))
                             .apply();
@@ -283,7 +295,7 @@ public class MainActivity extends Activity {
             return true;
         }
         @JavascriptInterface public void disconnectPrinter() {
-            getPreferences(0).edit().remove("printer_mac").remove("printer_name").apply();
+            getSharedPreferences(PREFS, MODE_PRIVATE).edit().remove("printer_mac").remove("printer_name").apply();
             runOnUiThread(() -> status.setText("Impressora não configurada"));
         }
     }
