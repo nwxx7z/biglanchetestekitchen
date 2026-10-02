@@ -3173,21 +3173,14 @@ async function testPrintSimulation(){
   };
 
   try{
-    /* Android: usa o simulador nativo já existente no APK. */
-    if(window.BIGLANCHE_PRINTER?.bridgeAvailable() &&
-       window.AndroidPrinter?.simulatePrint){
-      const preview = receipt(o)
-        .replace(/\\x1B[@aE](?:\\x01|\\x00)?/g, "")
-        .replace(/\\x1D[Vv](?:\\x00|\\x01)?/g, "")
-        .replace(/[\\x00-\\x08\\x0B\\x0C\\x0E-\\x1F]/g, "");
-
-      const r=window.AndroidPrinter.simulatePrint(String(preview));
-      if(r && typeof r.then==="function") await r;
-      return;
-    }
-
-    /* PC/navegador: mostra exatamente o conteúdo de teste sem exigir
-       impressora, QZ Tray ou qualquer instalação adicional. */
+    /*
+      IMPORTANTE:
+      O teste de impressão é uma prévia e nunca deve enviar bytes ESC/POS
+      para a impressora. No APK antigo, a prévia passava pelo bridge nativo
+      e acabava exibindo os códigos de controle como caracteres soltos.
+      Mantemos o teste 100% no painel web: não usa Bluetooth, QZ Tray,
+      não altera o pedido e não depende de gerar um APK novo.
+    */
     if(window.__openPrintTestPreview){
       window.__openPrintTestPreview(o);
       return;
