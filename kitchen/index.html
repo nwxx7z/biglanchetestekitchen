@@ -3062,13 +3062,14 @@ function markAutoPrintBaseline(list){
   autoPrintInitialized=true;
 }
 async function autoPrintNewOrders(previous,next){
-  // No APK Android, a impressão automática é feita pelo PrinterForegroundService.
-  // Isso evita uma corrida entre WebView e serviço que poderia imprimir duas vezes.
-  if(window.BIGLANCHE_PRINTER?.bridgeAvailable?.())return;
+  // Em APKs com serviço de impressão em segundo plano, o serviço é a
+  // única fonte de impressão para evitar duplicidade.
+  if(window.BIGLANCHE_ANDROID_BACKGROUND_PRINTER)return;
   if(!autoPrintEnabled || !window.BIGLANCHE_PRINTER?.ready?.())return;
   if(!autoPrintInitialized){
-    markAutoPrintBaseline(next);
-    return;
+    // Pedidos que ainda estão como "new" e não foram impressos precisam
+    // ser tratados como pendentes, inclusive após recarregar o painel.
+    autoPrintInitialized=true;
   }
   const prevIds=new Set((previous||[]).map(o=>o.id));
   for(const o of next){
