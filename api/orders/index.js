@@ -17,8 +17,9 @@ function brasiliaMinutes() {
 function automaticOpen() {
   const now = brasiliaMinutes();
 
-  return now >= (18 * 60) &&
-         now <= (23 * 60 + 40);
+  // Horário automático oficial da loja: 17:30 até 23:45 (Brasília).
+  return now >= (17 * 60 + 30) &&
+         now <= (23 * 60 + 45);
 }
 
 module.exports = async function handler(req, res) {
