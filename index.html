@@ -5217,6 +5217,13 @@ img,svg,video,canvas{max-width:100%}
               </select>
             </div>
           </div>
+          <label class="cidade-opcao cidade-opcao-retirada">
+            <input type="radio" name="cidade-entrega" value="Retirada no local" data-fee="0">
+            <span class="cidade-info">
+              <strong>Retirada no local</strong>
+              <small>Sem taxa · R$ 0,00</small>
+            </span>
+          </label>
           <label class="cidade-opcao">
             <input type="radio" name="cidade-entrega" value="Maragogi" data-fee="10">
             <span class="cidade-info">
@@ -5330,23 +5337,22 @@ const iconeFruta = sabor => FRUIT_ICONS[sabor] || "";
 // cada item: [nome, preço, descrição, opções (opcional)]
 const C = [
 {t:"Hambúrgueres artesanais",ad:"h",nota:"Todos acompanham uma porção de batatas fritas. Adicionais ficam disponíveis em &quot;Seu pedido&quot; depois de adicionar.",i:[
-["SPAS12",22,"Pão brioche, hambúrguer artesanal 150g, queijo muçarela, salada."],
-["AUG",28,"Pão brioche, hambúrguer artesanal 150g, presunto, queijo muçarela, bacon triturado, molho da casa, salada."],
-["PARAFAL",30,"Pão brioche, hambúrguer artesanal 150g, queijo coalho, cebola caramelizada, ovo, molho da casa, salada."],
-["SKS",32,"Pão brioche, hambúrguer artesanal 150g, queijo muçarela, cebola caramelizada, cheddar, calabresa."],
-["LANÇA GRANADAS",38,"Pão brioche, dois hambúrgueres artesanais 150g, presunto, queijo muçarela, ovo, molho da casa, salada."],
-["SVD",28,"Pão brioche, carne de sol triturada, queijo coalho, cebola caramelizada, catupiry, salada."],
-["K98",30,"Pão brioche, hambúrguer artesanal 150g, anéis de cebola empanados, cheddar, bacon triturado, molho da casa, salada."],
-["VECTOR",28,"Pão brioche, hambúrguer artesanal 150g, bacon triturado, catupiry, cebola caramelizada, molho da casa, salada."],
-["THOMPSON",30,"Pão brioche, hambúrguer artesanal 150g, anéis de cebola empanados, calabresa, queijo coalho, molho da casa, salada."],
-["CARAPINA",40,"Pão brioche, dois hambúrgueres artesanais 150g, anéis de cebola empanados, catupiry, calabresa, molho da casa, salada."],
-["MAG-7",25,"Pão brioche, hambúrguer artesanal 150g, queijo coalho, goiabada, molho da casa, salada."],
-["MAC-10",32,"Pão brioche, hambúrguer artesanal 150g, rodela de abacaxi, queijo coalho, bacon triturado, geleia de abacaxi, salada."],
-["BIZON",32,"Pão brioche, filé de carne acebolada 150g, queijo coalho em cubos, catupiry, molho barbecue, salada."],
-["G-36",40,"Pão brioche, hambúrguer artesanal 150g, camarão, cream cheese, geleia de pimenta e salada."],
-["An-94",35,"Pão brioche, hambúrguer artesanal 100g, queijo coalho, anéis de cebola empanada, charque desfiada, cream cheese, molho barbecue e salada."],
-["m500",35,"Pão brioche, hambúrguer artesanal 100g, costela desfiada, banana da terra, catupiry, molho barbecue e salada."]]},
-{t:"Hambúrgueres tradicionais",ad:"h",nota:"Adicionais ficam disponíveis em &quot;Seu pedido&quot; depois de adicionar.",i:[
+["SPAS12",22,"Pão brioche, hambúrguer artesanal 150g, queijo muçarela, salada. Acompanha batatas fritas."],
+["AUG",28,"Pão brioche, hambúrguer artesanal 150g, presunto, queijo muçarela, bacon triturado, molho da casa, salada. Acompanha batatas fritas."],
+["PARAFAL",30,"Pão brioche, hambúrguer artesanal 150g, queijo coalho, cebola caramelizada, ovo, molho da casa, salada. Acompanha batatas fritas."],
+["SKS",32,"Pão brioche, hambúrguer artesanal 150g, queijo muçarela, cebola caramelizada, cheddar, calabresa. Acompanha batatas fritas."],
+["LANÇA GRANADAS",38,"Pão brioche, dois hambúrgueres artesanais 150g, presunto, queijo muçarela, ovo, molho da casa, salada. Acompanha batatas fritas."],
+["SVD",28,"Pão brioche, carne de sol triturada, queijo coalho, cebola caramelizada, catupiry, salada. Acompanha batatas fritas."],
+["K98",30,"Pão brioche, hambúrguer artesanal 150g, anéis de cebola empanados, cheddar, bacon triturado, molho da casa, salada. Acompanha batatas fritas."],
+["VECTOR",28,"Pão brioche, hambúrguer artesanal 150g, bacon triturado, catupiry, cebola caramelizada, molho da casa, salada. Acompanha batatas fritas."],
+["THOMPSON",30,"Pão brioche, hambúrguer artesanal 150g, anéis de cebola empanados, calabresa, queijo coalho, molho da casa, salada. Acompanha batatas fritas."],
+["CARAPINA",40,"Pão brioche, dois hambúrgueres artesanais 150g, anéis de cebola empanados, catupiry, calabresa, molho da casa, salada. Acompanha batatas fritas."],
+["MAG-7",25,"Pão brioche, hambúrguer artesanal 150g, queijo coalho, goiabada, molho da casa, salada. Acompanha batatas fritas."],
+["MAC-10",32,"Pão brioche, hambúrguer artesanal 150g, rodela de abacaxi, queijo coalho, bacon triturado, geleia de abacaxi, salada. Acompanha batatas fritas."],
+["BIZON",32,"Pão brioche, filé de carne acebolada 150g, queijo coalho em cubos, catupiry, molho barbecue, salada. Acompanha batatas fritas."],
+["G-36",40,"Pão brioche, hambúrguer artesanal 150g, camarão, cream cheese, geleia de pimenta e salada. Acompanha batatas fritas."],
+["An-94",35,"Pão brioche, hambúrguer artesanal 100g, queijo coalho, anéis de cebola empanada, charque desfiada, cream cheese, molho barbecue e salada. Acompanha batatas fritas."],
+["m500",35,"Pão brioche, hambúrguer artesanal 100g, costela desfiada, banana da terra, catupiry, molho barbecue e salada."]]},{t:"Hambúrgueres tradicionais",ad:"h",nota:"Adicionais ficam disponíveis em &quot;Seu pedido&quot; depois de adicionar.",i:[
 ["BIG LANCHE",60,"Pão recife 40cm, 150g de filé de carne, 150g de filé de frango, queijo muçarela, presunto, calabresa, bacon, ovos, molho da casa, salada."],
 ["MP5",10,"Pão com gergelim, hambúrguer, salada."],
 ["UMP",15,"Pão com gergelim, hambúrguer, presunto, queijo e salada."],
@@ -5361,9 +5367,9 @@ const C = [
 ["FAMAS",20,"Pão brioche, filé de frango, milho verde, ervilha, batata palha, salada."],
 ["M60",20,"Pão brioche, filé de frango, presunto, queijo muçarela e salada."]]},
 {t:"Cachorro quente",i:[
-["Carne",15,"Salsicha, carne moída, milho verde, ervilhas, tomate, cebola, batata palha, cheddar, maionese, ketchup e queijo ralado."],
-["Frango",13,"Salsicha, frango desfiado, milho verde, ervilhas, tomate, cebola, batata palha, cheddar, maionese, ketchup e queijo ralado."],
-["Misto",18,"Salsicha, carne moída, frango desfiado, milho verde, ervilhas, tomate, cebola, batata palha, cheddar, maionese, ketchup e queijo ralado."]]},
+["Cachorro quente de carne",15,"Salsicha, carne moída, milho verde, ervilhas, tomate, cebola, batata palha, cheddar, maionese, ketchup e queijo ralado."],
+["Cachorro quente de frango",13,"Salsicha, frango desfiado, milho verde, ervilhas, tomate, cebola, batata palha, cheddar, maionese, ketchup e queijo ralado."],
+["Cachorro quente misto",18,"Salsicha, carne moída, frango desfiado, milho verde, ervilhas, tomate, cebola, batata palha, cheddar, maionese, ketchup e queijo ralado."]]},
 {t:"Combos",i:[
 ["Combo petiscos",50,"300g de filé de isca de frango empanada, 250g de calabresa, 250g de batata frita, molho da casa."],
 ["Combo hambúrguer",50,"Dois x-burguer com carne tradicional cortados ao meio, anéis de cebola empanada, 250g de batata com cheddar, bacon triturado, molho da casa."]]},
@@ -5380,9 +5386,9 @@ const C = [
 ["Suco de laranja natural",12],["Jarra de suco de laranja natural",24],
 ["Vitamina de açaí",13,"Polpa de açaí, banana, açúcar, leite, granola."],
 ["Vitamina de guaraná",13,"Guaraná, farinha de amendoim, banana, leite."],
-["Coca cola 1 Litro",12],["Coca cola 2 litros",18],["Coca lata",7],
+["Coca cola Júnior",3], ["Coca cola 1 Litro",12],["Coca cola 2 litros",18],["Coca lata",7],
 ["Coca cola 1 litro",12,"Sem açúcar."],["Coca lata",7,"Sem açúcar."],
-["Guaraná 1 litro",10],["Guaraná 2 litros",15],["Guaraná lata",6],
+["Guaraná júnior",2.5], ["Guaraná 1 litro",10],["Guaraná 2 litros",15],["Guaraná lata",6],
 ["Guaraná lata",6,"Sem açúcar."],["H2O",8]
 ]},
 {t:"Tapiocas",ad:"g",nota:"Adicionais ficam disponíveis em &quot;Seu pedido&quot; depois de adicionar.",i:[
@@ -5417,7 +5423,7 @@ let uid = 0;
 const $ = s => document.querySelector(s);
 const brl = v => v.toLocaleString("pt-BR",{style:"currency",currency:"BRL"});
 const esc = s => s.replace(/&/g,"&amp;").replace(/</g,"&lt;").replace(/"/g,"&quot;");
-const saudacao = () => { const h = new Date().getHours(); return h >= 5 && h < 12 ? "bom dia" : h >= 12 && h < 18 ? "boa tarde" : "boa noite"; };
+const saudacao = () => "Olá, gostaria de fazer meu pedido";
 // ===== HORÁRIO / CONTROLE DE PEDIDOS =====
 const PEDIDOS_INICIO = 17 * 60 + 30;
 const PEDIDOS_FIM = 23 * 60 + 45;
@@ -5541,14 +5547,26 @@ function enderecoEntrega(){
 function referenciaEntrega(){
   return "";
 }
+function atualizarEnderecoRetirada(){
+  const retirada = cidadeEntregaAtual()?.value === "Retirada no local";
+  const campo = $("#endereco-entrega");
+  if (campo){
+    campo.required = !retirada;
+    campo.disabled = retirada;
+    campo.hidden = retirada;
+    if (retirada) campo.value = "";
+  }
+}
 function entregaCompleta(){
   const cidade = cidadeEntregaAtual();
-  return !!cidade && (cidade.value !== "São Bento" || !!localEntregaAtual()) &&
-    !!enderecoEntrega();
+  if (!cidade) return false;
+  if (cidade.value === "Retirada no local") return true;
+  return (cidade.value !== "São Bento" || !!localEntregaAtual()) && !!enderecoEntrega();
 }
 function entregaFaltante(){
   const cidade = cidadeEntregaAtual();
   if (!cidade) return "Selecione a cidade de entrega";
+  if (cidade.value === "Retirada no local") return "";
   if (cidade.value === "São Bento" && !localEntregaAtual()) return "Escolha um local em São Bento";
   if (!enderecoEntrega()) return "Informe o endereço e ponto de referência";
   return "";
@@ -5604,8 +5622,8 @@ function atualizarTrocoUI(){
   const escolha = document.querySelector('input[name="troco"]:checked')?.value || "";
   $("#troco-valor-wrap").hidden = escolha !== "sim";
 }
-function mensagem(){
-  let m = `Olá, ${saudacao()}, gostaria de pedir:\n` + cart.map(l => {
+function mensagem(orderNumber = ""){
+  let m = `${saudacao()}${orderNumber ? `\nPedido #${orderNumber}` : ""}:\n` + cart.map(l => {
     const obsItem = String(l.note || "").trim();
     return `> ${l.q}x ${nome(l)}${obsItem ? ` — Obs.: ${obsItem}` : ""}`;
   }).join("\n");
@@ -5613,12 +5631,14 @@ function mensagem(){
   const cidade = cidadeEntregaAtual();
   const endereco = enderecoEntrega();
   if (cidade){
-    m += entregaConsultarValor()
-      ? `\nCidade de entrega: ${cidadeEntregaDescricao()} · Taxa: Consultar valor`
-      : `\nCidade de entrega: ${cidadeEntregaDescricao()} · Taxa ${brl(taxaEntrega())}`;
-  }
-  if (endereco){
-    m += `\nEndereço e ponto de referência: ${endereco}`;
+    if (cidade.value === "Retirada no local") {
+      m += "\nForma de recebimento: Retirada no local · Sem taxa de entrega";
+    } else {
+      m += entregaConsultarValor()
+        ? `\nCidade de entrega: ${cidadeEntregaDescricao()} · Taxa: Consultar valor`
+        : `\nCidade de entrega: ${cidadeEntregaDescricao()} · Taxa ${brl(taxaEntrega())}`;
+      if (endereco) m += `\nEndereço e ponto de referência: ${endereco}`;
+    }
   }
   m += `\nForma de pagamento: ${pagamento}`;
   const o = $("#obs").value.trim();
@@ -5957,29 +5977,43 @@ function pedidoParaCozinha(){
     createdAt: new Date().toISOString()
   };
 }
-function enviarPedidoParaCozinha(){
-  if (!pedidosAbertos() || !API_URL) return;
-  const body = JSON.stringify(pedidoParaCozinha());
-  try {
-    const blob = new Blob([body], {type:"application/json;charset=UTF-8"});
-    if (navigator.sendBeacon && navigator.sendBeacon(`${API_URL}/api/orders`, blob)) return;
-  } catch (e) {}
-  fetch(`${API_URL}/api/orders`, {
+async function enviarPedidoParaCozinha(){
+  if (!pedidosAbertos() || !API_URL) throw new Error("Pedidos encerrados");
+  const response = await fetch(`${API_URL}/api/orders`, {
     method:"POST",
     headers:{"Content-Type":"application/json"},
-    body,
-    keepalive:true,
+    body:JSON.stringify(pedidoParaCozinha()),
+    credentials:"include",
     mode:"cors"
-  }).catch((e) => console.error("Falha ao enviar pedido para a cozinha:", e));
+  });
+  let data = null;
+  try { data = await response.json(); } catch (e) {}
+  if (!response.ok) throw new Error(data?.error || "Não foi possível registrar o pedido na cozinha.");
+  const number = data?.number ?? data?.order?.number ?? data?.orderNumber;
+  if (number == null) throw new Error("A cozinha não retornou o número do pedido.");
+  return number;
 }
-$("#enviar").addEventListener("click", () => {
+$("#enviar").addEventListener("click", async () => {
   if (!pedidosAbertos()) {
     atualizarCheckoutEntrega();
     return;
   }
-  enviarPedidoParaCozinha();
-  const url = `https://wa.me/${WHATSAPP}?text=${encodeURIComponent(mensagem())}`;
-  window.open(url, "_blank", "noopener,noreferrer");
+  const button = $("#enviar");
+  const originalText = button.textContent;
+  const wa = window.open("about:blank", "_blank");
+  button.disabled = true;
+  button.textContent = "Enviando pedido...";
+  try {
+    const orderNumber = await enviarPedidoParaCozinha();
+    const url = `https://wa.me/${WHATSAPP}?text=${encodeURIComponent(mensagem(orderNumber))}`;
+    if (wa && !wa.closed) { wa.location.href = url; } else { window.location.href = url; }
+  } catch (e) {
+    if (wa && !wa.closed) wa.close();
+    alert(e.message || "Não foi possível enviar o pedido.");
+  } finally {
+    button.disabled = false;
+    button.textContent = originalText;
+  }
 });
 $("#copiar").addEventListener("click", async () => {
   const m = mensagem(), b = $("#copiar");
@@ -6011,7 +6045,7 @@ function atualizarCheckoutEntrega(){
   }
 }
 document.addEventListener("change", e => {
-  if (e.target.matches('input[name="cidade-entrega"]')) atualizarLocalSaoBento();
+  if (e.target.matches('input[name="cidade-entrega"]')) { atualizarLocalSaoBento(); atualizarEnderecoRetirada(); }
   if (
     e.target.matches('input[name="cidade-entrega"]') ||
     e.target.matches("#sao-bento-local") ||
@@ -6054,6 +6088,7 @@ function initPremiumReveal(){
 }
 atualizarTrocoUI();
 atualizarLocalSaoBento();
+atualizarEnderecoRetirada();
 buildMenu(); refresh(); initPremiumReveal();
 // ===== LOCALIZAÇÃO =====
 const LOJA = {lat:-9.0586965, lng:-35.2420895};
