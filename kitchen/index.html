@@ -3062,6 +3062,9 @@ function markAutoPrintBaseline(list){
   autoPrintInitialized=true;
 }
 async function autoPrintNewOrders(previous,next){
+  // No APK Android, a impressão automática é feita pelo PrinterForegroundService.
+  // Isso evita uma corrida entre WebView e serviço que poderia imprimir duas vezes.
+  if(window.BIGLANCHE_PRINTER?.bridgeAvailable?.())return;
   if(!autoPrintEnabled || !window.BIGLANCHE_PRINTER?.ready?.())return;
   if(!autoPrintInitialized){
     markAutoPrintBaseline(next);
@@ -3304,7 +3307,7 @@ orders=await api("/api/orders");
   await autoPrintNewOrders(previousOrders,orders);
   status(qzReady||window.BIGLANCHE_PRINTER?.ready()?"Pedidos + impressora":"Pedidos conectados",true);
   render();
-  if(window.BIGLANCHE_PRINTER?.ready()){
+  if(window.BIGLANCHE_PRINTER?.ready() && !window.BIGLANCHE_PRINTER?.bridgeAvailable?.()){
     for(const o of orders){
       if(o.status!=="new" || autoPrintSeen.has(o.id) || autoPrintBusy.has(o.id)) continue;
       autoPrintBusy.add(o.id);
@@ -3319,8 +3322,11 @@ orders=await api("/api/orders");
 $("#connect").onclick=connectPrinter;$("#testPrint").onclick=testPrintSimulation;$("#refresh").onclick=load;$("#logout").onclick=doLogout;
 $("#testPrint").hidden=false;$("#loginForm").addEventListener("submit",async e=>{e.preventDefault();const b=$("#loginForm button");const p=$("#loginPassword").value.trim();if(!p)return;$("#loginError").textContent="";b.disabled=true;try{await doLogin(p);$("#loginPassword").value=""}catch(err){$("#loginError").textContent=err.message||"Senha incorreta";$("#loginPassword").select()}finally{b.disabled=false}});let kitchenPollTimer=null;
 let kitchenPollBusy=false;
-async function pollKitchen(){if(!authenticated||document.hidden||kitchenPollBusy)return;kitchenPollBusy=true;try{await load()}finally{kitchenPollBusy=false}}
-function startKitchenPolling(){if(kitchenPollTimer)clearInterval(kitchenPollTimer);kitchenPollTimer=setInterval(pollKitchen,10000)}
+async function pollKitchen(){if(!authenticated||kitchenPollBusy)return;kitchenPollBusy=true;try{await load()}finally{kitchenPollBusy=false}}
+function startKitchenPolling(){
+  if(kitchenPollTimer)clearInterval(kitchenPollTimer);
+  kitchenPollTimer=setInterval(pollKitchen,5000);
+}
 document.addEventListener("visibilitychange",()=>{if(!document.hidden&&authenticated)pollKitchen()});
 
 const autoPrintButton=$("#autoPrintToggle");
