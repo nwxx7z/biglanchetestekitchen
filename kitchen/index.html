@@ -3164,29 +3164,45 @@ async function printOrder(id,automatic=false){
 }
 function browserPrint(o){const w=window.open("","_blank","width=420,height=700");if(!w)return;w.document.write(`<style>body{font:14px monospace;width:80mm;margin:0;padding:5mm}.i{font-weight:700;margin:6px 0}.a{padding-left:10px}.t{font-size:18px;font-weight:900;margin-top:12px}</style><h2>BIG LANCHE<br>Pedido #${esc(o.number)}</h2>${(o.cart||[]).map(i=>`<div class=i>${i.quantity}x ${esc(i.name)}${(i.additions||[]).map(a=>`<div class=a>+ ${a.quantity||1}x ${esc(a.name)}</div>`).join("")}${i.note?`<div class=a><b>Obs.:</b> ${esc(i.note)}</div>`:""}</div>`).join("")}<hr>Entrega: ${esc(o.delivery?.city)}<br>Endereco: ${esc(o.delivery?.address)}<br>Pagamento: ${esc(o.payment)}<div class=t>TOTAL: ${money(o.total)}</div><script>window.print()<\/script>`);w.document.close();}
 async function testPrintSimulation(){
-  const o=orders.find(x=>x.status!=="ready") || {
+  const o={
     number:"TESTE",
-    cart:[{quantity:1,name:"Pastel mistão",additions:[{quantity:1,name:"Queijo"}],note:"sem salada"}],
-    delivery:{city:"Maragogi",fee:10,address:"Rua de teste, 123"},
+    cart:[
+      {quantity:1,name:"BIG LANCHE - TESTE",additions:[{quantity:1,name:"Queijo"}],note:"Teste de impressão"}
+    ],
+    delivery:{city:"Teste",fee:0,address:"Rua de teste, 123"},
     payment:"Pix",
     total:30
   };
 
   try{
     /*
-      IMPORTANTE:
-      O teste de impressão é uma prévia e nunca deve enviar bytes ESC/POS
-      para a impressora. No APK antigo, a prévia passava pelo bridge nativo
-      e acabava exibindo os códigos de controle como caracteres soltos.
-      Mantemos o teste 100% no painel web: não usa Bluetooth, QZ Tray,
-      não altera o pedido e não depende de gerar um APK novo.
+      TESTE REAL:
+      envia um cupom de teste para a impressora, mas NÃO altera nenhum
+      pedido existente e NÃO altera o status de nenhum pedido.
     */
-    if(window.__openPrintTestPreview){
-      window.__openPrintTestPreview(o);
+    const raw=receipt(o);
+
+    if(window.BIGLANCHE_PRINTER?.bridgeAvailable?.()){
+      if(!window.BIGLANCHE_PRINTER.ready?.()){
+        throw new Error("Impressora não configurada. Conecte/pair a impressora primeiro.");
+      }
+      const sent=await window.BIGLANCHE_PRINTER.print(raw);
+      if(!sent) throw new Error("A impressora não confirmou o envio.");
+      status("Teste enviado para a impressora",true);
       return;
     }
 
-    throw new Error("Não foi possível abrir o teste de impressão.");
+    if(!qzReady){
+      if(!window.qz) throw new Error("QZ Tray não está conectado.");
+      if(!qz.websocket.isActive()) await qz.websocket.connect();
+      qzReady=true;
+    }
+
+    const p=PRINT_PRINTER||await qz.printers.getDefault();
+    if(!p) throw new Error("Nenhuma impressora encontrada.");
+    const c=qz.configs.create(p,{jobName:"BIG LANCHE • TESTE DE IMPRESSÃO"});
+    await qz.print(c,[{type:"raw",format:"command",flavor:"plain",data:raw}]);
+    status("Teste enviado para a impressora",true);
   }catch(e){
     alert("Falha no teste de impressão: "+(e?.message||e));
   }
