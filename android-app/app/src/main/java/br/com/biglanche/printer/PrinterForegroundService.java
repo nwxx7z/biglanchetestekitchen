@@ -80,9 +80,10 @@ public class PrinterForegroundService extends Service {
     private void loop() {
         while (running) {
             try {
-                boolean foreground = getSharedPreferences("printer", MODE_PRIVATE)
-                        .getBoolean("app_foreground", true);
-                if (!foreground) checkOrders();
+                // A impressão automática não depende mais da WebView estar
+                // em segundo plano. O serviço verifica os pedidos sempre,
+                // inclusive enquanto o painel está aberto.
+                checkOrders();
             } catch (Exception ignored) {}
             try { Thread.sleep(POLL_MS); } catch (InterruptedException e) { break; }
         }
