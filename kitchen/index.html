@@ -3015,24 +3015,48 @@ async function api(p,o={}){const r=await fetch(API_URL+p,{cache:"no-store",crede
 async function checkAuth(){try{const r=await fetch(API_URL+"/api/auth",{cache:"no-store",credentials:"same-origin"});if(r.ok){showApp();return true}}catch(e){}showLogin();return false}
 async function doLogin(password){const r=await fetch(API_URL+"/api/auth",{method:"POST",credentials:"same-origin",headers:{"Content-Type":"application/json"},body:JSON.stringify({password})});if(!r.ok){let msg="Senha incorreta";try{msg=(await r.json()).error||msg}catch(e){}throw Error(msg)}showApp();await load();}
 async function doLogout(){try{await fetch(API_URL+"/api/auth",{method:"DELETE",credentials:"same-origin"})}catch(e){}showLogin();}
+async function ensureQzPrinter(){
+  if(!window.qz) throw Error("QZ Tray não carregado");
+  if(!qz.websocket.isActive()) await qz.websocket.connect();
+  const p=PRINT_PRINTER||await qz.printers.getDefault();
+  if(!p) throw Error("Nenhuma impressora disponível no QZ Tray");
+  qzReady=true;
+  return p;
+}
 async function connectPrinter(){
   try{
-    if(window.BIGLANCHE_PRINTER.bridgeAvailable()){
+    if(window.BIGLANCHE_PRINTER?.bridgeAvailable?.()){
       await window.BIGLANCHE_PRINTER.connect();
       qzReady=false;
-      status("Impressora Android conectada",true);
+      status(window.BIGLANCHE_PRINTER.ready?.()
+        ? "Impressora Android conectada"
+        : "Selecione uma impressora Android", !!window.BIGLANCHE_PRINTER.ready?.());
       return;
     }
-    if(!window.qz)throw Error("QZ Tray não carregado");
-    if(!qz.websocket.isActive())await qz.websocket.connect();
-    const p=PRINT_PRINTER||await qz.printers.getDefault();
-    if(!p)throw Error("Sem impressora");
-    qzReady=true;
-    status("Impressora: "+p,true);
+    const p=await ensureQzPrinter();
+    status("Impressora PC: "+p,true);
+    await autoPrintPending();
   }catch(e){
     qzReady=false;
     status("Impressora não conectada");
-    alert(e.message);
+    alert(e?.message||e);
+  }
+}
+async function autoPrintPending(){
+  if(!autoPrintEnabled || window.BIGLANCHE_ANDROID_BACKGROUND_PRINTER)return;
+  if(window.BIGLANCHE_PRINTER?.bridgeAvailable?.()){
+    if(!window.BIGLANCHE_PRINTER.ready?.())return;
+  }else{
+    try{await ensureQzPrinter()}catch(e){return}
+  }
+  const pending=orders.slice().filter(o=>o.status==="new" && !autoPrintSeen.has(o.id) && !autoPrintBusy.has(o.id));
+  for(const o of pending){
+    autoPrintBusy.add(o.id);
+    try{
+      if(await printOrder(o.id,true)) autoPrintSeen.add(o.id);
+    }finally{
+      autoPrintBusy.delete(o.id);
+    }
   }
 }
 function loadAutoPrintSetting(){
@@ -3062,25 +3086,12 @@ function markAutoPrintBaseline(list){
   autoPrintInitialized=true;
 }
 async function autoPrintNewOrders(previous,next){
-  // Em APKs com serviço de impressão em segundo plano, o serviço é a
-  // única fonte de impressão para evitar duplicidade.
   if(window.BIGLANCHE_ANDROID_BACKGROUND_PRINTER)return;
-  if(!autoPrintEnabled || !window.BIGLANCHE_PRINTER?.ready?.())return;
-  if(!autoPrintInitialized){
-    // Pedidos que ainda estão como "new" e não foram impressos precisam
-    // ser tratados como pendentes, inclusive após recarregar o painel.
-    autoPrintInitialized=true;
-  }
-  const prevIds=new Set((previous||[]).map(o=>o.id));
-  for(const o of next){
-    if(o.status!=="new"||prevIds.has(o.id)||autoPrintSeen.has(o.id)||autoPrintBusy.has(o.id))continue;
-    autoPrintBusy.add(o.id);
-    try{
-      if(await printOrder(o.id,true))autoPrintSeen.add(o.id);
-    }finally{
-      autoPrintBusy.delete(o.id);
-    }
-  }
+  if(!autoPrintEnabled)return;
+  autoPrintInitialized=true;
+  // No primeiro carregamento, também imprimimos pedidos "new" que ficaram
+  // pendentes enquanto o painel estava fechado/offline.
+  await autoPrintPending();
 }
 
 function pedidoTime(value){
@@ -3141,24 +3152,23 @@ function render(){
 function receipt(o){const line="-".repeat(42),a=["\x1B\x40","\x1B\x61\x01","\x1B\x45\x01","BIG LANCHE","PEDIDO #"+o.number,"\x1B\x45\x00",line,"\x1B\x61\x00"];for(const i of o.cart||[]){a.push(`${i.quantity}x ${printSafe(i.name)}`);for(const x of i.additions||[])a.push(`   + ${x.quantity||1}x ${printSafe(x.name)}`);if(i.note)a.push(`   OBS: ${printSafe(i.note)}`)}a.push(line,`Entrega: ${printSafe(o.delivery?.city)} ${o.delivery?.fee?money(o.delivery.fee):""}`,`Endereco: ${printSafe(o.delivery?.address)}`,`Pagamento: ${printSafe(o.payment)}`,o.notes?`Obs: ${printSafe(o.notes)}`:"",`TOTAL: ${money(o.total)}`,"","","","\x1D\x56\x00");return a.join("\n");}
 async function printOrder(id,automatic=false){
   const o=orders.find(x=>x.id===id);
-  if(!o)return;
+  if(!o)return false;
   const raw=receipt(o);
   try{
-    if(window.BIGLANCHE_PRINTER.available()){
+    if(window.BIGLANCHE_PRINTER?.bridgeAvailable?.()){
+      if(!window.BIGLANCHE_PRINTER.ready?.()) throw Error("Impressora Android não configurada");
       const sent=await window.BIGLANCHE_PRINTER.print(raw);
-      if(!sent) throw Error("Impressora não respondeu");
-      await setStatus(id,"printed");
-      if(automatic) status("Pedido #"+o.number+" impresso automaticamente",true);
-      return true;
+      if(!sent) throw Error("A ponte Android não confirmou o envio");
+    }else{
+      const p=await ensureQzPrinter();
+      const config=qz.configs.create(p,{jobName:`BIG LANCHE Pedido #${o.number}`});
+      await qz.print(config,[{type:"raw",format:"command",flavor:"plain",data:raw}]);
     }
-    if(!qzReady){browserPrint(o);return}
-    const p=PRINT_PRINTER||await qz.printers.getDefault(),
-          c=qz.configs.create(p,{jobName:`BIG LANCHE Pedido #${o.number}`});
-    await qz.print(c,[{type:"raw",format:"command",flavor:"plain",data:raw}]);
     await setStatus(id,"printed");
+    if(automatic) status("Pedido #"+o.number+" impresso automaticamente",true);
     return true;
   }catch(e){
-    if(!automatic) alert("Falha na impressão: "+e.message);
+    if(!automatic) alert("Falha na impressão: "+(e?.message||e));
     return false;
   }
 }
@@ -3310,25 +3320,19 @@ document.querySelectorAll("[data-order-mode]").forEach(b=>{
   b.addEventListener("click",()=>setOrderMode(b.dataset.orderMode));
 });
 
-async function load(){try{
-  const previous=orders;
-  const previousOrders=orders.slice();
-orders=await api("/api/orders");
-  await autoPrintNewOrders(previousOrders,orders);
-  status(qzReady||window.BIGLANCHE_PRINTER?.ready()?"Pedidos + impressora":"Pedidos conectados",true);
-  render();
-  if(window.BIGLANCHE_PRINTER?.ready() && !window.BIGLANCHE_PRINTER?.bridgeAvailable?.()){
-    for(const o of orders){
-      if(o.status!=="new" || autoPrintSeen.has(o.id) || autoPrintBusy.has(o.id)) continue;
-      autoPrintBusy.add(o.id);
-      try{
-        const ok=await printOrder(o.id,true);
-        if(ok) autoPrintSeen.add(o.id);
-      }catch(e){}
-      finally{autoPrintBusy.delete(o.id);}
-    }
+async function load(){
+  try{
+    const previousOrders=orders.slice();
+    orders=await api("/api/orders");
+    render();
+    await autoPrintNewOrders(previousOrders,orders);
+    const printerOk=window.BIGLANCHE_PRINTER?.ready?.() || qzReady;
+    status(printerOk?"Pedidos + impressão automática":"Pedidos conectados",true);
+  }catch(e){
+    if(e?.message==="AUTH_REQUIRED")return;
+    status("Servidor offline");
   }
-}catch{status("Servidor offline");}}
+}
 $("#connect").onclick=connectPrinter;$("#testPrint").onclick=testPrintSimulation;$("#refresh").onclick=load;$("#logout").onclick=doLogout;
 $("#testPrint").hidden=false;$("#loginForm").addEventListener("submit",async e=>{e.preventDefault();const b=$("#loginForm button");const p=$("#loginPassword").value.trim();if(!p)return;$("#loginError").textContent="";b.disabled=true;try{await doLogin(p);$("#loginPassword").value=""}catch(err){$("#loginError").textContent=err.message||"Senha incorreta";$("#loginPassword").select()}finally{b.disabled=false}});let kitchenPollTimer=null;
 let kitchenPollBusy=false;
