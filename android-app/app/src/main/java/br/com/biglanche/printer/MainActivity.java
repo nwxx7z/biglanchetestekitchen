@@ -131,11 +131,12 @@ public class MainActivity extends Activity {
 
     @Override protected void onStart() {
         super.onStart();
-        getSharedPreferences("printer", MODE_PRIVATE).edit().putBoolean("app_foreground", true).apply();
+        getSharedPreferences(PREFS, MODE_PRIVATE).edit().putBoolean("app_foreground", true).apply();
+        if (hasBtPermission()) startPrinterService();
     }
 
     @Override protected void onStop() {
-        getSharedPreferences("printer", MODE_PRIVATE).edit().putBoolean("app_foreground", false).apply();
+        getSharedPreferences(PREFS, MODE_PRIVATE).edit().putBoolean("app_foreground", false).apply();
         super.onStop();
     }
 
@@ -227,27 +228,32 @@ public class MainActivity extends Activity {
         return m == null || m.isEmpty() ? e.getClass().getSimpleName() : m;
     }
 
-    private void printEscPos(String raw) {
-        String mac = getPreferences(0).getString("printer_mac", "");
+    private boolean printEscPosSync(String raw) {
+        // A configuração da impressora e o serviço de segundo plano usam
+        // exatamente o mesmo SharedPreferences. O código antigo usava
+        // Activity#getPreferences() aqui e SharedPreferences("printer")
+        // para salvar, fazendo o APK "perder" a impressora.
+        String mac = getSharedPreferences(PREFS, MODE_PRIVATE).getString("printer_mac", "");
         if (mac.isEmpty()) {
             runOnUiThread(() -> status.setText("Impressora não configurada"));
-            return;
+            return false;
         }
         if (!hasBtPermission()) {
             runOnUiThread(this::requestBluetoothPermissions);
-            return;
+            return false;
         }
-        new Thread(() -> {
-            try {
-                BluetoothAdapter adapter = BluetoothAdapter.getDefaultAdapter();
-                if (adapter == null || !adapter.isEnabled()) throw new Exception("Bluetooth desligado");
-                BluetoothDevice d = adapter.getRemoteDevice(mac);
-                EscPosPrinter.printRaw(d, raw);
-                runOnUiThread(() -> status.setText("Impressão enviada"));
-            } catch (Exception e) {
-                runOnUiThread(() -> status.setText("Falha na impressão: " + cleanError(e)));
-            }
-        }, "printer-print").start();
+
+        try {
+            BluetoothAdapter adapter = BluetoothAdapter.getDefaultAdapter();
+            if (adapter == null || !adapter.isEnabled()) throw new Exception("Bluetooth desligado");
+            BluetoothDevice d = adapter.getRemoteDevice(mac);
+            EscPosPrinter.printRaw(d, raw);
+            runOnUiThread(() -> status.setText("Impressão enviada"));
+            return true;
+        } catch (Exception e) {
+            runOnUiThread(() -> status.setText("Falha na impressão: " + cleanError(e)));
+            return false;
+        }
     }
 
     private void toast(String s) { Toast.makeText(this, s, Toast.LENGTH_LONG).show(); }
@@ -287,8 +293,11 @@ public class MainActivity extends Activity {
             return true;
         }
         @JavascriptInterface public boolean printEscPos(String raw) {
-            MainActivity.this.printEscPos(raw == null ? "" : raw);
-            return isPrinterConfigured();
+            // addJavascriptInterface executa o método fora da UI thread.
+            // Esperamos o envio físico terminar para que o JavaScript só
+            // marque o pedido como "printed" quando o cupom realmente foi
+            // enviado ao Bluetooth.
+            return MainActivity.this.printEscPosSync(raw == null ? "" : raw);
         }
         @JavascriptInterface public boolean simulatePrint(String raw) {
             runOnUiThread(() -> MainActivity.this.simulatePrint(raw == null ? "" : raw));
