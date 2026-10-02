@@ -30,7 +30,8 @@ import java.util.concurrent.Executors;
 public class PrinterForegroundService extends Service {
     private static final String CHANNEL_ID = "big_lanche_printer";
     private static final int NOTIFICATION_ID = 1001;
-    private static final long POLL_MS = 10_000L;
+    private static final long POLL_MS = 5_000L;
+    private static final long RETRY_BACKOFF_MS = 2_000L;
     private static final String API_BASE = "https://biglanchetestkitchen.vercel.app";
 
     private final ExecutorService executor = Executors.newSingleThreadExecutor();
@@ -90,7 +91,16 @@ public class PrinterForegroundService extends Service {
 
     private void checkOrders() throws Exception {
         String cookie = CookieManager.getInstance().getCookie(API_BASE + "/kitchen");
-        if (cookie == null || cookie.trim().isEmpty()) return;
+        if (cookie == null || cookie.trim().isEmpty()) {
+            // A sessão do painel é a autorização do serviço. Quando ela
+            // expirar, a atividade renovará a sessão assim que voltar ao
+            // primeiro plano.
+            return;
+        }
+
+        String mac = getSharedPreferences("printer", MODE_PRIVATE)
+                .getString("printer_mac", "");
+        if (mac.isEmpty()) return;
 
         String response = request("GET", API_BASE + "/api/orders", cookie, null);
         if (response == null || response.isEmpty()) return;
@@ -108,21 +118,20 @@ public class PrinterForegroundService extends Service {
             String status = o.optString("status", "");
             if (id.isEmpty() || printed.contains(id) || !"new".equalsIgnoreCase(status)) continue;
 
-            String mac = getSharedPreferences("printer", MODE_PRIVATE)
-                    .getString("printer_mac", "");
-            if (mac.isEmpty()) return;
-
             JSONObject printable = toPrintableOrder(o);
             String receipt = OrderFormatter.format(printable);
 
-            // Só marcamos localmente como impresso depois que o Bluetooth
-            // concluir o envio do cupom.
-            print(mac, receipt);
+            // O método print só retorna depois de o socket Bluetooth ter
+            // enviado e descarregado o buffer. Falha => não marcamos como
+            // impresso e o próximo ciclo tenta novamente.
+            boolean ok = printWithRetry(mac, receipt);
+            if (!ok) continue;
+
             printed.add(id);
             savePrinted();
 
-            // O PATCH é feito depois do envio físico. Se a rede falhar aqui,
-            // o ID local impede que o mesmo pedido seja enviado novamente.
+            // O PATCH é feito depois do envio físico. Se a rede falhar,
+            // o ID persistido evita uma segunda impressão após reinício.
             try {
                 request("PATCH", API_BASE + "/api/orders/" + id, cookie,
                         "{\"status\":\"printed\"}");
@@ -158,15 +167,28 @@ public class PrinterForegroundService extends Service {
         return out;
     }
 
-    private void print(String mac, String receipt) throws Exception {
-        BluetoothAdapter adapter = BluetoothAdapter.getDefaultAdapter();
-        if (adapter == null || !adapter.isEnabled()) throw new Exception("Bluetooth desligado");
-        if (Build.VERSION.SDK_INT >= 31 && checkSelfPermission(android.Manifest.permission.BLUETOOTH_CONNECT)
-                != android.content.pm.PackageManager.PERMISSION_GRANTED) {
-            throw new Exception("Permissão Bluetooth não concedida");
+    private boolean printWithRetry(String mac, String receipt) {
+        for (int attempt = 1; attempt <= 2; attempt++) {
+            try {
+                BluetoothAdapter adapter = BluetoothAdapter.getDefaultAdapter();
+                if (adapter == null || !adapter.isEnabled()) throw new Exception("Bluetooth desligado");
+                if (Build.VERSION.SDK_INT >= 31 && checkSelfPermission(android.Manifest.permission.BLUETOOTH_CONNECT)
+                        != android.content.pm.PackageManager.PERMISSION_GRANTED) {
+                    throw new Exception("Permissão Bluetooth não concedida");
+                }
+                BluetoothDevice device = adapter.getRemoteDevice(mac);
+                EscPosPrinter.printRaw(device, receipt);
+                return true;
+            } catch (Exception e) {
+                if (attempt == 2) return false;
+                try { Thread.sleep(RETRY_BACKOFF_MS); }
+                catch (InterruptedException interrupted) {
+                    Thread.currentThread().interrupt();
+                    return false;
+                }
+            }
         }
-        BluetoothDevice device = adapter.getRemoteDevice(mac);
-        EscPosPrinter.printRaw(device, receipt);
+        return false;
     }
 
     private String request(String method, String urlText, String cookie, String body) throws Exception {
