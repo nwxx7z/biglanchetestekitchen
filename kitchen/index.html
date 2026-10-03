@@ -152,6 +152,8 @@ html[data-theme="dark"] .order-mode.active{
 .order-mode.active{background:#5c4333;border-color:#5c4333;color:#fff}
 .order-mode:disabled{opacity:.55;cursor:wait}
 #autoPrintToggle{font-weight:800}
+.danger-action{color:var(--danger)!important;border-color:#e3c7c2!important;background:#fff8f6!important;font-weight:800}
+html[data-theme="dark"] .danger-action{color:#ffb5aa!important;border-color:#65423b!important;background:#30211d!important}
 #autoPrintToggle.auto-print-on{border-color:#5f493a;color:#5f493a}
 #autoPrintToggle.auto-print-off{opacity:.78}
 
@@ -255,8 +257,8 @@ function card(o){
   const time=pedidoTime(o.createdAt);
   const isReady=o.status==="ready";
   const actions=isReady
-    ? `<button onclick="setStatus('${esc(o.id)}','preparing')">↩️ Voltar para pedidos</button>`
-    : `<button class="primary" onclick="printOrder('${esc(o.id)}')">🖨️ Imprimir</button><button onclick="setStatus('${esc(o.id)}','preparing')">Em preparo</button><button onclick="setStatus('${esc(o.id)}','ready')">Pronto</button>`;
+    ? `<button onclick="setStatus('${esc(o.id)}','preparing')">↩️ Voltar para pedidos</button><button class="danger-action" onclick="deleteOrder('${esc(o.id)}')">🗑️ Excluir</button>`
+    : `<button class="primary" onclick="printOrder('${esc(o.id)}')">🖨️ Imprimir</button><button onclick="setStatus('${esc(o.id)}','preparing')">Em preparo</button><button onclick="setStatus('${esc(o.id)}','ready')">Pronto</button><button class="danger-action" onclick="deleteOrder('${esc(o.id)}')">🗑️ Excluir</button>`;
   return `<article class="order ${o.status==="new"?"new":""}">
     <div class="order-head">
       <div><div class="number">Pedido #${esc(o.number)}</div>${time?`<div class="order-time">Feito às ${time}</div>`:""}</div>
@@ -309,6 +311,22 @@ async function printOrder(id,automatic=false){
 }
 function browserPrint(o){const w=window.open("","_blank","width=420,height=700");if(!w)return;w.document.write(`<style>body{font:14px monospace;width:80mm;margin:0;padding:5mm}.i{font-weight:700;margin:6px 0}.a{padding-left:10px}.t{font-size:18px;font-weight:900;margin-top:12px}</style><h2>BIG LANCHE<br>Pedido #${esc(o.number)}</h2>${(o.cart||[]).map(i=>`<div class=i>${i.quantity}x ${esc(i.name)}${(i.additions||[]).map(a=>`<div class=a>+ ${a.quantity||1}x ${esc(a.name)}</div>`).join("")}${i.note?`<div class=a><b>Obs.:</b> ${esc(i.note)}</div>`:""}</div>`).join("")}<hr>Entrega: ${esc(o.delivery?.city)}<br>Endereco: ${esc(o.delivery?.address)}<br>Pagamento: ${esc(o.payment)}<div class=t>TOTAL: ${money(o.total)}</div><script>window.print()<\/script>`);w.document.close();}
 async function setStatus(id,s){await api("/api/orders/"+encodeURIComponent(id),{method:"PATCH",body:JSON.stringify({status:s})});const o=orders.find(x=>x.id===id);if(o)o.status=s;render();}
+async function deleteOrder(id){
+  const o=orders.find(x=>x.id===id);
+  if(!o)return;
+  const number=o.number?String(o.number):id;
+  if(!confirm("Excluir o pedido #"+number+"?\\n\\nEssa ação não pode ser desfeita."))return;
+  try{
+    await api("/api/orders/"+encodeURIComponent(id),{method:"DELETE"});
+    orders=orders.filter(x=>x.id!==id);
+    autoPrintSeen.delete(id);
+    autoPrintBusy.delete(id);
+    render();
+    status("Pedido #"+number+" excluído",true);
+  }catch(e){
+    if(e.message!=="AUTH_REQUIRED")alert("Não foi possível excluir o pedido: "+e.message);
+  }
+}
 function loadAutoPrintSetting(){try{const v=localStorage.getItem(autoPrintStorageKey);autoPrintEnabled=v===null?true:v==="1"}catch(e){autoPrintEnabled=true}renderAutoPrintToggle()}
 function renderAutoPrintToggle(){const b=$("#autoPrintToggle");if(!b)return;b.classList.toggle("auto-print-on",autoPrintEnabled);b.classList.toggle("auto-print-off",!autoPrintEnabled);b.setAttribute("aria-pressed",String(autoPrintEnabled));b.textContent=autoPrintEnabled?"⚡ Impressão automática: ON":"⚡ Impressão automática: OFF"}
 function toggleAutoPrint(){autoPrintEnabled=!autoPrintEnabled;try{localStorage.setItem(autoPrintStorageKey,autoPrintEnabled?"1":"0")}catch(e){}renderAutoPrintToggle();if(!autoPrintEnabled)autoPrintBusy.clear();status(autoPrintEnabled?"Impressão automática ativada":"Impressão automática desativada",true);if(autoPrintEnabled)load()}
