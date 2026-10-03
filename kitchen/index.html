@@ -3338,7 +3338,9 @@ let kitchenPollBusy=false;
 async function pollKitchen(){if(!authenticated||kitchenPollBusy)return;kitchenPollBusy=true;try{await load()}finally{kitchenPollBusy=false}}
 function startKitchenPolling(){
   if(kitchenPollTimer)clearInterval(kitchenPollTimer);
-  kitchenPollTimer=setInterval(pollKitchen,5000);
+  // Mantém o comportamento da versão que imprimia automaticamente de forma
+  // confiável: nova verificação a cada 2,5s, sem exigir atualização manual.
+  kitchenPollTimer=setInterval(pollKitchen,2500);
 }
 document.addEventListener("visibilitychange",()=>{if(!document.hidden&&authenticated)pollKitchen()});
 
