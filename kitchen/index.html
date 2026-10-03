@@ -3043,7 +3043,7 @@ async function connectPrinter(){
   }
 }
 async function autoPrintPending(){
-  if(!autoPrintEnabled || window.BIGLANCHE_ANDROID_BACKGROUND_PRINTER)return;
+  if(!autoPrintEnabled)return;
   if(window.BIGLANCHE_PRINTER?.bridgeAvailable?.()){
     if(!window.BIGLANCHE_PRINTER.ready?.())return;
   }else{
@@ -3086,7 +3086,6 @@ function markAutoPrintBaseline(list){
   autoPrintInitialized=true;
 }
 async function autoPrintNewOrders(previous,next){
-  if(window.BIGLANCHE_ANDROID_BACKGROUND_PRINTER)return;
   if(!autoPrintEnabled)return;
   autoPrintInitialized=true;
   // No primeiro carregamento, também imprimimos pedidos "new" que ficaram
