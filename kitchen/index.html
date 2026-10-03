@@ -58,10 +58,16 @@ html[data-theme="dark"]{color-scheme:dark!important}
 .theme-toggle{
   display:inline-flex!important;align-items:center;justify-content:center;gap:5px;
   min-height:34px!important;padding:6px 10px!important;
-  border:1px solid rgba(255,255,255,.24)!important;border-radius:999px!important;
-  background:rgba(255,255,255,.10)!important;color:#fff!important;
+  border:1px solid #b9aaa0!important;border-radius:999px!important;
+  background:#fffaf5!important;color:#171311!important;
   cursor:pointer!important;font:800 12px/1 Arial,sans-serif!important;
   transition:background .18s,border-color .18s,transform .18s!important;
+}
+html[data-theme="light"] .theme-toggle{
+  background:#fffaf5!important;color:#171311!important;border-color:#b9aaa0!important;
+}
+html[data-theme="dark"] .theme-toggle{
+  background:#2b211c!important;color:#fff1d6!important;border-color:#5a4639!important;
 }
 .theme-toggle:hover{background:rgba(255,255,255,.18)!important;transform:translateY(-1px)}
 .theme-icon{font-size:14px;line-height:1}
