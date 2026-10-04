@@ -5149,13 +5149,74 @@ img,svg,video,canvas{max-width:100%}
 </style>
 <style id="addon-dropdown-menu">
 /* ===== MENU DROPDOWN DE ADICIONAIS ===== */
-.addon-dropdown{position:relative;width:100%;margin-top:9px;z-index:30}
-.addon-dropdown-trigger{width:100%;min-height:42px;display:flex;align-items:center;gap:8px;padding:9px 12px;border:1px solid var(--line);border-radius:13px;background:var(--card);color:var(--ink);font:700 .88rem/1.2 "DM Sans",sans-serif;text-align:left;cursor:pointer;box-shadow:0 2px 7px rgba(42,31,24,.05);transition:background .18s ease,border-color .18s ease,box-shadow .18s ease}
-.addon-dropdown-trigger:hover{border-color:#cdbeb2;box-shadow:0 4px 11px rgba(42,31,24,.08)}
-.addon-dropdown-trigger:focus-visible{outline:3px solid var(--tomato);outline-offset:2px}
-.addon-dropdown-arrow{width:8px;height:8px;margin:0 2px 3px auto;border-right:2px solid currentColor;border-bottom:2px solid currentColor;transform:rotate(45deg);transition:transform .18s ease}
+.addon-dropdown{position:relative;width:100%;margin-top:10px;z-index:30}
+.linha .addon-dropdown-trigger{
+  width:100%;
+  min-width:0;
+  min-height:46px;
+  height:46px;
+  display:flex;
+  align-items:center;
+  gap:9px;
+  padding:0 13px;
+  border:1px solid #80614e;
+  border-radius:13px;
+  background:linear-gradient(135deg,rgba(255,255,255,.055),rgba(255,255,255,.015)),var(--card);
+  color:var(--ink);
+  font:700 .9rem/1 "DM Sans",sans-serif;
+  text-align:left;
+  cursor:pointer;
+  box-shadow:0 3px 10px rgba(20,12,8,.08);
+  transition:transform .16s ease,border-color .16s ease,background .16s ease,box-shadow .16s ease;
+}
+.linha .addon-dropdown-trigger::before{
+  content:"+";
+  width:25px;
+  height:25px;
+  flex:0 0 25px;
+  display:inline-flex;
+  align-items:center;
+  justify-content:center;
+  border-radius:8px;
+  background:rgba(47,93,58,.16);
+  color:var(--pickle);
+  font-size:1.15rem;
+  font-weight:500;
+  line-height:1;
+}
+.linha .addon-dropdown-trigger:hover{
+  border-color:var(--pickle);
+  background:linear-gradient(135deg,rgba(47,93,58,.12),rgba(255,255,255,.025)),var(--card);
+  box-shadow:0 5px 14px rgba(20,12,8,.12);
+  transform:translateY(-1px);
+}
+.linha .addon-dropdown-trigger:active{transform:translateY(0)}
+.linha .addon-dropdown-trigger:focus-visible{outline:3px solid var(--tomato);outline-offset:2px}
+.addon-dropdown-arrow{
+  width:8px;
+  height:8px;
+  margin:0 2px 3px auto;
+  border-right:2px solid currentColor;
+  border-bottom:2px solid currentColor;
+  transform:rotate(45deg);
+  transition:transform .18s ease;
+  opacity:.78;
+}
 .addon-dropdown.open .addon-dropdown-arrow{transform:rotate(225deg);margin-bottom:-2px}
-.addon-dropdown-count{min-width:21px;height:21px;display:inline-flex;align-items:center;justify-content:center;padding:0 6px;border-radius:999px;background:var(--pickle);color:#fff;font-size:.72rem;font-weight:900}
+.addon-dropdown-count{
+  min-width:23px;
+  height:23px;
+  display:inline-flex;
+  align-items:center;
+  justify-content:center;
+  padding:0 7px;
+  border-radius:999px;
+  background:var(--pickle);
+  color:#fff;
+  font-size:.72rem;
+  font-weight:900;
+  box-shadow:0 2px 5px rgba(47,93,58,.2);
+}
 .addon-dropdown-menu{position:absolute;left:0;right:0;top:calc(100% + 6px);max-height:260px;overflow:auto;padding:6px;border:1px solid var(--line);border-radius:14px;background:var(--card);box-shadow:0 16px 30px rgba(42,31,24,.18);opacity:0;visibility:hidden;pointer-events:none;transform:translateY(-5px);transition:opacity .15s ease,transform .17s ease,visibility 0s linear .17s;z-index:7000;overscroll-behavior:contain;-webkit-overflow-scrolling:touch}
 .addon-dropdown.open .addon-dropdown-menu{opacity:1;visibility:visible;pointer-events:auto;transform:translateY(0);transition:opacity .15s ease,transform .17s ease,visibility 0s linear 0s}
 .addon-option{min-height:42px;display:flex;align-items:center;gap:8px;padding:6px 7px 6px 10px;border-radius:10px;transition:background .14s ease}
@@ -5164,11 +5225,11 @@ img,svg,video,canvas{max-width:100%}
 .addon-option-name{min-width:0;flex:1;font-size:.84rem;font-weight:700}
 .addon-option-name small{opacity:.78;font-size:.75rem;font-weight:700}
 .addon-controls{display:inline-flex;align-items:center;gap:3px;flex:none}
-.addon-controls button{width:29px;height:29px;min-height:29px;padding:0;border:1px solid var(--line);border-radius:8px;background:var(--card);color:var(--ink);font:800 .95rem/1 "DM Sans",sans-serif;cursor:pointer}
-.addon-controls button:hover{border-color:var(--pickle);color:var(--pickle)}
+.linha .addon-controls button{width:29px;height:29px;min-height:29px;padding:0;border:1px solid var(--line);border-radius:8px;background:var(--card);color:var(--ink);font:800 .95rem/1 "DM Sans",sans-serif;cursor:pointer}
+.linha .addon-controls button:hover{border-color:var(--pickle);color:var(--pickle)}
 .addon-qty{min-width:19px;text-align:center;font-size:.78rem;font-weight:850}
 .addon-option.has-qty{background:color-mix(in srgb,var(--pickle) 9%,var(--card))}
-@media(max-width:650px){.addon-dropdown-menu{max-height:230px}.addon-option{min-height:43px;padding-left:8px}.addon-controls button{width:30px;height:30px;min-height:30px}}
+@media(max-width:650px){.addon-dropdown-menu{max-height:230px}.addon-option{min-height:43px;padding-left:8px}.linha .addon-dropdown-trigger{min-height:44px;height:44px}.linha .addon-controls button{width:30px;height:30px;min-height:30px}}
 @media(prefers-color-scheme:dark){.addon-dropdown-trigger{background:#33261d;border-color:#614939;color:#fff1d6}.addon-dropdown-menu{background:#33261d;border-color:#614939;box-shadow:0 16px 30px rgba(0,0,0,.4)}.addon-option:hover{background:#4b382d}.addon-option.has-qty{background:#2f6240}.addon-controls button{background:#3f3027;border-color:#634a3a;color:#fff1d6}}
 </style>
 </head>
@@ -5456,7 +5517,7 @@ const saudacao = () => "Olá, gostaria de fazer meu pedido";
 // ===== HORÁRIO / CONTROLE DE PEDIDOS =====
 const PEDIDOS_INICIO = 17 * 60 + 30;
 const PEDIDOS_FIM = 23 * 60 + 45;
-// "auto" segue 18:00–23:40; "open" e "closed" são comandos do Kitchen.
+// "auto" segue 17:30–23:45; "open" e "closed" são comandos do Kitchen.
 let STORE_ORDER_MODE = "auto";
 let STORE_ORDER_OPEN = null;
 let STORE_STATUS_LOADED = false;
@@ -5813,7 +5874,7 @@ function refresh(){
   $("#enviar").textContent = !cart.length
     ? "Escolha um item para enviar"
     : !horarioValido
-      ? "Pedidos das 18:00 às 23:40"
+      ? "Pedidos das 17:30 às 23:45"
       : !saboresValidos
         ? "Escolha o sabor do suco"
         : !entregaValida
