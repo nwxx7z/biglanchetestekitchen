@@ -5423,6 +5423,12 @@ const FRUIT_ICONS = {
   "Caju": `<svg viewBox="0 0 48 48" aria-hidden="true"><path d="M25 11c-2-5 1-8 7-9 2 5-1 8-6 10" fill="#4F9147"/><path d="M28 8c4-4 9-4 12-1-3 4-7 5-11 4" fill="#69A954"/><path d="M11 19c3-5 9-7 16-5 8 2 13 8 12 15-1 9-9 15-18 14-8-1-14-7-14-14 0-4 1-7 4-10z" fill="#E58B35"/><path d="M14 20c4-4 10-5 15-3 6 2 9 6 9 11 0 7-6 11-13 11-6 0-11-4-12-9-1-4 0-7 1-10z" fill="#F2A33D"/><path d="M20 17c-1 5-1 13 2 19" fill="none" stroke="#FFD27A" stroke-width="2" stroke-linecap="round" opacity=".65"/><path d="M26 33c3 1 5 3 5 6-1 3-4 5-7 4-3-1-5-4-4-7 1-3 3-4 6-3z" fill="#8D5A3B"/></svg>`
 };
 const iconeFruta = sabor => FRUIT_ICONS[sabor] || "";
+const MILKSHAKE_ICONS = {
+  "Morango": `<svg viewBox="0 0 48 48" aria-hidden="true"><path d="M14 18h20l-2 24H16z" fill="#f8eee4"/><path d="M12 17h24" stroke="#8b5a43" stroke-width="3" stroke-linecap="round"/><path d="M17 16c1-8 5-11 7-7 2-7 7-5 7 2" fill="#f4a0a8" stroke="#d75b70" stroke-width="2"/><circle cx="21" cy="11" r="1.5" fill="#fff"/><circle cx="27" cy="8" r="1.5" fill="#fff"/><circle cx="31" cy="12" r="1.5" fill="#fff"/><path d="M18 23h12M18 28h12M19 34h10" stroke="#d75b70" stroke-width="2" stroke-linecap="round"/></svg>`,
+  "Chocolate": `<svg viewBox="0 0 48 48" aria-hidden="true"><path d="M14 18h20l-2 24H16z" fill="#f8eee4"/><path d="M12 17h24" stroke="#8b5a43" stroke-width="3" stroke-linecap="round"/><path d="M16 15c2-8 5-10 8-5 3-6 8-3 8 5" fill="#7b4a32"/><circle cx="20" cy="10" r="2" fill="#a66a47"/><circle cx="27" cy="9" r="2" fill="#a66a47"/><circle cx="31" cy="13" r="2" fill="#a66a47"/><path d="M18 23h12M18 28h12M19 34h10" stroke="#7b4a32" stroke-width="2" stroke-linecap="round"/></svg>`,
+  "Creme": `<svg viewBox="0 0 48 48" aria-hidden="true"><path d="M14 18h20l-2 24H16z" fill="#f8eee4"/><path d="M12 17h24" stroke="#8b5a43" stroke-width="3" stroke-linecap="round"/><path d="M16 16c2-8 5-10 8-5 3-6 8-3 8 5" fill="#fff3d2" stroke="#d9bd8a" stroke-width="2"/><path d="M19 9c2 3 3 5 5 1 2 4 4 2 5-1" fill="none" stroke="#fff" stroke-width="2" stroke-linecap="round"/><path d="M18 23h12M18 28h12M19 34h10" stroke="#c9a96d" stroke-width="2" stroke-linecap="round"/></svg>`
+};
+const iconeMilkshake = sabor => MILKSHAKE_ICONS[sabor] || "";
 // cada item: [nome, preço, descrição, opções (opcional)]
 const C = [
 {t:"Hambúrgueres artesanais",ad:"h",nota:"Todos acompanham uma porção de batatas fritas. Adicionais ficam disponíveis em &quot;Seu pedido&quot; depois de adicionar.",i:[
@@ -5483,7 +5489,7 @@ const C = [
 ["H2O",8,"",null,"agua"],
 ["Água mineral sem gás 500ml",3,"",null,"agua"],
 ["Água mineral com gás 500ml",4,"",null,"agua"],
-["Milkshake",15,"",["Morango","Chocolate","Creme"],"milkshake"]
+["Milkshake",15,"","","milkshake"]
 ]},
 {t:"Tapiocas",ad:"g",nota:"Adicionais ficam disponíveis em &quot;Seu pedido&quot; depois de adicionar.",i:[
 ["Tapioca de carne de sol com queijo",18],["Tapioca de camarão",25],["Tapioca de frango com queijo",16],
@@ -5867,16 +5873,29 @@ function refresh(){
         </label>`).join("")}
       </div>
     </div>` : "";
+    const milkshakeOptions = l.kind === "milkshake" ? `<div class="suco-escolha" role="radiogroup" aria-label="Escolha o sabor de ${esc(l.n)}">
+      <div class="suco-escolha-title">Escolha o sabor</div>
+      <div class="suco-opcoes">
+        ${["Morango","Chocolate","Creme"].map(sabor => `<label class="suco-opcao">
+          <input class="suco-radio" type="radio" name="milkshake-${l.u}" value="${esc(sabor)}" data-u="${l.u}" ${l.flavor === sabor ? "checked" : ""}>
+          <span class="suco-opcao-card">
+            <span class="suco-fruta">${iconeMilkshake(sabor)}</span>
+            <span class="suco-nome">${esc(sabor)}</span>
+            <span class="suco-check" aria-hidden="true"></span>
+          </span>
+        </label>`).join("")}
+      </div>
+    </div>` : "";
     const btns = ad ? `<button data-u="${l.u}" data-d="0" aria-label="Remover ${esc(l.n)}">×</button>`
       : `<button data-u="${l.u}" data-d="-1" aria-label="Remover um ${esc(l.n)}">−</button><button data-u="${l.u}" data-d="1" aria-label="Adicionar um ${esc(l.n)}">+</button>`;
     const notePlaceholder = observacaoPlaceholder(l);
     const noteField = notePlaceholder ? `<textarea class="item-note" data-note-u="${l.u}" maxlength="300" placeholder="${notePlaceholder}">${esc(l.note || "")}</textarea>` : "";
-    return `<div class="linha"><div class="lt"><b>${l.q}x ${esc(l.n)}</b>${(l.juice || l.kind === "milkshake") && l.flavor ? ` <span class="suco-sabor-resumo">· ${esc(l.flavor)}</span>` : ""} · ${brl(l.q * unit(l))}${juiceOptions}${chips}${noteField}</div>${btns}</div>`;
+    return `<div class="linha"><div class="lt"><b>${l.q}x ${esc(l.n)}</b>${(l.juice || l.kind === "milkshake") && l.flavor ? ` <span class="suco-sabor-resumo">· ${esc(l.flavor)}</span>` : ""} · ${brl(l.q * unit(l))}${juiceOptions}${milkshakeOptions}${chips}${noteField}</div>${btns}</div>`;
   }).join("") + `<div id="total">Total: ${brl(total())}</div>` : `<p class="nota">Nenhum item escolhido ainda.</p>`;
   const entregaValida = entregaCompleta();
   const pagamentoValido = !!document.querySelector('input[name="pagamento"]:checked') && trocoValido();
   const horarioValido = pedidosAbertos();
-  const saboresValidos = cart.every(l => !l.juice || !!l.flavor);
+  const saboresValidos = cart.every(l => (!l.juice && l.kind !== "milkshake") || !!l.flavor);
   const checkoutValido = entregaValida && pagamentoValido && horarioValido && saboresValidos;
   $("#enviar").disabled = !cart.length || !checkoutValido;
   $("#copiar").disabled = !cart.length || !checkoutValido;
@@ -5885,7 +5904,9 @@ function refresh(){
     : !horarioValido
       ? "Pedidos das 17:30 às 23:45"
       : !saboresValidos
-        ? "Escolha o sabor do suco"
+        ? (cart.some(l => l.kind === "milkshake" && !l.flavor)
+            ? "Escolha o sabor do milkshake"
+            : "Escolha o sabor do suco")
         : !entregaValida
           ? entregaFaltante()
           : !pagamentoValido
@@ -6023,10 +6044,10 @@ document.addEventListener("click", e => {
     const id = a.dataset.c + "-" + a.dataset.i;
     const isJuice = it[4] === "suco";
     const kind = it[4] || "";
-    const selectedFlavor = it[4] === "milkshake" && sel ? sel.value : "";
-    const l = c.ad || isJuice ? null : cart.find(x => x.id === id && x.n === n);
+    const isFlavorItem = isJuice || kind === "milkshake";
+    const l = c.ad || isFlavorItem ? null : cart.find(x => x.id === id && x.n === n);
     if (l) l.q++;
-    else cart.push({u: ++uid, id, n, p: it[1], q: 1, ad: c.ad || "", adds: [], juice: isJuice, kind, flavor: selectedFlavor, note: ""});
+    else cart.push({u: ++uid, id, n, p: it[1], q: 1, ad: c.ad || "", adds: [], juice: isJuice, kind, flavor: "", note: ""});
     animateAddButton(a);
     refresh();
     updateCartCount(true);
