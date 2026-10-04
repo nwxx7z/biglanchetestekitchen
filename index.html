@@ -5940,7 +5940,7 @@ function observacaoPlaceholder(l){
   if (l.juice || l.kind === "milkshake" || l.kind === "vitamina") {
     return "Observação deste item (ex.: sem açúcar, pouco açúcar, etc.)";
   }
-  if (l.kind === "refrigerante" || l.kind === "agua") {
+  if (l.kind === "refrigerante" || l.kind === "refrigerante-dropdown" || l.kind === "agua") {
     return "";
   }
   return "Observação deste item (ex.: sem salada, sem bacon, sem tomate)";
