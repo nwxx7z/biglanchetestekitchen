@@ -777,6 +777,20 @@ textarea{resize:vertical;min-height:76px}
   position:relative;
   z-index:1;
 }
+/* O dropdown aberto precisa ficar acima das outras linhas do carrinho.
+   Sem isso, cada .linha (z-index:1) pode pintar por cima do menu de uma
+   linha anterior quando existem vários itens no pedido. */
+.cart-panel .linha:has(.addon-dropdown.open){
+  position:relative !important;
+  z-index:1000 !important;
+}
+.cart-panel .linha:has(.addon-dropdown.open) .addon-dropdown{
+  position:relative;
+  z-index:1001;
+}
+.cart-panel .linha:has(.addon-dropdown.open) .addon-dropdown-menu{
+  z-index:1002 !important;
+}
 .cart-panel .chips{
   margin-top:8px;
 }
