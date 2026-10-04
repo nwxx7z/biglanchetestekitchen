@@ -5232,6 +5232,70 @@ img,svg,video,canvas{max-width:100%}
 @media(max-width:650px){.addon-dropdown-menu{max-height:230px}.addon-option{min-height:43px;padding-left:8px}.linha .addon-dropdown-trigger{min-height:44px;height:44px}.linha .addon-controls button{width:30px;height:30px;min-height:30px}}
 @media(prefers-color-scheme:dark){.addon-dropdown-trigger{background:#33261d;border-color:#614939;color:#fff1d6}.addon-dropdown-menu{background:#33261d;border-color:#614939;box-shadow:0 16px 30px rgba(0,0,0,.4)}.addon-option:hover{background:#4b382d}.addon-option.has-qty{background:#2f6240}.addon-controls button{background:#3f3027;border-color:#634a3a;color:#fff1d6}}
 </style>
+<style id="addon-dropdown-contrast-fix">
+/* Correção final: o .linha span aplicava flex:1 na seta do dropdown, criando a linha diagonal gigante. */
+.cart-panel .linha .addon-dropdown-arrow{
+  flex:0 0 8px !important;
+  width:8px;
+  min-width:8px;
+  height:8px;
+  border-right:2px solid #fff1d6 !important;
+  border-bottom:2px solid #fff1d6 !important;
+}
+.cart-panel .linha .addon-dropdown-count{
+  flex:0 0 auto !important;
+  color:#fff !important;
+  background:#2f6b46 !important;
+}
+.cart-panel .linha .addon-dropdown-trigger{
+  background:#3b2b22 !important;
+  color:#fff1d6 !important;
+  border-color:#80614e !important;
+}
+.cart-panel .linha .addon-dropdown-trigger:hover{
+  background:#443128 !important;
+  border-color:#6fb587 !important;
+}
+.cart-panel .linha .addon-dropdown-menu{
+  background:#33261d !important;
+  border-color:#80614e !important;
+  box-shadow:0 16px 30px rgba(0,0,0,.42);
+}
+.cart-panel .linha .addon-option{
+  color:#fff1d6 !important;
+}
+.cart-panel .linha .addon-option:hover{
+  background:#4b382d !important;
+}
+.cart-panel .linha .addon-option-name{
+  color:#fff1d6 !important;
+  font-weight:750;
+}
+.cart-panel .linha .addon-option-name small{
+  color:#e8d5bd !important;
+  opacity:1;
+}
+.cart-panel .linha .addon-controls{
+  flex:0 0 auto !important;
+}
+.cart-panel .linha .addon-controls button{
+  width:30px !important;
+  height:30px !important;
+  min-width:30px !important;
+  min-height:30px !important;
+  background:#f5ede4 !important;
+  color:#315f42 !important;
+  border-color:#8b735f !important;
+}
+.cart-panel .linha .addon-qty{
+  flex:0 0 auto !important;
+  color:#fff1d6 !important;
+  font-weight:900;
+}
+.cart-panel .linha .addon-option.has-qty{
+  background:#2f4f39 !important;
+}
+</style>
 </head>
 <body>
 <header class="hero-freefire" aria-label="BIG LANCHE">
