@@ -5883,7 +5883,7 @@ function buildMenu(){
         <div class="custom-select-menu" role="listbox" aria-label="Escolha seu sabor">
           ${it[5].map((o,oi) => `<button type="button" class="custom-option" role="option" aria-selected="false" data-value="${esc(o[0])}" style="--option-i:${oi}">${esc(o[0])} <span style="margin-left:auto;font-weight:700">${brl(o[1])}</span></button>`).join("")}
         </div>
-      </div>` : ${it[3] ? `<div class="custom-select" data-select-label="Opção de ${esc(it[0])}">
+      </div>` : (it[3] ? `<div class="custom-select" data-select-label="Opção de ${esc(it[0])}">
         <select aria-label="Opção de ${esc(it[0])}">${it[3].map(o => `<option>${o}</option>`).join("")}</select>
         <button type="button" class="custom-select-trigger" aria-haspopup="listbox" aria-expanded="false">
           <span class="custom-select-value">${esc(it[3][0])}</span><span class="custom-select-arrow">⌄</span>
