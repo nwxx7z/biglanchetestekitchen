@@ -5480,8 +5480,8 @@ const C = [
 ["Suco sem leite",8,"",null,"suco"],["Suco com leite",10,"",null,"suco"],
 ["Jarra de suco sem leite",16,"",null,"suco"],["Jarra de suco com leite",20,"",null,"suco"],
 ["Suco de laranja natural",12],["Jarra de suco de laranja natural",24],
-["Vitamina de açaí",13,"Polpa de açaí, banana, açúcar, leite, granola."],
-["Vitamina de guaraná",13,"Guaraná, farinha de amendoim, banana, leite."],
+["Vitamina de açaí",13,"Polpa de açaí, banana, açúcar, leite, granola.","", "vitamina"],
+["Vitamina de guaraná",13,"Guaraná, farinha de amendoim, banana, leite.","", "vitamina"],
 ["Coca cola Júnior",3,"",null,"refrigerante"], ["Coca cola 1 Litro",12,"",null,"refrigerante"],["Coca cola 2 litros",18,"",null,"refrigerante"],["Coca lata",7,"",null,"refrigerante"],
 ["Coca cola 1 litro zero",12,"",null,"refrigerante"],["Coca lata zero",7,"",null,"refrigerante"],
 ["Guaraná júnior",2.5,"",null,"refrigerante"], ["Guaraná 1 litro",10,"",null,"refrigerante"],["Guaraná 2 litros",15,"",null,"refrigerante"],["Guaraná lata",6,"",null,"refrigerante"],
@@ -5822,7 +5822,7 @@ function observacaoPlaceholder(l){
   if (categoria === "Espetinhos") {
     return "Observação deste item (ex.: ao ponto, sem acompanhamentos, etc.)";
   }
-  if (l.juice) {
+  if (l.juice || l.kind === "milkshake" || l.kind === "vitamina") {
     return "Observação deste item (ex.: sem açúcar, pouco açúcar, etc.)";
   }
   if (l.kind === "refrigerante" || l.kind === "agua") {
