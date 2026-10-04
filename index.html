@@ -5891,7 +5891,7 @@ function buildMenu(){
         <div class="custom-select-menu" role="listbox" aria-label="Opções de ${esc(it[0])}">
           ${it[3].map((o,oi) => `<button type="button" class="custom-option${oi === 0 ? " selected" : ""}" role="option" aria-selected="${oi === 0 ? "true" : "false"}" data-value="${esc(o)}" style="--option-i:${oi}">${esc(o)}</button>`).join("")}
         </div>
-      </div>` : ""}
+      </div>` : "")}
       <button class="add" data-c="${ci}" data-i="${ii}" aria-label="Adicionar ${esc(it[0])}">
   <span class="add-icon" aria-hidden="true">
     <span class="add-plus">+</span>
