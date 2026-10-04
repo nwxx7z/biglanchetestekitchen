@@ -5310,6 +5310,40 @@ img,svg,video,canvas{max-width:100%}
   background:#2f4f39 !important;
 }
 </style>
+<style id="remove-copy-and-payment-contrast">
+/* O botão de copiar foi removido: o envio acontece exclusivamente pelo WhatsApp. */
+#copiar,.cart-panel #copiar{display:none !important}
+
+/* Contraste forte e consistente das formas de pagamento. */
+.cart-panel .pagamento-card{
+  background:#3b2b22 !important;
+  border:2px solid #80614e !important;
+  color:#fff4e8 !important;
+}
+.cart-panel .pagamento-text strong{
+  color:#fff8ef !important;
+  font-weight:800 !important;
+}
+.cart-panel .pagamento-text small{
+  color:#ead8c8 !important;
+  font-weight:600 !important;
+}
+.cart-panel .pagamento-opcao:hover .pagamento-card{
+  background:#4a3529 !important;
+  border-color:#a88970 !important;
+}
+.cart-panel .pagamento-opcao input:checked + .pagamento-card{
+  background:#2f6b46 !important;
+  border-color:#a9d8b5 !important;
+  box-shadow:0 0 0 2px rgba(169,216,181,.22),0 5px 14px rgba(0,0,0,.2) !important;
+}
+.cart-panel .pagamento-opcao input:checked + .pagamento-card .pagamento-text strong{
+  color:#ffffff !important;
+}
+.cart-panel .pagamento-opcao input:checked + .pagamento-card .pagamento-text small{
+  color:#f1fff4 !important;
+}
+</style>
 </head>
 <body>
 <header class="hero-freefire" aria-label="BIG LANCHE">
@@ -5471,7 +5505,6 @@ img,svg,video,canvas{max-width:100%}
       <div class="cart-actions">
         <button id="enviar" disabled>Escolha um item para enviar</button>
         <div id="whatsapp-aviso" role="note">O PEDIDO SÓ SERÁ FINALIZADO APÓS O ENVIO DA MENSAGEM AO WHATSAPP (MENSAGEM É GERADA AUTOMATICAMENTE AO CLICAR NO BOTÃO)</div>
-        <button id="copiar" disabled>Copiar mensagem do pedido</button>
       </div>
     </div>
   </div>
@@ -5977,7 +6010,6 @@ function refresh(){
   const saboresValidos = cart.every(l => (!l.juice && l.kind !== "milkshake") || !!l.flavor);
   const checkoutValido = entregaValida && pagamentoValido && horarioValido && saboresValidos;
   $("#enviar").disabled = !cart.length || !checkoutValido;
-  $("#copiar").disabled = !cart.length || !checkoutValido;
   $("#enviar").textContent = !cart.length
     ? "Escolha um item para enviar"
     : !horarioValido
@@ -6277,19 +6309,11 @@ $("#enviar").addEventListener("click", async () => {
     button.textContent = originalText;
   }
 });
-$("#copiar").addEventListener("click", async () => {
-  const m = mensagem(), b = $("#copiar");
-  try { await navigator.clipboard.writeText(m); }
-  catch (e) { const t = document.createElement("textarea"); t.value = m; document.body.appendChild(t); t.select(); document.execCommand("copy"); t.remove(); }
-  b.textContent = "Copiado! Cole no WhatsApp";
-  setTimeout(() => b.textContent = "Copiar mensagem do pedido", 2500);
-});
 function atualizarCheckoutEntrega(){
   const entregaValida = entregaCompleta();
   const pagamentoValido = !!document.querySelector('input[name="pagamento"]:checked') && trocoValido();
   const checkoutValido = entregaValida && pagamentoValido;
   $("#enviar").disabled = !cart.length || !checkoutValido;
-  $("#copiar").disabled = !cart.length || !checkoutValido;
   $("#enviar").textContent = !cart.length
     ? "Escolha um item para enviar"
     : !entregaValida
@@ -6431,9 +6455,6 @@ desenharMapa();
     ){
       closeCart();
     }
-  });
-  document.getElementById("copiar")?.addEventListener("click", () => {
-    setTimeout(closeCart, 1200);
   });
   document.getElementById("enviar")?.addEventListener("click", () => {
     setTimeout(closeCart, 250);
