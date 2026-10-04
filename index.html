@@ -36,6 +36,7 @@ textarea{width:100%;margin-top:12px;border:1px solid var(--line);border-radius:1
 button:focus-visible,textarea:focus-visible,select:focus-visible,a:focus-visible{outline:3px solid var(--tomato);outline-offset:2px}
 .bar{position:fixed;left:0;right:0;bottom:0;padding:12px 16px calc(12px + env(safe-area-inset-bottom,0px));background:var(--paper);border-top:1px solid var(--line)}
 #enviar{display:block;width:100%;max-width:680px;margin:0 auto;border:0;border-radius:14px;background:var(--pickle);color:#fff;font:700 1.05rem "DM Sans",sans-serif;padding:16px;cursor:pointer}
+#whatsapp-aviso{display:block;width:100%;max-width:680px;margin:7px auto 0;text-align:center;color:var(--ink);font:700 .78rem/1.35 "DM Sans",sans-serif;letter-spacing:.01em}
 #enviar:disabled{background:var(--line);color:var(--ink);opacity:.6;cursor:default}
 .lt{flex:1}.chips{display:flex;flex-wrap:wrap;gap:6px;margin-top:6px}.chip{display:flex;align-items:center;gap:6px;border:1px solid var(--line);border-radius:999px;padding:6px 10px;font-size:.85rem;cursor:pointer}.chip input{width:18px;height:18px;accent-color:var(--pickle)}
 #copiar{display:block;margin:6px auto 0;border:0;background:none;color:var(--ink);font:500 .9rem "DM Sans",sans-serif;text-decoration:underline;cursor:pointer;padding:6px}#copiar:disabled{display:none}
@@ -5146,6 +5147,30 @@ img,svg,video,canvas{max-width:100%}
 @media(max-width:650px){.cidade-opcao-sao-bento,.local-entrega{grid-column:1}}
 @media(prefers-reduced-motion:reduce){.local-entrega{transition:none}}
 </style>
+<style id="addon-dropdown-menu">
+/* ===== MENU DROPDOWN DE ADICIONAIS ===== */
+.addon-dropdown{position:relative;width:100%;margin-top:9px;z-index:30}
+.addon-dropdown-trigger{width:100%;min-height:42px;display:flex;align-items:center;gap:8px;padding:9px 12px;border:1px solid var(--line);border-radius:13px;background:var(--card);color:var(--ink);font:700 .88rem/1.2 "DM Sans",sans-serif;text-align:left;cursor:pointer;box-shadow:0 2px 7px rgba(42,31,24,.05);transition:background .18s ease,border-color .18s ease,box-shadow .18s ease}
+.addon-dropdown-trigger:hover{border-color:#cdbeb2;box-shadow:0 4px 11px rgba(42,31,24,.08)}
+.addon-dropdown-trigger:focus-visible{outline:3px solid var(--tomato);outline-offset:2px}
+.addon-dropdown-arrow{width:8px;height:8px;margin:0 2px 3px auto;border-right:2px solid currentColor;border-bottom:2px solid currentColor;transform:rotate(45deg);transition:transform .18s ease}
+.addon-dropdown.open .addon-dropdown-arrow{transform:rotate(225deg);margin-bottom:-2px}
+.addon-dropdown-count{min-width:21px;height:21px;display:inline-flex;align-items:center;justify-content:center;padding:0 6px;border-radius:999px;background:var(--pickle);color:#fff;font-size:.72rem;font-weight:900}
+.addon-dropdown-menu{position:absolute;left:0;right:0;top:calc(100% + 6px);max-height:260px;overflow:auto;padding:6px;border:1px solid var(--line);border-radius:14px;background:var(--card);box-shadow:0 16px 30px rgba(42,31,24,.18);opacity:0;visibility:hidden;pointer-events:none;transform:translateY(-5px);transition:opacity .15s ease,transform .17s ease,visibility 0s linear .17s;z-index:7000;overscroll-behavior:contain;-webkit-overflow-scrolling:touch}
+.addon-dropdown.open .addon-dropdown-menu{opacity:1;visibility:visible;pointer-events:auto;transform:translateY(0);transition:opacity .15s ease,transform .17s ease,visibility 0s linear 0s}
+.addon-option{min-height:42px;display:flex;align-items:center;gap:8px;padding:6px 7px 6px 10px;border-radius:10px;transition:background .14s ease}
+.addon-option + .addon-option{margin-top:2px}
+.addon-option:hover{background:color-mix(in srgb,var(--line) 45%,transparent)}
+.addon-option-name{min-width:0;flex:1;font-size:.84rem;font-weight:700}
+.addon-option-name small{opacity:.78;font-size:.75rem;font-weight:700}
+.addon-controls{display:inline-flex;align-items:center;gap:3px;flex:none}
+.addon-controls button{width:29px;height:29px;min-height:29px;padding:0;border:1px solid var(--line);border-radius:8px;background:var(--card);color:var(--ink);font:800 .95rem/1 "DM Sans",sans-serif;cursor:pointer}
+.addon-controls button:hover{border-color:var(--pickle);color:var(--pickle)}
+.addon-qty{min-width:19px;text-align:center;font-size:.78rem;font-weight:850}
+.addon-option.has-qty{background:color-mix(in srgb,var(--pickle) 9%,var(--card))}
+@media(max-width:650px){.addon-dropdown-menu{max-height:230px}.addon-option{min-height:43px;padding-left:8px}.addon-controls button{width:30px;height:30px;min-height:30px}}
+@media(prefers-color-scheme:dark){.addon-dropdown-trigger{background:#33261d;border-color:#614939;color:#fff1d6}.addon-dropdown-menu{background:#33261d;border-color:#614939;box-shadow:0 16px 30px rgba(0,0,0,.4)}.addon-option:hover{background:#4b382d}.addon-option.has-qty{background:#2f6240}.addon-controls button{background:#3f3027;border-color:#634a3a;color:#fff1d6}}
+</style>
 </head>
 <body>
 <header class="hero-freefire" aria-label="BIG LANCHE">
@@ -5306,6 +5331,7 @@ img,svg,video,canvas{max-width:100%}
       </section>
       <div class="cart-actions">
         <button id="enviar" disabled>Escolha um item para enviar</button>
+        <div id="whatsapp-aviso" role="note">OBS: O PEDIDO DEVE SER ENVIADO APÓS O REDIRECIONAMENTO AO WHATSAPP</div>
         <button id="copiar" disabled>Copiar mensagem do pedido</button>
       </div>
     </div>
@@ -5319,7 +5345,7 @@ const AD = {
  h:[["Presunto",3],["Calabresa",3],["Ovo",3],["Bacon",4],["Cheddar",4],["Catupiry",4],["Queijo",4],["Anéis de cebola empanada",4],["Cebola caramelizada",4],["Hambúrguer tradicional",5],["Hambúrguer artesanal",10]], // hambúrgueres
  g:[["Presunto",3],["Calabresa",3],["Bacon",4],["Cheddar",4],["Catupiry",4],["Queijo",4]] // tapiocas e pastéis
 };
-const SABORES_SUCO = ["Maracujá","Acerola","Goiaba","Cajá","Mangaba","Graviola"];
+const SABORES_SUCO = ["Maracujá","Acerola","Goiaba","Cajá","Mangaba","Graviola","Caju"];
 // Catálogo de imagens preparado para a próxima etapa.
 // Chave: "categoria-indice" (ex.: "0-0" = primeiro item da primeira categoria).
 // Enquanto vazio, o site mantém exatamente o visual atual.
@@ -5332,7 +5358,8 @@ const FRUIT_ICONS = {
   "Goiaba": `<svg viewBox="0 0 48 48" aria-hidden="true"><path d="M24 10c2-5 7-7 12-4-1 5-5 8-11 8" fill="#5D9A4B"/><ellipse cx="24" cy="27" rx="15" ry="17" fill="#8CB35D"/><ellipse cx="24" cy="28" rx="10" ry="12" fill="#F18EA1"/><g fill="#D6B63E"><circle cx="19" cy="23" r=".8"/><circle cx="25" cy="21" r=".8"/><circle cx="29" cy="25" r=".8"/><circle cx="20" cy="30" r=".8"/><circle cx="26" cy="33" r=".8"/></g></svg>`,
   "Cajá": `<svg viewBox="0 0 48 48" aria-hidden="true"><path d="M25 11c-1-5 2-8 8-9 1 5-2 8-7 10" fill="#5B9948"/><ellipse cx="24" cy="28" rx="11" ry="16" fill="#F1B934"/><path d="M20 16c-2 5-2 14 0 21" stroke="#FFD96F" stroke-width="2" stroke-linecap="round" opacity=".6"/></svg>`,
   "Mangaba": `<svg viewBox="0 0 48 48" aria-hidden="true"><path d="M22 10c2-5 7-7 12-4-1 5-5 8-11 8" fill="#5D9A4B"/><path d="M10 20c5-9 19-13 28-5 8 7 5 20-3 27-7 6-20 3-25-5-3-5-3-12 0-17z" fill="#C8D46B"/><path d="M15 26c4-5 12-8 19-5 5 2 7 7 5 12-3 7-13 9-20 4-4-3-6-7-4-11z" fill="#EED780" opacity=".75"/></svg>`,
-  "Graviola": `<svg viewBox="0 0 48 48" aria-hidden="true"><path d="M23 9c3-4 8-5 11-2-1 4-5 6-10 6" fill="#4D8D44"/><ellipse cx="24" cy="27" rx="15" ry="17" fill="#6E9D52"/><g fill="#47773B"><path d="M12 18l-6-2 7 7z"/><path d="M9 28l-7 2 8 4z"/><path d="M13 38l-5 5 9-3z"/><path d="M36 18l6-2-7 7z"/><path d="M39 28l7 2-8 4z"/><path d="M35 38l5 5-9-3z"/></g><ellipse cx="24" cy="28" rx="10" ry="12" fill="#D6E29A" opacity=".72"/></svg>`
+  "Graviola": `<svg viewBox="0 0 48 48" aria-hidden="true"><path d="M23 9c3-4 8-5 11-2-1 4-5 6-10 6" fill="#4D8D44"/><ellipse cx="24" cy="27" rx="15" ry="17" fill="#6E9D52"/><g fill="#47773B"><path d="M12 18l-6-2 7 7z"/><path d="M9 28l-7 2 8 4z"/><path d="M13 38l-5 5 9-3z"/><path d="M36 18l6-2-7 7z"/><path d="M39 28l7 2-8 4z"/><path d="M35 38l5 5-9-3z"/></g><ellipse cx="24" cy="28" rx="10" ry="12" fill="#D6E29A" opacity=".72"/></svg>`,
+  "Caju": `<svg viewBox="0 0 48 48" aria-hidden="true"><path d="M25 11c-2-5 1-8 7-9 2 5-1 8-6 10" fill="#4F9147"/><path d="M28 8c4-4 9-4 12-1-3 4-7 5-11 4" fill="#69A954"/><path d="M11 19c3-5 9-7 16-5 8 2 13 8 12 15-1 9-9 15-18 14-8-1-14-7-14-14 0-4 1-7 4-10z" fill="#E58B35"/><path d="M14 20c4-4 10-5 15-3 6 2 9 6 9 11 0 7-6 11-13 11-6 0-11-4-12-9-1-4 0-7 1-10z" fill="#F2A33D"/><path d="M20 17c-1 5-1 13 2 19" fill="none" stroke="#FFD27A" stroke-width="2" stroke-linecap="round" opacity=".65"/><path d="M26 33c3 1 5 3 5 6-1 3-4 5-7 4-3-1-5-4-4-7 1-3 3-4 6-3z" fill="#8D5A3B"/></svg>`
 };
 const iconeFruta = sabor => FRUIT_ICONS[sabor] || "";
 // cada item: [nome, preço, descrição, opções (opcional)]
@@ -5382,7 +5409,7 @@ const C = [
 ["Batata gourmet de carne de sol",30,"Batatas fritas, carne de sol desfiada, cheddar, catupiry, molho da casa."],
 ["Filé com fritas",50,"Batatas fritas, filé acebolado."]]},
 {t:"Espetinhos",nota:"Acompanham vinagrete e farofa.",i:[["Espetinho de carne",12],["Espetinho de frango",10]]},
-{t:"Bebidas",nota:"O sabor dos sucos é escolhido no carrinho. As opções sem açúcar estão identificadas logo abaixo do nome.",i:[
+{t:"Bebidas",nota:"O sabor dos sucos é escolhido no carrinho. A observação dos sucos aceita pedidos como sem açúcar ou pouco açúcar.",i:[
 ["Suco sem leite",8,"",null,"suco"],["Suco com leite",10,"",null,"suco"],
 ["Jarra de suco sem leite",16,"",null,"suco"],["Jarra de suco com leite",20,"",null,"suco"],
 ["Suco de laranja natural",12],["Jarra de suco de laranja natural",24],
@@ -5718,24 +5745,47 @@ function animateAddButton(button){
     }, 680);
   });
 }
+function observacaoPlaceholder(l){
+  const ci = Number(String(l.id || "").split("-")[0]);
+  const categoria = C[ci]?.t || "";
+  if (categoria === "Espetinhos") {
+    return "Observação deste item (ex.: ao ponto, sem acompanhamentos, etc.)";
+  }
+  if (l.juice) {
+    return "Observação deste item (ex.: sem açúcar, pouco açúcar, etc.)";
+  }
+  return "Observação deste item (ex.: sem salada, sem bacon, sem tomate)";
+}
 function refresh(){
   atualizarStatusPedidosVisual();
   const ids = new Set(cart.map(l => l.id));
   document.querySelectorAll(".item").forEach(el => el.classList.toggle("on", ids.has(el.id.slice(1))));
   $("#resumo").innerHTML = cart.length ? cart.map(l => {
     const ad = l.ad ? AD[l.ad] : null;
-    const chips = ad ? `<div class="chips" role="group" aria-label="Adicionais de ${esc(l.n)}">` + ad.map(x => {
-      const atual = l.adds.find(y => y[0] === x[0]);
-      const qty = atual ? (atual[2] || 1) : 0;
-      return `<div class="chip${qty ? " has-qty" : ""}">
-        <span class="chip-name">${x[0]} <small>+${brl(x[1])}</small></span>
-        <span class="addon-controls" role="group" aria-label="Quantidade de ${esc(x[0])}">
-          <button type="button" class="addon-minus" data-addon="-1" data-u="${l.u}" data-a="${esc(x[0])}" aria-label="Remover ${esc(x[0])}">−</button>
-          <span class="addon-qty" aria-live="polite">${qty}</span>
-          <button type="button" class="addon-plus" data-addon="1" data-u="${l.u}" data-a="${esc(x[0])}" aria-label="Adicionar ${esc(x[0])}">+</button>
-        </span>
+    const chips = ad ? (() => {
+      const selectedCount = l.adds.reduce((sum, x) => sum + Math.max(0, Number(x[2] || 0)), 0);
+      return `<div class="addon-dropdown">
+        <button type="button" class="addon-dropdown-trigger" data-u="${l.u}" aria-haspopup="true" aria-expanded="false">
+          <span>Adicionais</span>
+          ${selectedCount ? `<span class="addon-dropdown-count">${selectedCount}</span>` : ""}
+          <span class="addon-dropdown-arrow" aria-hidden="true"></span>
+        </button>
+        <div class="addon-dropdown-menu" role="menu" aria-label="Adicionais de ${esc(l.n)}">
+          ${ad.map(x => {
+            const atual = l.adds.find(y => y[0] === x[0]);
+            const qty = atual ? (atual[2] || 1) : 0;
+            return `<div class="addon-option${qty ? " has-qty" : ""}">
+              <span class="addon-option-name">${esc(x[0])} <small>+${brl(x[1])}</small></span>
+              <span class="addon-controls" role="group" aria-label="Quantidade de ${esc(x[0])}">
+                <button type="button" class="addon-minus" data-addon="-1" data-u="${l.u}" data-a="${esc(x[0])}" aria-label="Remover ${esc(x[0])}">−</button>
+                <span class="addon-qty" aria-live="polite">${qty}</span>
+                <button type="button" class="addon-plus" data-addon="1" data-u="${l.u}" data-a="${esc(x[0])}" aria-label="Adicionar ${esc(x[0])}">+</button>
+              </span>
+            </div>`;
+          }).join("")}
+        </div>
       </div>`;
-    }).join("") + `</div>` : "";
+    })() : "";
     const juiceOptions = l.juice ? `<div class="suco-escolha" role="radiogroup" aria-label="Escolha o sabor de ${esc(l.n)}">
       <div class="suco-escolha-title">Escolha o sabor</div>
       <div class="suco-opcoes">
@@ -5751,7 +5801,7 @@ function refresh(){
     </div>` : "";
     const btns = ad ? `<button data-u="${l.u}" data-d="0" aria-label="Remover ${esc(l.n)}">×</button>`
       : `<button data-u="${l.u}" data-d="-1" aria-label="Remover um ${esc(l.n)}">−</button><button data-u="${l.u}" data-d="1" aria-label="Adicionar um ${esc(l.n)}">+</button>`;
-    return `<div class="linha"><div class="lt"><b>${l.q}x ${esc(l.n)}</b>${l.juice && l.flavor ? ` <span class="suco-sabor-resumo">· ${esc(l.flavor)}</span>` : ""} · ${brl(l.q * unit(l))}${juiceOptions}${chips}<textarea class="item-note" data-note-u="${l.u}" maxlength="300" placeholder="Observação deste item (ex.: sem salada, sem bacon, sem tomate)">${esc(l.note || "")}</textarea></div>${btns}</div>`;
+    return `<div class="linha"><div class="lt"><b>${l.q}x ${esc(l.n)}</b>${l.juice && l.flavor ? ` <span class="suco-sabor-resumo">· ${esc(l.flavor)}</span>` : ""} · ${brl(l.q * unit(l))}${juiceOptions}${chips}<textarea class="item-note" data-note-u="${l.u}" maxlength="300" placeholder="${observacaoPlaceholder(l)}">${esc(l.note || "")}</textarea></div>${btns}</div>`;
   }).join("") + `<div id="total">Total: ${brl(total())}</div>` : `<p class="nota">Nenhum item escolhido ainda.</p>`;
   const entregaValida = entregaCompleta();
   const pagamentoValido = !!document.querySelector('input[name="pagamento"]:checked') && trocoValido();
@@ -5773,6 +5823,35 @@ function refresh(){
             : `Enviar pelo WhatsApp · ${brl(total())}`;
   updateCartCount();
 }
+// ===== DROPDOWN DE ADICIONAIS =====
+function fecharDropdownsAdicionais(except = null){
+  document.querySelectorAll(".addon-dropdown.open").forEach(d => {
+    if(d !== except){
+      d.classList.remove("open");
+      d.querySelector(".addon-dropdown-trigger")?.setAttribute("aria-expanded","false");
+    }
+  });
+}
+document.addEventListener("click", e => {
+  const trigger = e.target.closest(".addon-dropdown-trigger");
+  if(trigger){
+    const box = trigger.closest(".addon-dropdown");
+    const aberto = box.classList.contains("open");
+    fecharDropdownsAdicionais(box);
+    box.classList.toggle("open", !aberto);
+    trigger.setAttribute("aria-expanded", String(!aberto));
+    return;
+  }
+  if(!e.target.closest(".addon-dropdown")) fecharDropdownsAdicionais();
+});
+document.addEventListener("keydown", e => {
+  if(e.key !== "Escape") return;
+  const box = e.target.closest(".addon-dropdown");
+  if(box){
+    box.classList.remove("open");
+    box.querySelector(".addon-dropdown-trigger")?.setAttribute("aria-expanded","false");
+  }
+});
 // ===== DROPDOWNS PERSONALIZADOS =====
 function syncDropdownIsolation(){
   document.body.classList.toggle(
@@ -5875,7 +5954,7 @@ document.addEventListener("click", e => {
     const isJuice = it[4] === "suco";
     const l = c.ad || isJuice ? null : cart.find(x => x.id === id && x.n === n);
     if (l) l.q++;
-    else cart.push({u: ++uid, id, n, p: it[1], q: 1, ad: c.ad || "", adds: [], juice: isJuice, flavor: ""});
+    else cart.push({u: ++uid, id, n, p: it[1], q: 1, ad: c.ad || "", adds: [], juice: isJuice, flavor: "", note: ""});
     animateAddButton(a);
     refresh();
     updateCartCount(true);
@@ -5908,6 +5987,7 @@ document.addEventListener("click", e => {
   e.stopImmediatePropagation();
   const l = cart.find(x => x.u == b.dataset.u);
   if (!l || !l.ad) return;
+  const addonWasOpen = b.closest(".addon-dropdown")?.classList.contains("open");
   const x = AD[l.ad].find(y => y[0] === b.dataset.a);
   if (!x) return;
   const delta = Number(b.dataset.addon);
@@ -5926,6 +6006,14 @@ document.addEventListener("click", e => {
     dock.classList.add("open");
     document.body.classList.add("cart-open");
     document.getElementById("cartToggle")?.setAttribute("aria-expanded", "true");
+  }
+  if (addonWasOpen) {
+    const trigger = document.querySelector(`.addon-dropdown-trigger[data-u="${b.dataset.u}"]`);
+    const box = trigger?.closest(".addon-dropdown");
+    if (box) {
+      box.classList.add("open");
+      trigger.setAttribute("aria-expanded", "true");
+    }
   }
   const updated = Array.from(document.querySelectorAll("button[data-addon]")).find(
     x => x.dataset.u === b.dataset.u &&
