@@ -5476,10 +5476,14 @@ const C = [
 ["Suco de laranja natural",12],["Jarra de suco de laranja natural",24],
 ["Vitamina de açaí",13,"Polpa de açaí, banana, açúcar, leite, granola."],
 ["Vitamina de guaraná",13,"Guaraná, farinha de amendoim, banana, leite."],
-["Coca cola Júnior",3], ["Coca cola 1 Litro",12],["Coca cola 2 litros",18],["Coca lata",7],
-["Coca cola 1 litro zero",12],["Coca lata zero",7],
-["Guaraná júnior",2.5], ["Guaraná 1 litro",10],["Guaraná 2 litros",15],["Guaraná lata",6],
-["Guaraná lata zero",6],["H2O",8]
+["Coca cola Júnior",3,"",null,"refrigerante"], ["Coca cola 1 Litro",12,"",null,"refrigerante"],["Coca cola 2 litros",18,"",null,"refrigerante"],["Coca lata",7,"",null,"refrigerante"],
+["Coca cola 1 litro zero",12,"",null,"refrigerante"],["Coca lata zero",7,"",null,"refrigerante"],
+["Guaraná júnior",2.5,"",null,"refrigerante"], ["Guaraná 1 litro",10,"",null,"refrigerante"],["Guaraná 2 litros",15,"",null,"refrigerante"],["Guaraná lata",6,"",null,"refrigerante"],
+["Guaraná lata zero",6,"",null,"refrigerante"],
+["H2O",8,"",null,"agua"],
+["Água mineral sem gás 500ml",3,"",null,"agua"],
+["Água mineral com gás 500ml",4,"",null,"agua"],
+["Milkshake",15,"",["Morango","Chocolate","Creme"],"milkshake"]
 ]},
 {t:"Tapiocas",ad:"g",nota:"Adicionais ficam disponíveis em &quot;Seu pedido&quot; depois de adicionar.",i:[
 ["Tapioca de carne de sol com queijo",18],["Tapioca de camarão",25],["Tapioca de frango com queijo",16],
@@ -5815,6 +5819,9 @@ function observacaoPlaceholder(l){
   if (l.juice) {
     return "Observação deste item (ex.: sem açúcar, pouco açúcar, etc.)";
   }
+  if (l.kind === "refrigerante" || l.kind === "agua") {
+    return "";
+  }
   return "Observação deste item (ex.: sem salada, sem bacon, sem tomate)";
 }
 function refresh(){
@@ -5862,7 +5869,9 @@ function refresh(){
     </div>` : "";
     const btns = ad ? `<button data-u="${l.u}" data-d="0" aria-label="Remover ${esc(l.n)}">×</button>`
       : `<button data-u="${l.u}" data-d="-1" aria-label="Remover um ${esc(l.n)}">−</button><button data-u="${l.u}" data-d="1" aria-label="Adicionar um ${esc(l.n)}">+</button>`;
-    return `<div class="linha"><div class="lt"><b>${l.q}x ${esc(l.n)}</b>${l.juice && l.flavor ? ` <span class="suco-sabor-resumo">· ${esc(l.flavor)}</span>` : ""} · ${brl(l.q * unit(l))}${juiceOptions}${chips}<textarea class="item-note" data-note-u="${l.u}" maxlength="300" placeholder="${observacaoPlaceholder(l)}">${esc(l.note || "")}</textarea></div>${btns}</div>`;
+    const notePlaceholder = observacaoPlaceholder(l);
+    const noteField = notePlaceholder ? `<textarea class="item-note" data-note-u="${l.u}" maxlength="300" placeholder="${notePlaceholder}">${esc(l.note || "")}</textarea>` : "";
+    return `<div class="linha"><div class="lt"><b>${l.q}x ${esc(l.n)}</b>${(l.juice || l.kind === "milkshake") && l.flavor ? ` <span class="suco-sabor-resumo">· ${esc(l.flavor)}</span>` : ""} · ${brl(l.q * unit(l))}${juiceOptions}${chips}${noteField}</div>${btns}</div>`;
   }).join("") + `<div id="total">Total: ${brl(total())}</div>` : `<p class="nota">Nenhum item escolhido ainda.</p>`;
   const entregaValida = entregaCompleta();
   const pagamentoValido = !!document.querySelector('input[name="pagamento"]:checked') && trocoValido();
@@ -6013,9 +6022,11 @@ document.addEventListener("click", e => {
     const n = it[0] + (sel ? ` (${sel.value})` : "");
     const id = a.dataset.c + "-" + a.dataset.i;
     const isJuice = it[4] === "suco";
+    const kind = it[4] || "";
+    const selectedFlavor = it[4] === "milkshake" && sel ? sel.value : "";
     const l = c.ad || isJuice ? null : cart.find(x => x.id === id && x.n === n);
     if (l) l.q++;
-    else cart.push({u: ++uid, id, n, p: it[1], q: 1, ad: c.ad || "", adds: [], juice: isJuice, flavor: "", note: ""});
+    else cart.push({u: ++uid, id, n, p: it[1], q: 1, ad: c.ad || "", adds: [], juice: isJuice, kind, flavor: selectedFlavor, note: ""});
     animateAddButton(a);
     refresh();
     updateCartCount(true);
@@ -6108,7 +6119,7 @@ function pedidoParaCozinha(){
   return {
     cart: cart.map(l => ({
       name: nome(l),
-      flavor: l.juice ? String(l.flavor || "") : "",
+      flavor: (l.juice || l.kind === "milkshake") ? String(l.flavor || "") : "",
       quantity: Number(l.q || 0),
       price: Number(l.p || 0),
       note: String(l.note || "").trim().slice(0, 300),
