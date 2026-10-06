@@ -96,19 +96,16 @@ async function run(){
 }
 $("#run").onclick=run;
 $("#copy").onclick=async()=>{
- buildFixes(); const text="RELATÓRIO DE DIAGNÓSTICO — BIG LANCHE
-
-RESULTADOS:
-"+report.map(x=>`[${x.state.toUpperCase()}] ${x.name}
-${x.detail}`).join("
-
-")+"
-
-O QUE FAZER PARA CORRIGIR:
-"+fixes.map(f=>`[${f[0]}] ${f[1]}
-${f[2]}`).join("
-
-");
+ buildFixes();
+ const text=[
+   "RELATÓRIO DE DIAGNÓSTICO — BIG LANCHE",
+   "",
+   "RESULTADOS:",
+   report.map(x=>`[${x.state.toUpperCase()}] ${x.name}\n${x.detail}`).join("\n\n"),
+   "",
+   "O QUE FAZER PARA CORRIGIR:",
+   fixes.map(f=>`[${f[0]}] ${f[1]}\n${f[2]}`).join("\n\n")
+ ].join("\n");
  try{await navigator.clipboard.writeText(text);alert("Relatório copiado.")}catch{alert(text)}
 };
 $("#base").value=localStorage.getItem("biglanche-diagnostic-base")||DEFAULT;
