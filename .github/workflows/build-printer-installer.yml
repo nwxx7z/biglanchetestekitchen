@@ -20,12 +20,12 @@ jobs:
         shell: pwsh
         run: |
           Copy-Item printer-agent/BigLanchePrinter.ps1 printer-agent/installer/BigLanchePrinter.ps1 -Force
-          dotnet publish printer-agent/installer/BigLanchePrinterInstaller.csproj -c Release -r win-x64 --self-contained false -o printer-agent/installer/Build
+          dotnet publish printer-agent/installer/BigLanchePrinterInstaller.csproj -c Release -r win-x64 --self-contained true -p:PublishSingleFile=true -p:IncludeNativeLibrariesForSelfExtract=true -o printer-agent/installer/Build
 
       - name: Package
         shell: pwsh
         run: |
-          Compress-Archive -Path printer-agent/installer/Build/* -DestinationPath printer-agent/Instalador-Big-Lanche-win-x64.zip -Force
+          Compress-Archive -Path printer-agent/installer/Build/Instalador-Big-Lanche.exe -DestinationPath printer-agent/Instalador-Big-Lanche-win-x64.zip -Force
 
       - name: Upload installer
         uses: actions/upload-artifact@v4
