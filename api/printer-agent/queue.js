@@ -8,7 +8,8 @@ module.exports=async function handler(req,res){
   const id=String(req.body?.id||"").slice(0,120);
   if(!id)return send(res,400,{error:"ID do pedido obrigatório"});
   const sql=getSql();
-  const rows=await sql`UPDATE orders SET printed=FALSE WHERE id=${id} RETURNING id,number,printed`;
+  await sql`ALTER TABLE orders ADD COLUMN IF NOT EXISTS print_requested BOOLEAN NOT NULL DEFAULT FALSE`;
+  const rows=await sql`UPDATE orders SET printed=FALSE, print_requested=TRUE WHERE id=${id} RETURNING id,number,printed`;
   if(!rows.length)return send(res,404,{error:"Pedido não encontrado"});
   return send(res,200,{queued:true,order:rows[0]});
  }catch(error){
