@@ -38,11 +38,12 @@ details{margin-top:8px}.note{color:var(--muted);font-size:.84rem}
 <strong>Testes</strong>
 <div id="tests"><p class="note">Clique em “Executar diagnóstico”.</p></div>
 </section>
+<section class="card"><strong>🛠️ O que precisa ser feito para corrigir</strong><p class="note">As recomendações abaixo são geradas automaticamente a partir das falhas encontradas.</p><div id="fixes"></div></section>
 </main>
 <script>
 const $=s=>document.querySelector(s);
 const DEFAULT="https://biglanchetestekitchen.vercel.app";
-let report=[];
+let report=[];\nlet fixes=[];\nfunction buildFixes(){ fixes=[]; for(const x of report){ if(x.name==="Banco + API de status"&&x.state==="bad") fixes.push(["CRÍTICO","Corrigir /api/store-status","Verifique api/store-status.js, DATABASE_URL na Vercel e os logs da função. Depois faça novo deploy."]); if(x.name==="API de disponibilidade"&&x.state==="bad") fixes.push(["ALTO","Corrigir /api/menu-availability","Confirme se api/menu-availability.js existe e foi publicado. Se esta funcionalidade não existir neste projeto, remova este teste."]); if(x.name==="Proteção da Kitchen"&&x.state==="bad") fixes.push(["ALTO","Corrigir autenticação da Kitchen","Se for 500, revise api/_lib.js, sessão/cookie e banco. Se for 401/403, a proteção está funcionando e é necessário autenticar para testar pedidos."]); if(x.name.includes("CORS")&&x.state==="bad") fixes.push(["MÉDIO","Corrigir CORS","Revise Access-Control-Allow-Origin, Access-Control-Allow-Methods e Access-Control-Allow-Headers; OPTIONS deve responder 200/204."]); if(x.name==="Rota inexistente retorna erro HTTP"&&x.state==="bad") fixes.push(["BAIXO","Revisar roteamento da Vercel","Revise vercel.json e as rewrites para garantir que rotas inexistentes não sejam encaminhadas para uma página/API válida."]); } if(!fixes.length) fixes.push(["OK","Nenhuma correção obrigatória","Os testes executados não encontraram falhas. Se ainda houver erro na interface, envie este relatório junto com o erro."]); }
 function esc(v){return String(v??"").replace(/[&<>"']/g,c=>({"&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;","'":"&#039;"}[c]))}
 function base(){return ($("#base").value.trim()||DEFAULT).replace(/\/$/,"")}
 function add(name,state,detail){report.push({name,state,detail});}
@@ -54,6 +55,7 @@ async function request(path,opt={}){
  return {status:r.status,ms:Math.round(performance.now()-started),data};
 }
 function render(){
+ buildFixes();
  const ok=report.filter(x=>x.state==="ok").length,warn=report.filter(x=>x.state==="warn").length,bad=report.filter(x=>x.state==="bad").length;
  $("#summary").innerHTML=`
  <div class="metric"><b>${report.length}</b><small>testes executados</small></div>
@@ -63,6 +65,7 @@ function render(){
  $("#tests").innerHTML=report.map(x=>`
  <article class="test"><div class="test-head"><strong>${esc(x.name)}</strong><span class="badge ${x.state}">${x.state==="ok"?"OK":x.state==="warn"?"AVISO":"FALHA"}</span></div>
  <details><summary>Detalhes</summary><pre>${esc(x.detail)}</pre></details></article>`).join("");
+ $("#fixes").innerHTML=fixes.map(f=>`<article class="test"><div class="test-head"><strong>${esc(f[1])}</strong><span class="badge ${f[0]==="OK"?"ok":f[0]==="CRÍTICO"?"bad":f[0]==="ALTO"?"bad":"warn"}">${esc(f[0])}</span></div><p style="margin:9px 0 0">${esc(f[2])}</p></article>`).join("");
 }
 async function test(path,name,expected,opts={}){
  try{
@@ -86,7 +89,7 @@ async function run(){
 }
 $("#run").onclick=run;
 $("#copy").onclick=async()=>{
- const text=report.map(x=>`[${x.state.toUpperCase()}] ${x.name}\n${x.detail}`).join("\n\n");
+ buildFixes(); const text="RELATÓRIO DE DIAGNÓSTICO — BIG LANCHE\n\nRESULTADOS:\n"+report.map(x=>`[${x.state.toUpperCase()}] ${x.name}\n${x.detail}`).join("\n\n")+"\n\nO QUE FAZER PARA CORRIGIR:\n"+fixes.map(f=>`[${f[0]}] ${f[1]}\n${f[2]}`).join("\n\n");
  try{await navigator.clipboard.writeText(text);alert("Relatório copiado.")}catch{alert(text)}
 };
 $("#base").value=localStorage.getItem("biglanche-diagnostic-base")||DEFAULT;
