@@ -1,0 +1,133 @@
+<!doctype html>
+<html lang="pt-BR">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<title>BIG LANCHE — Teste</title>
+<style>
+:root{--bg:#f4eee8;--card:#fffaf5;--ink:#2c211a;--muted:#76685f;--line:#ddcfc4;--ok:#4f7b5c;--bad:#a6473d;--accent:#5f493a}
+*{box-sizing:border-box}body{margin:0;background:var(--bg);color:var(--ink);font:15px/1.45 Arial,sans-serif}
+main{width:min(900px,calc(100% - 24px));margin:28px auto 50px}
+h1{margin:0 0 5px}h2{font-size:1rem;margin:0 0 10px}
+.sub{color:var(--muted);margin:0 0 22px}
+.card{background:var(--card);border:1px solid var(--line);border-radius:16px;padding:16px;margin-bottom:14px}
+.row{display:flex;gap:8px;align-items:center;flex-wrap:wrap}
+input{flex:1;min-width:220px;padding:11px;border:1px solid var(--line);border-radius:10px;background:#fff;color:#222}
+button{border:1px solid var(--line);border-radius:10px;padding:10px 13px;background:#fff;cursor:pointer;font-weight:700}
+button.primary{background:var(--accent);color:#fff;border-color:var(--accent)}
+button.danger{color:var(--bad)}
+.status{display:flex;align-items:center;gap:8px;font-weight:700}.dot{width:10px;height:10px;border-radius:50%;background:#999}.dot.ok{background:var(--ok)}.dot.bad{background:var(--bad)}
+pre{white-space:pre-wrap;word-break:break-word;background:#211914;color:#f8eee5;border-radius:10px;padding:12px;font-size:.78rem;max-height:260px;overflow:auto}
+#items{display:grid;grid-template-columns:repeat(auto-fit,minmax(240px,1fr));gap:8px;margin-top:12px}
+.item{border:1px solid var(--line);border-radius:12px;padding:10px;background:#fff}
+.item b{display:block}.item small{color:var(--muted)}.item button{margin-top:8px;width:100%}
+.note{font-size:.84rem;color:var(--muted);margin-top:8px}
+</style>
+</head>
+<body>
+<main>
+<h1>🧪 BIG LANCHE — Página de teste</h1>
+<p class="sub">Teste rápido das APIs e das funcionalidades novas. Esta página não cria pedidos reais.</p>
+
+<section class="card">
+<h2>Backend / API</h2>
+<div class="row">
+<input id="api" placeholder="https://seu-projeto.vercel.app">
+<button class="primary" id="save">Salvar e testar</button>
+<button id="origin">Usar este domínio</button>
+</div>
+<p class="note">No GitHub Pages, as APIs não rodam no mesmo domínio. Informe aqui a URL do backend Vercel se necessário.</p>
+</section>
+
+<section class="card">
+<h2>Diagnóstico</h2>
+<div id="status" class="status"><span class="dot"></span><span>Não testado</span></div>
+<pre id="log">Aguardando teste…</pre>
+</section>
+
+<section class="card">
+<h2>Disponibilidade do cardápio</h2>
+<p class="note">Carrega a mesma disponibilidade usada pela Kitchen. Você pode testar ativar/desativar um item e depois restaurá-lo.</p>
+<div class="row">
+<button class="primary" id="load">Carregar disponibilidade</button>
+<button id="restore">Restaurar item testado</button>
+</div>
+<div id="items"></div>
+</section>
+
+<section class="card">
+<h2>Status dos pedidos</h2>
+<div id="storeStatus">Ainda não testado.</div>
+<button id="store" style="margin-top:10px">Testar /api/store-status</button>
+</section>
+</main>
+<script>
+const $=s=>document.querySelector(s);
+const key="biglanche-teste-api";
+function base(){
+  let v=localStorage.getItem(key)||location.origin;
+  return v.replace(/\/$/,"");
+}
+function setLog(msg,ok){
+  $(".dot").className="dot "+(ok?"ok":"bad");
+  $("#status span:last-child").textContent=ok?"API acessível":"API com problema";
+  $("#log").textContent=msg;
+}
+function save(v){v=v.trim().replace(/\/$/,"");localStorage.setItem(key,v);$("#api").value=v}
+async function call(path,opt){
+  const r=await fetch(base()+path,{cache:"no-store",credentials:"include",...opt,headers:{"Content-Type":"application/json",...(opt?.headers||{})}});
+  const text=await r.text();
+  let data;try{data=JSON.parse(text)}catch{data=text}
+  if(!r.ok) throw new Error("HTTP "+r.status+" — "+(typeof data==="string"?data.slice(0,700):JSON.stringify(data,null,2)));
+  return data;
+}
+async function testApi(){
+  try{
+    const data=await call("/api/menu-availability");
+    setLog("GET /api/menu-availability\n\n"+JSON.stringify(data,null,2).slice(0,8000),true);
+    render(data.items||[]);
+  }catch(e){
+    setLog(String(e.message||e),false);
+    $("#items").innerHTML="";
+  }
+}
+function render(items){
+  $("#items").innerHTML=items.map((x,i)=>`
+    <div class="item">
+      <b>${esc(x.name)}</b><small>${esc(x.category)} · <strong>${x.available?"Disponível":"Indisponível"}</strong></small>
+      <button data-key="${esc(x.key)}" data-value="${x.available?"false":"true"}">${x.available?"Desativar para teste":"Ativar novamente"}</button>
+    </div>`).join("");
+}
+function esc(s){return String(s??"").replace(/[&<>"']/g,c=>({"&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;","'":"&#039;"}[c]))}
+async function setAvailability(key,available){
+  try{
+    const data=await call("/api/menu-availability",{method:"PATCH",body:JSON.stringify({key,available})});
+    await testApi();
+    alert((data?.name||key)+" → "+(available?"Disponível":"Indisponível"));
+  }catch(e){alert("Falhou: "+e.message)}
+}
+$("#api").value=base();
+$("#save").onclick=()=>{save($("#api").value);testApi()};
+$("#origin").onclick=()=>{save(location.origin);testApi()};
+$("#load").onclick=testApi;
+$("#restore").onclick=async()=>{
+  const item=[...document.querySelectorAll("[data-key]")].find(x=>x.dataset.value==="true");
+  if(!item){alert("Nenhum item alterado foi identificado nesta tela.");return}
+  await setAvailability(item.dataset.key,true);
+};
+document.addEventListener("click",e=>{
+  const b=e.target.closest("[data-key]");
+  if(!b)return;
+  const available=b.dataset.value==="true";
+  if(confirm("Alterar a disponibilidade de "+b.dataset.key+"?")) setAvailability(b.dataset.key,available);
+});
+$("#store").onclick=async()=>{
+  try{
+    const data=await call("/api/store-status");
+    $("#storeStatus").innerHTML="<pre>"+esc(JSON.stringify(data,null,2))+"</pre>";
+  }catch(e){$("#storeStatus").textContent=e.message}
+};
+testApi();
+</script>
+</body>
+</html>
