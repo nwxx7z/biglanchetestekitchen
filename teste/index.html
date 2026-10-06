@@ -65,7 +65,7 @@ pre{white-space:pre-wrap;word-break:break-word;background:#211914;color:#f8eee5;
 const $=s=>document.querySelector(s);
 const key="biglanche-teste-api";
 function base(){
-  let v=localStorage.getItem(key)||location.origin;
+  let v=localStorage.getItem(key)||"https://biglanchetestekitchen.vercel.app";
   return v.replace(/\/$/,"");
 }
 function setLog(msg,ok){
