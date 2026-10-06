@@ -28,7 +28,7 @@ module.exports = async function handler(req, res) {
     const orders = await sql`SELECT id,number,status,printed,created_at AS "createdAt",
       cart,delivery,payment,notes,total FROM orders
       WHERE printed=FALSE AND ((SELECT auto_print FROM printer_settings WHERE id=1)=TRUE OR print_requested=TRUE) ORDER BY created_at ASC LIMIT 20`;
-    return send(res, 200, { enabled: settings[0]?.autoPrint === true, orders });
+    return send(res, 200, { enabled: settings[0]?.autoPrint === true || orders.length > 0, orders });
   } catch (error) {
     console.error(error);
     return send(res, 500, { error:"Erro interno", detail:error.message });
