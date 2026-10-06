@@ -1,0 +1,96 @@
+<!doctype html>
+<html lang="pt-BR">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<title>BIG LANCHE — Diagnóstico</title>
+<style>
+:root{--bg:#f4eee8;--card:#fffaf5;--ink:#2c211a;--muted:#76685f;--line:#ddcfc4;--ok:#3f7b51;--warn:#a76b22;--bad:#a6473d;--accent:#5f493a}
+*{box-sizing:border-box}body{margin:0;background:var(--bg);color:var(--ink);font:15px/1.45 Arial,sans-serif}
+main{width:min(980px,calc(100% - 24px));margin:26px auto 50px}h1{margin:0 0 4px}.sub{margin:0 0 20px;color:var(--muted)}
+.card{background:var(--card);border:1px solid var(--line);border-radius:16px;padding:16px;margin:12px 0}
+.row{display:flex;gap:8px;flex-wrap:wrap}input{flex:1;min-width:240px;padding:11px;border:1px solid var(--line);border-radius:10px;background:#fff;font:inherit}
+button{border:1px solid var(--line);border-radius:10px;padding:10px 13px;background:#fff;cursor:pointer;font-weight:700}button.primary{background:var(--accent);border-color:var(--accent);color:#fff}
+#summary{display:grid;grid-template-columns:repeat(auto-fit,minmax(180px,1fr));gap:9px;margin-top:14px}
+.metric{border:1px solid var(--line);border-radius:12px;padding:12px;background:#fff}.metric b{display:block;font-size:1.25rem}.metric small{color:var(--muted)}
+.test{border:1px solid var(--line);border-radius:12px;padding:12px;margin-top:9px;background:#fff}.test-head{display:flex;justify-content:space-between;gap:10px}.badge{padding:3px 8px;border-radius:999px;font-size:.75rem;font-weight:800;background:#eee}.ok{background:#dcebdd;color:#245333}.warn{background:#f4e4c9;color:#704714}.bad{background:#f1d8d4;color:#7b3028}
+pre{white-space:pre-wrap;word-break:break-word;background:#211914;color:#f8eee5;border-radius:9px;padding:10px;margin:9px 0 0;font-size:.76rem;max-height:220px;overflow:auto}
+details{margin-top:8px}.note{color:var(--muted);font-size:.84rem}
+</style>
+</head>
+<body>
+<main>
+<h1>🧪 BIG LANCHE — Diagnóstico funcional</h1>
+<p class="sub">Painel somente para diagnóstico. Os testes são majoritariamente somente leitura e não criam pedidos.</p>
+
+<section class="card">
+<strong>Backend/API</strong>
+<div class="row" style="margin-top:10px">
+<input id="base" placeholder="https://biglanchetestekitchen.vercel.app">
+<button class="primary" id="run">▶ Executar diagnóstico</button>
+<button id="copy">Copiar relatório</button>
+</div>
+<p class="note">Você pode abrir esta página pelo Vercel ou pelo GitHub Pages. Se estiver no Pages, informe a URL da Vercel acima.</p>
+<div id="summary"></div>
+</section>
+
+<section class="card">
+<strong>Testes</strong>
+<div id="tests"><p class="note">Clique em “Executar diagnóstico”.</p></div>
+</section>
+</main>
+<script>
+const $=s=>document.querySelector(s);
+const DEFAULT="https://biglanchetestekitchen.vercel.app";
+let report=[];
+function esc(v){return String(v??"").replace(/[&<>"']/g,c=>({"&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;","'":"&#039;"}[c]))}
+function base(){return ($("#base").value.trim()||DEFAULT).replace(/\/$/,"")}
+function add(name,state,detail){report.push({name,state,detail});}
+async function request(path,opt={}){
+ const started=performance.now();
+ const r=await fetch(base()+path,{cache:"no-store",credentials:"include",...opt,headers:{"Content-Type":"application/json",...(opt.headers||{})}});
+ const raw=await r.text(); let data=raw;
+ try{data=JSON.parse(raw)}catch{}
+ return {status:r.status,ms:Math.round(performance.now()-started),data};
+}
+function render(){
+ const ok=report.filter(x=>x.state==="ok").length,warn=report.filter(x=>x.state==="warn").length,bad=report.filter(x=>x.state==="bad").length;
+ $("#summary").innerHTML=`
+ <div class="metric"><b>${report.length}</b><small>testes executados</small></div>
+ <div class="metric"><b>${ok}</b><small>OK</small></div>
+ <div class="metric"><b>${warn}</b><small>avisos</small></div>
+ <div class="metric"><b>${bad}</b><small>falhas</small></div>`;
+ $("#tests").innerHTML=report.map(x=>`
+ <article class="test"><div class="test-head"><strong>${esc(x.name)}</strong><span class="badge ${x.state}">${x.state==="ok"?"OK":x.state==="warn"?"AVISO":"FALHA"}</span></div>
+ <details><summary>Detalhes</summary><pre>${esc(x.detail)}</pre></details></article>`).join("");
+}
+async function test(path,name,expected,opts={}){
+ try{
+  const r=await request(path,opts);
+  const pass=typeof expected==="function"?expected(r):expected.includes(r.status);
+  add(name,pass?"ok":"bad",`URL: ${base()+path}\nHTTP: ${r.status}\nTempo: ${r.ms} ms\nResposta:\n${typeof r.data==="string"?r.data.slice(0,3000):JSON.stringify(r.data,null,2).slice(0,3000)}`);
+ }catch(e){add(name,"bad",`URL: ${base()+path}\nErro de rede: ${e.message}`)}
+}
+async function run(){
+ report=[];render();
+ const b=base(); if(!/^https?:\/\//i.test(b)){add("URL do backend","bad","Informe uma URL http(s).");render();return}
+ await test("/api/store-status","Banco + API de status",r=>r.status===200&&r.data&&typeof r.data.open==="boolean");
+ await test("/api/menu-availability","API de disponibilidade",r=>r.status===200&&Array.isArray(r.data?.items));
+ await test("/api/orders","Proteção da Kitchen",r=>r.status===200||r.status===401||r.status===403);
+ await test("/api/orders","OPTIONS /api/orders (CORS)",r=>r.status===204||r.status===200,{method:"OPTIONS"});
+ await test("/api/menu-availability","OPTIONS disponibilidade (CORS)",r=>r.status===204||r.status===200,{method:"OPTIONS"});
+ await test("/api/store-status","OPTIONS status (CORS)",r=>r.status===204||r.status===200,{method:"OPTIONS"});
+ await test("/api/nao-existe","Rota inexistente retorna erro HTTP",r=>r.status>=400&&r.status<600);
+ add("Frontend /teste","ok","Página carregada corretamente.");
+ render();
+}
+$("#run").onclick=run;
+$("#copy").onclick=async()=>{
+ const text=report.map(x=>`[${x.state.toUpperCase()}] ${x.name}\n${x.detail}`).join("\n\n");
+ try{await navigator.clipboard.writeText(text);alert("Relatório copiado.")}catch{alert(text)}
+};
+$("#base").value=localStorage.getItem("biglanche-diagnostic-base")||DEFAULT;
+$("#base").addEventListener("change",()=>localStorage.setItem("biglanche-diagnostic-base",base()));
+</script>
+</body>
+</html>
