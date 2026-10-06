@@ -1,0 +1,35 @@
+name: Build Big Lanche Printer Installer
+
+on:
+  push:
+    branches: [main]
+    paths:
+      - "printer-agent/installer/**"
+      - "printer-agent/BigLanchePrinter.ps1"
+      - ".github/workflows/build-printer-installer.yml"
+  workflow_dispatch:
+
+jobs:
+  build:
+    runs-on: windows-latest
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Build installer
+        shell: pwsh
+        run: |
+          Copy-Item printer-agent/BigLanchePrinter.ps1 printer-agent/installer/BigLanchePrinter.ps1 -Force
+          dotnet publish printer-agent/installer/BigLanchePrinterInstaller.csproj -c Release -r win-x64 --self-contained false -o printer-agent/installer/Build
+
+      - name: Package
+        shell: pwsh
+        run: |
+          Compress-Archive -Path printer-agent/installer/Build/* -DestinationPath printer-agent/Instalador-Big-Lanche-win-x64.zip -Force
+
+      - name: Upload installer
+        uses: actions/upload-artifact@v4
+        with:
+          name: Instalador-Big-Lanche-win-x64
+          path: printer-agent/Instalador-Big-Lanche-win-x64.zip
+          if-no-files-found: error
