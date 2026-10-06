@@ -4,7 +4,7 @@
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width,initial-scale=1">
 <title>BIG LANCHE — Cozinha</title>
-<script src="https://cdn.jsdelivr.net/npm/qz-tray/qz-tray.js"></script>
+
 <style>
 :root{--bg:#f3eee8;--card:#fffaf5;--ink:#2c211a;--muted:#7a6b61;--line:#dfd3c8;--accent:#5f493a;--ok:#4f7b5c;--warn:#b77932;--danger:#a6473d}
 *{box-sizing:border-box}body{margin:0;background:var(--bg);color:var(--ink);font:15px/1.4 Arial,sans-serif}
@@ -22,77 +22,53 @@ button{border:1px solid var(--line);border-radius:10px;padding:9px 12px;backgrou
 <body>
 <header><div class="head"><h1>🍔 BIG LANCHE · Cozinha</h1><div class="status"><span id="dot" class="dot"></span><span id="status">Conectando...</span></div></div></header>
 <main>
-<div class="toolbar"><button class="primary" id="connect">Conectar impressora</button><button id="autoPrint">🖨️ Impressão automática: ON</button><button id="refresh">Atualizar</button></div>
+<div class="toolbar"><button class="primary" id="autoPrint">🖨️ Impressão automática: ON</button><button id="refresh">Atualizar</button></div>
 <div id="orders" class="orders"><div class="empty">Nenhum pedido.</div></div>
 </main>
 <script>
-const API_URL=location.origin, PRINT_PRINTER="";
-let qzReady=false, orders=[], printingIds=new Set(), printedSessionIds=new Set();
-let autoPrintEnabled=localStorage.getItem("biglanche-auto-print")!=="off";
+const API_URL=location.origin;
+let orders=[], autoPrintEnabled=true;
 const $=s=>document.querySelector(s);
 const money=v=>Number(v||0).toLocaleString("pt-BR",{style:"currency",currency:"BRL"});
 const esc=s=>String(s??"").replace(/[&<>"']/g,c=>({"&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;","'":"&#039;"}[c]));
 const printSafe=s=>String(s??"").normalize("NFD").replace(/[\u0300-\u036f]/g,"").replace(/[^\x20-\x7E\n\r]/g,"");
 function status(t,ok=false){$("#status").textContent=t;$("#dot").className="dot "+(ok?"ok":"");}
 async function api(p,o={}){const r=await fetch(API_URL+p,{cache:"no-store",...o,headers:{"Content-Type":"application/json",...(o.headers||{})}});if(!r.ok)throw Error(await r.text());return r.json();}
-async function connectPrinter(showError=true){
+async function loadPrinterConfig(){
  try{
-  if(!window.qz)throw Error("QZ Tray não carregado");
-  if(!qz.websocket.isActive())await qz.websocket.connect({retries:2,delay:1});
-  const p=PRINT_PRINTER||await qz.printers.getDefault();
-  if(!p)throw Error("Nenhuma impressora padrão encontrada no Windows");
-  qzReady=true;
-  status("Impressora: "+p,true);
-  return p;
+  const cfg=await api("/api/printer-agent/config");
+  autoPrintEnabled=cfg.autoPrint!==false;
+  updateAutoPrintButton();
+  status(autoPrintEnabled?"Impressão automática ativa":"Impressão automática pausada",true);
  }catch(e){
-  qzReady=false;
-  status("Impressora não conectada");
-  if(showError)alert(e.message);
-  return null;
+  autoPrintEnabled=true;
+  updateAutoPrintButton();
+  status("Agente local configurando…");
  }
 }
 function card(o){const items=(o.cart||[]).map(i=>`<div class="item"><div class="item-name">${i.quantity}x ${esc(i.name)}</div>${(i.additions||[]).map(a=>`<div class="add">+ ${a.quantity||1}x ${esc(a.name)}</div>`).join("")}${i.note?`<div class="item-note"><b>Obs.:</b> ${esc(i.note)}</div>`:""}</div>`).join("");
 return `<article class="order ${o.status==="new"?"new":""}"><div class="order-head"><div class="number">Pedido #${esc(o.number)}</div><span class="badge ${o.status==="printed"?"printed":"new"}">${o.status==="printed"?"Impresso":o.status==="ready"?"Pronto":"Novo"}</span></div>${items}<div class="meta"><div><b>Entrega:</b> ${esc(o.delivery?.city||"")} ${o.delivery?.fee? "· "+money(o.delivery.fee):""}</div><div><b>Endereço:</b> ${esc(o.delivery?.address||"")}</div><div><b>Pagamento:</b> ${esc(o.payment||"")}</div>${o.notes?`<div><b>Obs.:</b> ${esc(o.notes)}</div>`:""}</div><div class="total">Total: ${money(o.total)}</div><div class="actions"><button class="primary" onclick="printOrder('${esc(o.id)}')">🖨️ Imprimir</button><button onclick="setStatus('${esc(o.id)}','preparing')">Em preparo</button><button onclick="setStatus('${esc(o.id)}','ready')">Pronto</button></div></article>`}
 function render(){ $("#orders").innerHTML=orders.length?orders.slice().reverse().map(card).join(""):'<div class="empty">Nenhum pedido.</div>'; }
 function receipt(o){const line="-".repeat(42),a=["\x1B\x40","\x1B\x61\x01","\x1B\x45\x01","BIG LANCHE","PEDIDO #"+o.number,"\x1B\x45\x00",line,"\x1B\x61\x00"];for(const i of o.cart||[]){a.push(`${i.quantity}x ${printSafe(i.name)}`);for(const x of i.additions||[])a.push(`   + ${x.quantity||1}x ${printSafe(x.name)}`);if(i.note)a.push(`   OBS: ${printSafe(i.note)}`)}a.push(line,`Entrega: ${printSafe(o.delivery?.city)} ${o.delivery?.fee?money(o.delivery.fee):""}`,`Endereco: ${printSafe(o.delivery?.address)}`,`Pagamento: ${printSafe(o.payment)}`,o.notes?`Obs: ${printSafe(o.notes)}`:"",`TOTAL: ${money(o.total)}`,"","","","\x1D\x56\x00");return a.join("\n");}
-async function printOrder(id,automatic=false){
+async function printOrder(id){
  const o=orders.find(x=>x.id===id);
  if(!o)return false;
- if(!qzReady){
-  if(automatic){await connectPrinter(false); if(!qzReady)return false;}
-  else{browserPrint(o);return true;}
- }
- if(printingIds.has(id))return false;
- printingIds.add(id);
  try{
-  const p=PRINT_PRINTER||await qz.printers.getDefault();
-  if(!p)throw Error("Nenhuma impressora encontrada");
-  const cfg=qz.configs.create(p,{jobName:`BIG LANCHE Pedido #${o.number}`});
-  await qz.print(cfg,[{type:"raw",format:"command",flavor:"plain",data:receipt(o)}]);
-  printedSessionIds.add(id);
-  await setStatus(id,"printed");
+  await api("/api/printer-agent/queue",{method:"POST",body:JSON.stringify({id})});
+  status("Pedido #"+o.number+" enviado para impressão",true);
   return true;
  }catch(e){
-  if(!automatic)alert("Falha na impressão: "+e.message);
-  else status("Falha ao imprimir pedido #"+o.number);
+  alert("Não foi possível colocar o pedido na fila de impressão: "+e.message);
   return false;
- }finally{printingIds.delete(id);}
-}
-async function autoPrintNewOrders(){
- if(!autoPrintEnabled)return;
- if(!qzReady)await connectPrinter(false);
- if(!qzReady)return;
- const pending=orders.filter(o=>o.status==="new"&&!printedSessionIds.has(o.id));
- for(const o of pending)await printOrder(o.id,true);
+ }
 }
 function browserPrint(o){const w=window.open("","_blank","width=420,height=700");if(!w)return;w.document.write(`<style>body{font:14px monospace;width:80mm;margin:0;padding:5mm}.i{font-weight:700;margin:6px 0}.a{padding-left:10px}.t{font-size:18px;font-weight:900;margin-top:12px}</style><h2>BIG LANCHE<br>Pedido #${esc(o.number)}</h2>${(o.cart||[]).map(i=>`<div class=i>${i.quantity}x ${esc(i.name)}${(i.additions||[]).map(a=>`<div class=a>+ ${a.quantity||1}x ${esc(a.name)}</div>`).join("")}${i.note?`<div class=a><b>Obs.:</b> ${esc(i.note)}</div>`:""}</div>`).join("")}<hr>Entrega: ${esc(o.delivery?.city)}<br>Endereco: ${esc(o.delivery?.address)}<br>Pagamento: ${esc(o.payment)}<div class=t>TOTAL: ${money(o.total)}</div><script>window.print()<\/script>`);w.document.close();}
 async function setStatus(id,s){await api("/api/orders/"+encodeURIComponent(id),{method:"PATCH",body:JSON.stringify({status:s})});const o=orders.find(x=>x.id===id);if(o)o.status=s;render();}
 async function load(){
  try{
   orders=await api("/api/orders");
-  status(qzReady?"Pedidos + impressora":"Pedidos conectados",true);
   render();
-  await autoPrintNewOrders();
+  await loadPrinterConfig();
  }catch{status("Servidor offline");}
 }
 function updateAutoPrintButton(){
@@ -100,12 +76,14 @@ function updateAutoPrintButton(){
  b.textContent="🖨️ Impressão automática: "+(autoPrintEnabled?"ON":"OFF");
  b.className=autoPrintEnabled?"primary":"";
 }
-$("#connect").onclick=()=>connectPrinter(true);
 $("#autoPrint").onclick=async()=>{
- autoPrintEnabled=!autoPrintEnabled;
- localStorage.setItem("biglanche-auto-print",autoPrintEnabled?"on":"off");
- updateAutoPrintButton();
- if(autoPrintEnabled)await autoPrintNewOrders();
+ const next=!autoPrintEnabled;
+ try{
+  const cfg=await api("/api/printer-agent/config",{method:"PATCH",body:JSON.stringify({autoPrint:next})});
+  autoPrintEnabled=cfg.autoPrint!==false;
+  updateAutoPrintButton();
+  status(autoPrintEnabled?"Impressão automática ativa":"Impressão automática pausada",true);
+ }catch(e){alert("Não foi possível alterar a impressão automática: "+e.message);}
 };
 $("#refresh").onclick=load;
 updateAutoPrintButton();
