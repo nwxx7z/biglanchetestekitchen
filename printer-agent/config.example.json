@@ -1,0 +1,6 @@
+{
+  "apiUrl": "https://biglanchetestekitchen.vercel.app",
+  "token": "COLOQUE_AQUI_O_PRINTER_AGENT_TOKEN_DO_VERCEL",
+  "printerName": "",
+  "pollMs": 10000
+}
