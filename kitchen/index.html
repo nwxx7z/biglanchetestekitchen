@@ -152,6 +152,25 @@ html[data-theme="dark"] .order-mode.active{
 .order-mode.active{background:#5c4333;border-color:#5c4333;color:#fff}
 .order-mode:disabled{opacity:.55;cursor:wait}
 #autoPrintToggle{font-weight:800}
+.availability-panel{margin:0 0 18px;padding:16px;border:1px solid #e4d8cd;border-radius:18px;background:#fffdf9;box-shadow:0 8px 22px rgba(43,32,26,.06)}
+.availability-head{display:flex;justify-content:space-between;gap:14px;align-items:flex-end;margin-bottom:14px}
+.availability-head strong{display:block;color:#2b201a;font-size:1rem}
+.availability-head small{display:block;margin-top:4px;color:#786b62;font-size:.8rem}
+.availability-tools{display:flex;gap:7px;align-items:center}
+#availabilitySearch{width:min(260px,45vw);min-height:40px;border:1px solid #e0d8d1;border-radius:10px;padding:8px 11px;background:#fff;color:#2b201a}
+.availability-list{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:8px}
+.availability-item{display:flex;align-items:center;justify-content:space-between;gap:10px;padding:10px 11px;border:1px solid #e3dbd5;border-radius:12px;background:#fff}
+.availability-item.unavailable{background:#fff6f4;border-color:#e3c7c2}
+.availability-name{font-weight:700;font-size:.86rem;line-height:1.25}
+.availability-state{font-size:.7rem;font-weight:800;white-space:nowrap}
+.availability-toggle{position:relative;flex:0 0 48px;width:48px;height:28px;padding:0;border:0;border-radius:999px;background:#c9c0b9;cursor:pointer}
+.availability-toggle::after{content:"";position:absolute;top:4px;left:4px;width:20px;height:20px;border-radius:50%;background:#fff;transition:transform .16s ease}
+.availability-toggle.on{background:var(--ok)}
+.availability-toggle.on::after{transform:translateX(20px)}
+.availability-toggle:disabled{opacity:.55;cursor:wait}
+@media(max-width:850px){.availability-list{grid-template-columns:repeat(2,minmax(0,1fr))}}
+@media(max-width:650px){.availability-head{flex-direction:column;align-items:stretch}.availability-tools{width:100%}#availabilitySearch{width:100%}.availability-list{grid-template-columns:1fr}}
+
 .danger-action{color:var(--danger)!important;border-color:#e3c7c2!important;background:#fff8f6!important;font-weight:800}
 html[data-theme="dark"] .danger-action{color:#ffb5aa!important;border-color:#65423b!important;background:#30211d!important}
 #autoPrintToggle.auto-print-on{border-color:#5f493a;color:#5f493a}
@@ -187,7 +206,20 @@ html[data-theme="dark"] .danger-action{color:#ffb5aa!important;border-color:#654
 </div>
 <main>
 <div class="toolbar"><button id="autoPrintToggle" type="button" aria-pressed="true">⚡ Impressão automática: ON</button><button class="primary" id="connect">🖨️ Conectar impressora</button><button id="refresh">Atualizar</button><button id="clearReady" class="danger-action" type="button" hidden>🗑️ Limpar pedidos prontos</button><button id="logout">Sair</button></div>
-<div class="order-control" id="orderControl"><div class="order-control-info"><span class="order-control-kicker">Status dos pedidos</span><strong id="orderControlTitle">Automático</strong><small id="orderControlHint">17:30 às 23:45 · Brasília</small></div><div class="order-mode-buttons" role="group" aria-label="Controle de pedidos"><button type="button" class="order-mode active" data-order-mode="auto">◷ Automático</button><button type="button" class="order-mode" data-order-mode="open">Aberto</button><button type="button" class="order-mode" data-order-mode="closed">Fechado</button></div></div>
+<div class="order-control" id="orderControl"><div class="order-control-info"><span class="order-control-kicker">Status dos pedidos</span><strong id="orderControlTitle">Automático</strong><small id="orderControlHint">17:30 às 23:45 · Brasília</small></div><div class="order-mode-buttons" role="group" aria-label="Controle de pedidos"><button type="button" class="order-mode active" data-order-mode="auto">◷ Automático</button><button type="button" class="order-mode" data-order-mode="open">Aberto</button><button type="button" class="order-mode" data-order-mode="closed">Fechado</button></div></div><section class="availability-panel" aria-labelledby="availabilityTitle">
+  <div class="availability-head">
+    <div>
+      <span class="order-control-kicker">Cardápio</span>
+      <strong id="availabilityTitle">Disponibilidade dos itens</strong>
+      <small>Desative um item quando estiver em falta. A alteração aparece no cardápio do cliente.</small>
+    </div>
+    <div class="availability-tools">
+      <input id="availabilitySearch" type="search" placeholder="Buscar item..." aria-label="Buscar item">
+      <button id="availabilityRefresh" type="button">Atualizar</button>
+    </div>
+  </div>
+  <div id="availabilityList" class="availability-list"><div class="empty">Carregando itens...</div></div>
+</section>
 <div id="orders" class="orders"><div class="empty">Nenhum pedido.</div></div>
 </main>
 <script>
@@ -199,6 +231,9 @@ let autoPrintEnabled=true;
 const autoPrintStorageKey="big-lanche-auto-print-v1";
 let orderMode="auto";
 let orderModeTimer=null;
+let menuCatalog=[];
+let menuUnavailable={};
+
 const $=s=>document.querySelector(s);
 const money=v=>Number(v||0).toLocaleString("pt-BR",{style:"currency",currency:"BRL"});
 const esc=s=>String(s??"").replace(/[&<>"']/g,c=>({"&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;","'":"&#039;"}[c]));
@@ -357,6 +392,45 @@ async function deleteOrder(id){
 function loadAutoPrintSetting(){try{const v=localStorage.getItem(autoPrintStorageKey);autoPrintEnabled=v===null?true:v==="1"}catch(e){autoPrintEnabled=true}renderAutoPrintToggle()}
 function renderAutoPrintToggle(){const b=$("#autoPrintToggle");if(!b)return;b.classList.toggle("auto-print-on",autoPrintEnabled);b.classList.toggle("auto-print-off",!autoPrintEnabled);b.setAttribute("aria-pressed",String(autoPrintEnabled));b.textContent=autoPrintEnabled?"⚡ Impressão automática: ON":"⚡ Impressão automática: OFF"}
 function toggleAutoPrint(){autoPrintEnabled=!autoPrintEnabled;try{localStorage.setItem(autoPrintStorageKey,autoPrintEnabled?"1":"0")}catch(e){}renderAutoPrintToggle();if(!autoPrintEnabled)autoPrintBusy.clear();status(autoPrintEnabled?"Impressão automática ativada":"Impressão automática desativada",true);if(autoPrintEnabled)load()}
+async function loadMenuAvailability(){
+  const list=$("#availabilityList");
+  if(list) list.innerHTML='<div class="empty">Carregando itens...</div>';
+  try{
+    const data=await api("/api/menu-status");
+    menuCatalog=Array.isArray(data?.catalog)?data.catalog:[];
+    menuUnavailable=data?.unavailable||{};
+    renderMenuAvailability();
+  }catch(e){
+    if(list) list.innerHTML='<div class="empty">Não foi possível carregar a disponibilidade.</div>';
+  }
+}
+function renderMenuAvailability(){
+  const list=$("#availabilityList");
+  if(!list) return;
+  const query=String($("#availabilitySearch")?.value||"").trim().toLocaleLowerCase("pt-BR");
+  const filtered=menuCatalog.filter(name=>!query||name.toLocaleLowerCase("pt-BR").includes(query));
+  if(!filtered.length){list.innerHTML='<div class="empty">Nenhum item encontrado.</div>';return;}
+  list.innerHTML=filtered.map(name=>{
+    const available=menuUnavailable[name]!==false;
+    return `<div class="availability-item ${available?"":"unavailable"}">
+      <span><span class="availability-name">${esc(name)}</span><span class="availability-state">${available?"Disponível":"Indisponível"}</span></span>
+      <button class="availability-toggle ${available?"on":""}" type="button" data-menu-name="${esc(name)}" aria-label="${available?"Desativar":"Ativar"} ${esc(name)}" aria-pressed="${String(available)}"></button>
+    </div>`;
+  }).join("");
+}
+async function toggleMenuAvailability(name){
+  const button=document.querySelector(`[data-menu-name="${CSS.escape(name)}"]`);
+  if(button) button.disabled=true;
+  try{
+    const available=menuUnavailable[name]===false;
+    const data=await api("/api/menu-status",{method:"PATCH",body:JSON.stringify({name,available})});
+    menuUnavailable=data?.unavailable||{};
+    renderMenuAvailability();
+    status(available?`${name} marcado como disponível`:`${name} marcado como indisponível`,true);
+  }catch(e){
+    if(e.message!=="AUTH_REQUIRED") alert("Não foi possível alterar a disponibilidade: "+e.message);
+  }
+}
 function modeLabel(mode){return mode==="open"?"Aberto":mode==="closed"?"Fechado":"Automático"}
 function updateOrderModeUI(data){const mode=String(data?.mode||"auto"),openNow=!!data?.open;orderMode=mode;document.querySelectorAll("[data-order-mode]").forEach(b=>b.classList.toggle("active",b.dataset.orderMode===mode));const title=$("#orderControlTitle"),hint=$("#orderControlHint");if(title)title.textContent=modeLabel(mode);if(hint)hint.textContent=mode==="auto"?(openNow?"Aberto agora · horário automático 17:30–23:45":"Fechado pelo horário · abre às 17:30"):mode==="open"?"Aberto manualmente · ignora o horário":"Fechado manualmente · ignora o horário"}
 async function loadOrderMode(){try{return updateOrderModeUI(await api("/api/store-status"))}catch(e){return null}}
