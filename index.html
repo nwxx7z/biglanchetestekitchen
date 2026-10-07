@@ -21,8 +21,7 @@ nav a{flex:none;color:var(--ink);text-decoration:none;font-weight:700;font-size:
 main{max-width:680px;margin:0 auto;padding:4px 16px}
 h2{font:400 1.45rem "Alfa Slab One",Georgia,serif;color:var(--tomato);margin:28px 0 4px}
 .nota{margin:0 0 8px;font-size:.9rem;opacity:.8}
-.item.unavailable{opacity:.58}.item.unavailable .add{cursor:not-allowed;filter:grayscale(.35)}.item.unavailable .price::after{content:" · Indisponível";font-weight:700;color:var(--tomato)}
-.item.menu-item-hidden{display:none!important}
+.item.unavailable{opacity:.58}.item.unavailable .add{cursor:not-allowed;filter:grayscale(.35)}.item.unavailable .name::after{content:" · Indisponível";font-weight:700;color:var(--tomato)}.item.unavailable .price::after{content:" · Indisponível";font-weight:700;color:var(--tomato)}
 .item{display:flex;align-items:center;justify-content:space-between;gap:12px;background:var(--card);border:1px solid var(--line);border-radius:14px;padding:12px 14px;margin-bottom:8px}
 .item.on{border-color:var(--pickle);box-shadow:inset 4px 0 0 var(--pickle)}
 .name{font-weight:700}.desc{font-size:.85rem;opacity:.78}.price{font-weight:700;color:var(--pickle)}
@@ -5593,9 +5592,19 @@ const C = [
 ["Coca cola Júnior",3,"",null,"refrigerante"],["Água mineral sem gás 500ml",3,"",null,"agua"],
 ["Água mineral com gás 500ml",4,"",null,"agua"],
 ["Guaraná júnior",2.5,"",null,"refrigerante"],
-["Refrigerante 1L",0,"",null,"refrigerante-dropdown",[["Guaraná 1 litro",10],["Coca cola 1 Litro",12],["Coca cola 1 litro zero",12],["Pepsi 1L",10]]],
-["Refrigerante 2L",0,"",null,"refrigerante-dropdown",[["Guaraná 2 litros",15],["Coca cola 2 litros",18]]],
-["Refrigerante lata",0,"",null,"refrigerante-dropdown",[["Guaraná lata",6],["Guaraná lata zero",6],["Coca lata",7],["Coca lata zero",7],["Fanta uva lata",6],["Soda lata",6],["Pepsi lata",6]]],
+["Guaraná 1 litro",10,"",null,"refrigerante"],
+["Coca cola 1 Litro",12,"",null,"refrigerante"],
+["Coca cola 1 litro zero",12,"",null,"refrigerante"],
+["Pepsi 1L",10,"",null,"refrigerante"],
+["Guaraná 2 litros",15,"",null,"refrigerante"],
+["Coca cola 2 litros",18,"",null,"refrigerante"],
+["Guaraná lata",6,"",null,"refrigerante"],
+["Guaraná lata zero",6,"",null,"refrigerante"],
+["Coca lata",7,"",null,"refrigerante"],
+["Coca lata zero",7,"",null,"refrigerante"],
+["Fanta uva lata",6,"",null,"refrigerante"],
+["Soda lata",6,"",null,"refrigerante"],
+["Pepsi lata",6,"",null,"refrigerante"],
 ["Suco sem leite 500ml",8,"",null,"suco"],["H2O",8,"",null,"agua"],
 ["Suco com leite 500ml",10,"",null,"suco"],["Suco de laranja natural 500ml",12],
 ["Vitamina de açaí",13,"Polpa de açaí, banana, açúcar, leite, granola.","", "vitamina"],["Vitamina de guaraná",13,"Guaraná, farinha de amendoim, banana, leite.","", "vitamina"],
@@ -5893,7 +5902,6 @@ function aplicarDisponibilidade(){
     const name=C[ci]?.i?.[ii]?.[0] || "";
     const available=itemDisponivel(name);
     el.classList.toggle("unavailable",!available);
-    el.classList.toggle("menu-item-hidden",!available);
     btn.disabled=!available;
     btn.setAttribute("aria-disabled",String(!available));
     btn.title=available?"Adicionar ao pedido":"Item indisponível no momento";
