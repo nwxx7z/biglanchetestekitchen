@@ -186,7 +186,7 @@ html[data-theme="dark"] .danger-action{color:#ffb5aa!important;border-color:#654
   <button id="tabReady" class="tab" type="button" role="tab" aria-selected="false">Prontos <span id="countReady" class="tab-count">0</span></button>
 </div>
 <main>
-<div class="toolbar"><button id="autoPrintToggle" type="button" aria-pressed="true">⚡ Impressão automática: ON</button><button class="primary" id="connect">🖨️ Conectar impressora</button><button id="refresh">Atualizar</button><button id="logout">Sair</button></div>
+<div class="toolbar"><button id="autoPrintToggle" type="button" aria-pressed="true">⚡ Impressão automática: ON</button><button class="primary" id="connect">🖨️ Conectar impressora</button><button id="refresh">Atualizar</button><button id="clearReady" class="danger-action" type="button" hidden>🗑️ Limpar pedidos prontos</button><button id="logout">Sair</button></div>
 <div class="order-control" id="orderControl"><div class="order-control-info"><span class="order-control-kicker">Status dos pedidos</span><strong id="orderControlTitle">Automático</strong><small id="orderControlHint">17:30 às 23:45 · Brasília</small></div><div class="order-mode-buttons" role="group" aria-label="Controle de pedidos"><button type="button" class="order-mode active" data-order-mode="auto">◷ Automático</button><button type="button" class="order-mode" data-order-mode="open">Aberto</button><button type="button" class="order-mode" data-order-mode="closed">Fechado</button></div></div>
 <div id="orders" class="orders"><div class="empty">Nenhum pedido.</div></div>
 </main>
@@ -276,6 +276,8 @@ function card(o){
   </article>`;
 }
 function render(){
+  const clearReady=$("#clearReady");
+  if(clearReady) clearReady.hidden=currentTab!=="ready";
   const activeOrders=orders.filter(o=>o.status!=="ready");
   const readyOrders=orders.filter(o=>o.status==="ready");
   $("#countActive").textContent=activeOrders.length;
@@ -285,7 +287,32 @@ function render(){
     ? list.slice().sort((a,b)=>new Date(a.createdAt)-new Date(b.createdAt)).reverse().map(card).join("")
     : `<div class="empty">${currentTab==="ready"?"Nenhum pedido pronto.":"Nenhum pedido em andamento."}</div>`;
 }
-function receipt(o){const line="-".repeat(42),a=["\x1B\x40","\x1B\x61\x01","\x1B\x45\x01","BIG LANCHE","PEDIDO #"+o.number,"\x1B\x45\x00",line,"\x1B\x61\x00"];for(const i of o.cart||[]){a.push(`${i.quantity}x ${printSafe(i.name)}`);for(const x of i.additions||[])a.push(`   + ${x.quantity||1}x ${printSafe(x.name)}`);if(i.note)a.push(`   OBS: ${printSafe(i.note)}`)}a.push(line,`Entrega: ${printSafe(o.delivery?.city)} ${o.delivery?.fee?money(o.delivery.fee):""}`,`Endereco: ${printSafe(o.delivery?.address)}`,`Pagamento: ${printSafe(o.payment)}`,o.notes?`Obs: ${printSafe(o.notes)}`:"",`TOTAL: ${money(o.total)}`,"","","","\x1D\x56\x00");return a.join("\n");}
+async function clearReadyOrders(){
+  if(currentTab!=="ready") return;
+  const readyOrders=orders.filter(o=>o.status==="ready");
+  if(!readyOrders.length){
+    status("Nenhum pedido pronto para excluir",true);
+    return;
+  }
+  if(!confirm(`Excluir TODOS os ${readyOrders.length} pedidos da aba Prontos?\\n\\nEssa ação não pode ser desfeita.`)) return;
+  const button=$("#clearReady");
+  if(button) button.disabled=true;
+  try{
+    await api("/api/orders?status=ready",{method:"DELETE"});
+    orders=orders.filter(o=>o.status!=="ready");
+    for(const o of readyOrders){
+      autoPrintSeen.delete(o.id);
+      autoPrintBusy.delete(o.id);
+    }
+    render();
+    status(`${readyOrders.length} pedido(s) pronto(s) excluído(s)`,true);
+  }catch(e){
+    if(e.message!=="AUTH_REQUIRED") alert("Não foi possível excluir os pedidos prontos: "+e.message);
+  }finally{
+    if(button) button.disabled=false;
+  }
+}
+function receipt(o){const line="-".repeat(42),a=["\x1B\x40","\x1B\x61\x01","\x1B\x45\x01","BIG LANCHE","PEDIDO #"+o.number,"\x1B\x45\x00",line,"\x1B\x61\x00"];for(const i of o.cart||[]){const flavor=i.flavor&&(!String(i.name||"").toLowerCase().includes(String(i.flavor).toLowerCase()))?` (sabor: ${i.flavor})`:"";a.push(`${i.quantity}x ${printSafe(i.name)}${printSafe(flavor)}`);for(const x of i.additions||[])a.push(`   + ${x.quantity||1}x ${printSafe(x.name)}`);if(i.note)a.push(`   OBS: ${printSafe(i.note)}`)}a.push(line,`Entrega: ${printSafe(o.delivery?.city)} ${o.delivery?.fee?money(o.delivery.fee):""}`,`Endereco: ${printSafe(o.delivery?.address)}`,`Pagamento: ${printSafe(o.payment)}`,o.notes?`Obs: ${printSafe(o.notes)}`:"",`TOTAL: ${money(o.total)}`,"","","","\x1D\x56\x00");return a.join("\n");}
 async function printOrder(id,automatic=false){
   const o=orders.find(x=>x.id===id);
   if(!o)return;
@@ -352,7 +379,7 @@ async function load(){try{
     }
   }
 }catch{status("Servidor offline");}}
-$("#connect").onclick=connectPrinter;$("#refresh").onclick=load;$("#logout").onclick=doLogout;$("#autoPrintToggle").onclick=toggleAutoPrint;document.querySelectorAll("[data-order-mode]").forEach(b=>b.addEventListener("click",()=>setOrderMode(b.dataset.orderMode)));loadAutoPrintSetting();$("#loginForm").addEventListener("submit",async e=>{e.preventDefault();const b=$("#loginForm button");const p=$("#loginPassword").value.trim();if(!p)return;$("#loginError").textContent="";b.disabled=true;try{await doLogin(p);$("#loginPassword").value=""}catch(err){$("#loginError").textContent=err.message||"Senha incorreta";$("#loginPassword").select()}finally{b.disabled=false}});checkAuth().then(ok=>{if(ok){load();loadOrderMode();startOrderModePolling()}});setInterval(()=>{if(authenticated)load()},2500);$("#tabActive").onclick=()=>setTab("active");$("#tabReady").onclick=()=>setTab("ready");
+$("#connect").onclick=connectPrinter;$("#refresh").onclick=load;$("#logout").onclick=doLogout;$("#autoPrintToggle").onclick=toggleAutoPrint;document.querySelectorAll("[data-order-mode]").forEach(b=>b.addEventListener("click",()=>setOrderMode(b.dataset.orderMode)));loadAutoPrintSetting();$("#loginForm").addEventListener("submit",async e=>{e.preventDefault();const b=$("#loginForm button");const p=$("#loginPassword").value.trim();if(!p)return;$("#loginError").textContent="";b.disabled=true;try{await doLogin(p);$("#loginPassword").value=""}catch(err){$("#loginError").textContent=err.message||"Senha incorreta";$("#loginPassword").select()}finally{b.disabled=false}});checkAuth().then(ok=>{if(ok){load();loadOrderMode();startOrderModePolling()}});setInterval(()=>{if(authenticated)load()},2500);$("#tabActive").onclick=()=>setTab("active");$("#tabReady").onclick=()=>setTab("ready");$("#clearReady").onclick=clearReadyOrders;
 </script>
 </div><script>
 (function(){
