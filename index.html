@@ -22,6 +22,7 @@ main{max-width:680px;margin:0 auto;padding:4px 16px}
 h2{font:400 1.45rem "Alfa Slab One",Georgia,serif;color:var(--tomato);margin:28px 0 4px}
 .nota{margin:0 0 8px;font-size:.9rem;opacity:.8}
 .item.unavailable{opacity:.58}.item.unavailable .add{cursor:not-allowed;filter:grayscale(.35)}.item.unavailable .price::after{content:" · Indisponível";font-weight:700;color:var(--tomato)}
+.item.menu-item-hidden{display:none!important}
 .item{display:flex;align-items:center;justify-content:space-between;gap:12px;background:var(--card);border:1px solid var(--line);border-radius:14px;padding:12px 14px;margin-bottom:8px}
 .item.on{border-color:var(--pickle);box-shadow:inset 4px 0 0 var(--pickle)}
 .name{font-weight:700}.desc{font-size:.85rem;opacity:.78}.price{font-weight:700;color:var(--pickle)}
@@ -5872,7 +5873,18 @@ const FOTOS_CATEGORIA = Object.freeze({
     </div>`
 });
 let menuUnavailable = Object.create(null);
-function itemDisponivel(name){ return menuUnavailable[name] !== false; }
+function normalizarDisponibilidadeNome(name){
+  return String(name||"")
+    .normalize("NFD").replace(/[\u0300-\u036f]/g,"")
+    .toLowerCase().replace(/[^a-z0-9]+/g,"");
+}
+function itemDisponivel(name){
+  if(menuUnavailable[name] === false) return false;
+  const alvo=normalizarDisponibilidadeNome(name);
+  return !Object.keys(menuUnavailable).some(k =>
+    menuUnavailable[k] === false && normalizarDisponibilidadeNome(k) === alvo
+  );
+}
 function aplicarDisponibilidade(){
   document.querySelectorAll("#menu .item").forEach(el=>{
     const btn=el.querySelector(".add");
@@ -5881,6 +5893,7 @@ function aplicarDisponibilidade(){
     const name=C[ci]?.i?.[ii]?.[0] || "";
     const available=itemDisponivel(name);
     el.classList.toggle("unavailable",!available);
+    el.classList.toggle("menu-item-hidden",!available);
     btn.disabled=!available;
     btn.setAttribute("aria-disabled",String(!available));
     btn.title=available?"Adicionar ao pedido":"Item indisponível no momento";
