@@ -5556,8 +5556,8 @@ const C = [
 ["MAG-7",25,"Pão brioche, hambúrguer artesanal 150g, queijo coalho, goiabada, molho da casa, salada. Acompanha batatas fritas."],
 ["MAC-10",32,"Pão brioche, hambúrguer artesanal 150g, rodela de abacaxi, queijo coalho, bacon triturado, geleia de abacaxi, salada. Acompanha batatas fritas."],
 ["BIZON",32,"Pão brioche, filé de carne acebolada 150g, queijo coalho em cubos, catupiry, molho barbecue, salada. Acompanha batatas fritas."],
-["G-36 ( CAMARÃO)",40,"Pão brioche, hambúrguer artesanal 150g, camarão, cream cheese, geleia de pimenta e salada. Acompanha batatas fritas."],
-["AN-94 ( CHARQUE)",35,"Pão brioche, hambúrguer artesanal 100g, queijo coalho, anéis de cebola empanada, charque desfiada, cream cheese, molho barbecue e salada. Acompanha batatas fritas."],
+["G-36 (CAMARÃO)",40,"Pão brioche, hambúrguer artesanal 150g, camarão, cream cheese, geleia de pimenta e salada. Acompanha batatas fritas."],
+["AN-94 (CHARQUE)",35,"Pão brioche, hambúrguer artesanal 100g, queijo coalho, anéis de cebola empanada, charque desfiada, cream cheese, molho barbecue e salada. Acompanha batatas fritas."],
 ["M500 (COSTELA)",35,"Pão brioche, hambúrguer artesanal 100g, costela desfiada, banana da terra, catupiry, molho barbecue e salada. Acompanha batatas fritas."]]},{t:"Hambúrgueres tradicionais",ad:"h",nota:"Adicionais ficam disponíveis em &quot;Seu pedido&quot; depois de adicionar.",i:[
 ["BIG LANCHE",60,"Pão recife 40cm, 150g de filé de carne, 150g de filé de frango, 4 fatias de presunto, 4 fatias de queijo muçarela, calabresa, bacon, ovos, molho da casa, salada."],
 ["MP5",10,"Pão com gergelim, hambúrguer, salada."],
@@ -5784,7 +5784,7 @@ function enderecoEntregaParaCozinha(){
 const total = () => cart.reduce((a,l) => a + l.q * unit(l), 0) + taxaEntrega();
 const juntar = a => a.length < 2 ? a.join("") : a.slice(0,-1).join(", ") + " e " + a[a.length-1];
 const nome = l => {
-  const sabor = l.juice && l.flavor ? ` (sabor: ${l.flavor})` : "";
+  const sabor = (l.juice || l.kind === "milkshake") && l.flavor ? ` (sabor: ${l.flavor})` : "";
   const adds = l.adds.length
     ? ` (adicional${l.adds.length > 1 ? "es" : ""} de ${juntar(l.adds.map(x => `${x[2] || 1}x ${x[0].toLowerCase()}`))})`
     : "";
