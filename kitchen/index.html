@@ -243,7 +243,7 @@ function showLogin(message=""){authenticated=false;$("#app").classList.add("hidd
 function showApp(){authenticated=true;$("#loginScreen").classList.add("hidden");$("#app").classList.remove("hidden")}
 async function api(p,o={}){const r=await fetch(API_URL+p,{cache:"no-store",credentials:"same-origin",...o,headers:{"Content-Type":"application/json",...(o.headers||{})}});if(r.status===401){showLogin("Sua sessão expirou. Entre novamente.");throw Error("AUTH_REQUIRED")}if(!r.ok)throw Error(await r.text());return r.json();}
 async function checkAuth(){try{const r=await fetch(API_URL+"/api/auth",{cache:"no-store",credentials:"same-origin"});if(r.ok){showApp();return true}}catch(e){}showLogin();return false}
-async function doLogin(password){const r=await fetch(API_URL+"/api/auth",{method:"POST",credentials:"same-origin",headers:{"Content-Type":"application/json"},body:JSON.stringify({password})});if(!r.ok){let msg="Senha incorreta";try{msg=(await r.json()).error||msg}catch(e){}throw Error(msg)}showApp();await load();}
+async function doLogin(password){const r=await fetch(API_URL+"/api/auth",{method:"POST",credentials:"same-origin",headers:{"Content-Type":"application/json"},body:JSON.stringify({password})});if(!r.ok){let msg="Senha incorreta";try{msg=(await r.json()).error||msg}catch(e){}throw Error(msg)}showApp();await load();await loadMenuAvailability();}
 async function doLogout(){try{await fetch(API_URL+"/api/auth",{method:"DELETE",credentials:"same-origin"})}catch(e){}showLogin();}
 async function connectPrinter(){
   try{
