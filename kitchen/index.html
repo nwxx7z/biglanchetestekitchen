@@ -474,6 +474,14 @@ async function load(){try{
     }
   }
 }catch{status("Servidor offline");}}
+$("#availabilityList").addEventListener("click",e=>{
+  const button=e.target.closest(".availability-toggle");
+  if(!button || button.disabled) return;
+  const name=button.dataset.menuName;
+  if(name) toggleMenuAvailability(name);
+});
+$("#availabilitySearch").addEventListener("input",renderMenuAvailability);
+$("#availabilityRefresh").onclick=loadMenuAvailability;
 $("#connect").onclick=connectPrinter;$("#refresh").onclick=load;$("#logout").onclick=doLogout;$("#autoPrintToggle").onclick=toggleAutoPrint;document.querySelectorAll("[data-order-mode]").forEach(b=>b.addEventListener("click",()=>setOrderMode(b.dataset.orderMode)));loadAutoPrintSetting();$("#loginForm").addEventListener("submit",async e=>{e.preventDefault();const b=$("#loginForm button");const p=$("#loginPassword").value.trim();if(!p)return;$("#loginError").textContent="";b.disabled=true;try{await doLogin(p);$("#loginPassword").value=""}catch(err){$("#loginError").textContent=err.message||"Senha incorreta";$("#loginPassword").select()}finally{b.disabled=false}});checkAuth().then(ok=>{if(ok){load();loadOrderMode();startOrderModePolling();loadMenuAvailability()}});setInterval(()=>{if(authenticated)load()},2500);$("#tabActive").onclick=()=>setTab("active");$("#tabReady").onclick=()=>setTab("ready");$("#tabAvailability").onclick=()=>setTab("availability");$("#clearReady").onclick=clearReadyOrders;
 </script>
 </div><script>
