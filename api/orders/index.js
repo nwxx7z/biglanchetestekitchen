@@ -55,6 +55,28 @@ module.exports = async function handler(req, res) {
       return send(res, 200, rows);
     }
 
+    if (req.method === "DELETE") {
+      if (!requireKitchenAuth(req, res)) return;
+
+      const status = String(req.query?.status || "").toLowerCase();
+      if (status !== "ready") {
+        return send(res, 400, {
+          error: "A exclusão em lote só permite status ready"
+        });
+      }
+
+      const rows = await sql`
+        DELETE FROM orders
+        WHERE status = 'ready'
+        RETURNING id
+      `;
+
+      return send(res, 200, {
+        ok: true,
+        deleted: rows.length
+      });
+    }
+
     if (req.method === "POST") {
 
       // Verifica se a loja está aberta
