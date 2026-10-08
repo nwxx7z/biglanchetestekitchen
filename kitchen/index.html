@@ -240,7 +240,10 @@ const API_URL=location.origin, PRINT_PRINTER="";
 let qzReady=false, orders=[], authenticated=false, currentTab="active";
 let autoPrintSeen=new Set();
 let autoPrintBusy=new Set();
+let autoPrintQueue=[];
+let autoPrintQueueRunning=false;
 let autoPrintEnabled=true;
+const AUTO_PRINT_TIMEOUT=15000;
 const autoPrintStorageKey="big-lanche-auto-print-v1";
 let orderMode="auto";
 let orderModeTimer=null;
@@ -369,27 +372,66 @@ async function clearReadyOrders(){
   }
 }
 function receipt(o){const line="-".repeat(42),a=["\x1B\x40","\x1B\x61\x01","\x1B\x45\x01","BIG LANCHE","PEDIDO #"+o.number,"\x1B\x45\x00",line,"\x1B\x61\x00"];for(const i of o.cart||[]){const flavor=i.flavor&&(!String(i.name||"").toLowerCase().includes(String(i.flavor).toLowerCase()))?` (sabor: ${i.flavor})`:"";a.push(`${i.quantity}x ${printSafe(i.name)}${printSafe(flavor)}`);for(const x of i.additions||[])a.push(`   + ${x.quantity||1}x ${printSafe(x.name)}`);if(i.note)a.push(`   OBS: ${printSafe(i.note)}`)}a.push(line,`Entrega: ${printSafe(o.delivery?.city)} ${o.delivery?.fee?money(o.delivery.fee):""}`,`Endereco: ${printSafe(o.delivery?.address)}`,`Pagamento: ${printSafe(o.payment)}`,o.notes?`Obs: ${printSafe(o.notes)}`:"",`TOTAL: ${money(o.total)}`,"","","","\x1D\x56\x00");return a.join("\n");}
+async function withPrintTimeout(promise,label="Impressão"){
+  let timer;
+  try{
+    return await Promise.race([
+      Promise.resolve(promise),
+      new Promise((_,reject)=>{timer=setTimeout(()=>reject(Error(label+" demorou mais de 15 segundos")),AUTO_PRINT_TIMEOUT)})
+    ]);
+  }finally{
+    if(timer) clearTimeout(timer);
+  }
+}
 async function printOrder(id,automatic=false){
   const o=orders.find(x=>x.id===id);
-  if(!o)return;
+  if(!o)return false;
   const raw=receipt(o);
   try{
     if(window.BIGLANCHE_PRINTER.available()){
-      const sent=await window.BIGLANCHE_PRINTER.print(raw);
+      const sent=await withPrintTimeout(
+        window.BIGLANCHE_PRINTER.print(raw),
+        "A impressora"
+      );
       if(!sent) throw Error("Impressora não respondeu");
-      await setStatus(id,"printed");
+      await withPrintTimeout(setStatus(id,"printed"),"Atualização do pedido");
       if(automatic) status("Pedido #"+o.number+" impresso automaticamente",true);
       return true;
     }
-    if(!qzReady){browserPrint(o);return}
-    const p=PRINT_PRINTER||await qz.printers.getDefault(),
+    if(!qzReady){browserPrint(o);return false}
+    const p=PRINT_PRINTER||await withPrintTimeout(qz.printers.getDefault(),"Localização da impressora"),
           c=qz.configs.create(p,{jobName:`BIG LANCHE Pedido #${o.number}`});
-    await qz.print(c,[{type:"raw",format:"command",flavor:"plain",data:raw}]);
-    await setStatus(id,"printed");
+    await withPrintTimeout(
+      qz.print(c,[{type:"raw",format:"command",flavor:"plain",data:raw}]),
+      "A impressão"
+    );
+    await withPrintTimeout(setStatus(id,"printed"),"Atualização do pedido");
     return true;
   }catch(e){
     if(!automatic) alert("Falha na impressão: "+e.message);
+    else status("Falha ao imprimir automaticamente: "+e.message);
     return false;
+  }
+}
+async function processAutoPrintQueue(){
+  if(autoPrintQueueRunning || !autoPrintEnabled || !window.BIGLANCHE_PRINTER?.available()) return;
+  autoPrintQueueRunning=true;
+  try{
+    while(autoPrintQueue.length && autoPrintEnabled && window.BIGLANCHE_PRINTER?.available()){
+      const id=autoPrintQueue.shift();
+      if(autoPrintSeen.has(id)) continue;
+      const o=orders.find(x=>x.id===id);
+      if(!o || o.status!=="new") continue;
+      autoPrintBusy.add(id);
+      try{
+        const ok=await printOrder(id,true);
+        if(ok) autoPrintSeen.add(id);
+      }finally{
+        autoPrintBusy.delete(id);
+      }
+    }
+  }finally{
+    autoPrintQueueRunning=false;
   }
 }
 function browserPrint(o){const w=window.open("","_blank","width=420,height=700");if(!w)return;w.document.write(`<style>body{font:14px monospace;width:80mm;margin:0;padding:5mm}.i{font-weight:700;margin:6px 0}.a{padding-left:10px}.t{font-size:18px;font-weight:900;margin-top:12px}</style><h2>BIG LANCHE<br>Pedido #${esc(o.number)}</h2>${(o.cart||[]).map(i=>`<div class=i>${i.quantity}x ${esc(i.name)}${(i.additions||[]).map(a=>`<div class=a>+ ${a.quantity||1}x ${esc(a.name)}</div>`).join("")}${i.note?`<div class=a><b>Obs.:</b> ${esc(i.note)}</div>`:""}</div>`).join("")}<hr>Entrega: ${esc(o.delivery?.city)}<br>Endereco: ${esc(o.delivery?.address)}<br>Pagamento: ${esc(o.payment)}<div class=t>TOTAL: ${money(o.total)}</div><script>window.print()<\/script>`);w.document.close();}
@@ -412,7 +454,17 @@ async function deleteOrder(id){
 }
 function loadAutoPrintSetting(){try{const v=localStorage.getItem(autoPrintStorageKey);autoPrintEnabled=v===null?true:v==="1"}catch(e){autoPrintEnabled=true}renderAutoPrintToggle()}
 function renderAutoPrintToggle(){const b=$("#autoPrintToggle");if(!b)return;b.classList.toggle("auto-print-on",autoPrintEnabled);b.classList.toggle("auto-print-off",!autoPrintEnabled);b.setAttribute("aria-pressed",String(autoPrintEnabled));b.textContent=autoPrintEnabled?"⚡ Impressão automática: ON":"⚡ Impressão automática: OFF"}
-function toggleAutoPrint(){autoPrintEnabled=!autoPrintEnabled;try{localStorage.setItem(autoPrintStorageKey,autoPrintEnabled?"1":"0")}catch(e){}renderAutoPrintToggle();if(!autoPrintEnabled)autoPrintBusy.clear();status(autoPrintEnabled?"Impressão automática ativada":"Impressão automática desativada",true);if(autoPrintEnabled)load()}
+function toggleAutoPrint(){
+  autoPrintEnabled=!autoPrintEnabled;
+  try{localStorage.setItem(autoPrintStorageKey,autoPrintEnabled?"1":"0")}catch(e){}
+  renderAutoPrintToggle();
+  if(!autoPrintEnabled){
+    autoPrintQueue=[];
+    autoPrintBusy.clear();
+  }
+  status(autoPrintEnabled?"Impressão automática ativada":"Impressão automática desativada",true);
+  if(autoPrintEnabled)load();
+}
 async function loadMenuAvailability(){
   const list=$("#availabilityList");
   if(list) list.innerHTML='<div class="empty">Carregando itens...</div>';
@@ -464,14 +516,10 @@ async function load(){try{
   render();
   if(autoPrintEnabled && window.BIGLANCHE_PRINTER?.available()){
     for(const o of orders){
-      if(o.status!=="new" || autoPrintSeen.has(o.id) || autoPrintBusy.has(o.id)) continue;
-      autoPrintBusy.add(o.id);
-      try{
-        const ok=await printOrder(o.id,true);
-        if(ok) autoPrintSeen.add(o.id);
-      }catch(e){}
-      finally{autoPrintBusy.delete(o.id);}
+      if(o.status!=="new" || autoPrintSeen.has(o.id) || autoPrintBusy.has(o.id) || autoPrintQueue.includes(o.id)) continue;
+      autoPrintQueue.push(o.id);
     }
+    void processAutoPrintQueue();
   }
 }catch{status("Servidor offline");}}
 $("#availabilityList").addEventListener("click",e=>{
