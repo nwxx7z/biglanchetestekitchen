@@ -12,6 +12,16 @@ $pollMs = [int]$config.pollMs
 if ($pollMs -lt 3000) { $pollMs = 10000 }
 if ([string]::IsNullOrWhiteSpace($token) -or $token -like "*COLOQUE_AQUI*") { Write-Host "ERRO: configure o token no config.json."; exit 1 }
 
+$agentId = [guid]::NewGuid().ToString()
+$mutex = New-Object System.Threading.Mutex($false, "Global\BigLanchePrinterAgent")
+$ownsMutex = $false
+try { $ownsMutex = $mutex.WaitOne(0, $false) } catch { $ownsMutex = $false }
+if (-not $ownsMutex) {
+  Write-Host "Já existe uma instância do Big Lanche Printer em execução. Esta cópia será encerrada."
+  $mutex.Dispose()
+  exit 0
+}
+
 Add-Type -TypeDefinition @"
 using System;
 using System.Runtime.InteropServices;
@@ -51,11 +61,11 @@ function Get-PrinterName {
  return [string]$p
 }
 function Get-Json($url){
- $headers=@{Authorization="Bearer $token";Accept="application/json"}
+ $headers=@{Authorization="Bearer $token";Accept="application/json";"X-Printer-Agent-Id"=$agentId}
  return Invoke-RestMethod -Uri $url -Headers $headers -Method Get -TimeoutSec 15
 }
 function Post-Json($url,$body){
- $headers=@{Authorization="Bearer $token";"Content-Type"="application/json";Accept="application/json"}
+ $headers=@{Authorization="Bearer $token";"Content-Type"="application/json";Accept="application/json";"X-Printer-Agent-Id"=$agentId}
  return Invoke-RestMethod -Uri $url -Headers $headers -Method Post -Body ($body|ConvertTo-Json -Depth 20) -TimeoutSec 15
 }
 function SafeText($value){
@@ -86,23 +96,28 @@ function Build-Receipt($o){
  [Array]::Copy($bytes,0,$result,0,$bytes.Length);[Array]::Copy($cut,0,$result,$bytes.Length,$cut.Length)
  return $result
 }
-Write-Host "BIG LANCHE Printer Agent iniciado."
-Write-Host "API: $apiUrl"
-Write-Host "Impressora: $(Get-PrinterName)"
-Write-Host "Polling: $pollMs ms"
-while($true){
- try{
-  $response=Get-Json "$apiUrl/api/printer-agent/orders"
-  if($response.enabled){
-   foreach($order in @($response.orders)){
-    try{
-     $printer=Get-PrinterName;$payload=Build-Receipt $order
-     [RawPrinter]::Send($printer,$payload)
-     Post-Json "$apiUrl/api/printer-agent/printed" @{id=[string]$order.id}|Out-Null
-     Write-Host ("[{0}] Pedido #{1} impresso."-f(Get-Date -Format "HH:mm:ss"),$order.number)
-    }catch{Write-Warning ("Falha no pedido #{0}: {1}"-f $order.number,$_.Exception.Message);break}
+try {
+ Write-Host "BIG LANCHE Printer Agent iniciado."
+ Write-Host "API: $apiUrl"
+ Write-Host "Impressora: $(Get-PrinterName)"
+ Write-Host "Polling: $pollMs ms"
+ while($true){
+  try{
+   $response=Get-Json "$apiUrl/api/printer-agent/orders"
+   if($response.enabled){
+    foreach($order in @($response.orders)){
+     try{
+      $printer=Get-PrinterName;$payload=Build-Receipt $order
+      [RawPrinter]::Send($printer,$payload)
+      Post-Json "$apiUrl/api/printer-agent/printed" @{id=[string]$order.id;agentId=$agentId}|Out-Null
+      Write-Host ("[{0}] Pedido #{1} impresso."-f(Get-Date -Format "HH:mm:ss"),$order.number)
+     }catch{Write-Warning ("Falha no pedido #{0}: {1}"-f $order.number,$_.Exception.Message);break}
+    }
    }
-  }
- }catch{Write-Warning ("Falha de comunicação: "+$_.Exception.Message)}
- Start-Sleep -Milliseconds $pollMs
+  }catch{Write-Warning ("Falha de comunicação: "+$_.Exception.Message)}
+  Start-Sleep -Milliseconds $pollMs
+ }
+} finally {
+ if ($ownsMutex) { try { $mutex.ReleaseMutex() } catch {} }
+ $mutex.Dispose()
 }
