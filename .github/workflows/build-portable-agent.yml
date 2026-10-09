@@ -1,0 +1,39 @@
+name: Build Big Lanche Portable Agent
+
+on:
+  push:
+    branches: [main]
+    paths:
+      - "printer-agent/BigLanchePrinter.ps1"
+      - "printer-agent/portable-agent/**"
+      - ".github/workflows/build-portable-agent.yml"
+  workflow_dispatch:
+
+jobs:
+  build:
+    runs-on: windows-latest
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Embed current print agent
+        shell: pwsh
+        run: |
+          Copy-Item printer-agent/BigLanchePrinter.ps1 printer-agent/portable-agent/BigLanchePrinter.ps1 -Force
+
+      - name: Publish portable EXE
+        shell: pwsh
+        run: |
+          dotnet publish printer-agent/portable-agent/BigLanchePortableAgent.csproj -c Release -r win-x64 --self-contained true -p:PublishSingleFile=true -p:IncludeNativeLibrariesForSelfExtract=true -o printer-agent/portable-agent/Build
+
+      - name: Package portable EXE
+        shell: pwsh
+        run: |
+          Compress-Archive -Path printer-agent/portable-agent/Build/Agente-Big-Lanche.exe -DestinationPath printer-agent/Agente-Big-Lanche-win-x64.zip -Force
+
+      - name: Upload portable agent
+        uses: actions/upload-artifact@v4
+        with:
+          name: Agente-Big-Lanche-win-x64
+          path: printer-agent/Agente-Big-Lanche-win-x64.zip
+          if-no-files-found: error
