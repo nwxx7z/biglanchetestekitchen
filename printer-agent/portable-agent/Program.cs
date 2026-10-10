@@ -67,12 +67,21 @@ internal static class Program
             var start = new ProcessStartInfo
             {
                 FileName = "powershell.exe",
-                Arguments = "-NoProfile -ExecutionPolicy Bypass -WindowStyle Hidden -File \"" + scriptPath + "\"",
+                Arguments = "-NoProfile -ExecutionPolicy Bypass -File \"" + scriptPath + "\"",
                 UseShellExecute = false,
-                CreateNoWindow = true,
+                CreateNoWindow = false,
                 WorkingDirectory = workDir
             };
-            Process.Start(start);
+            var agentProcess = Process.Start(start);
+            if (agentProcess is null)
+                throw new InvalidOperationException("O Windows não conseguiu iniciar o processo do agente.");
+            MessageBox.Show(
+                "O agente de impressão foi iniciado em uma janela separada.\n\n" +
+                "Mantenha a janela do PowerShell aberta enquanto quiser imprimir pedidos. " +
+                "Se houver erro de configuração ou conexão, a mensagem aparecerá nessa janela.",
+                "Big Lanche - Agente iniciado",
+                MessageBoxButtons.OK,
+                MessageBoxIcon.Information);
         }
         catch (Exception ex)
         {
