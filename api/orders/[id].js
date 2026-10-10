@@ -41,6 +41,6 @@ module.exports = async function handler(req, res) {
     return send(res, 200, rows[0]);
   } catch (error) {
     console.error(error);
-    return send(res, 500, { error: "Erro interno", detail: error.message });
+    return send(res, 500, { error: "Erro interno" });
   }
 };
