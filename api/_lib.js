@@ -105,7 +105,7 @@ function normalize(x = {}) {
   if (!x || typeof x !== "object") x = {};
   return {
     cart: (Array.isArray(x.cart) ? x.cart : []).slice(0, 50).map(i => ({
-      name: String(i.name || "Item").slice(0, 120),
+      name: String(i.name || "Item").slice(0, 400),
       quantity: Math.max(1, Math.min(999, Number(i.quantity) || 1)),
       price: Math.max(0, Number(i.price) || 0),
       note: String(i.note || "").slice(0, 300),
@@ -116,8 +116,10 @@ function normalize(x = {}) {
       }))
     })),
     delivery: {
-      city: String(x.delivery?.city || "").slice(0, 80),
+      city: String(x.delivery?.city || "").slice(0, 120),
+      locality: String(x.delivery?.locality || "").slice(0, 120),
       fee: Math.max(0, Number(x.delivery?.fee) || 0),
+      feeLabel: String(x.delivery?.feeLabel || "").slice(0, 80),
       address: String(x.delivery?.address || "").slice(0, 500)
     },
     payment: String(x.payment || "").slice(0, 80),
