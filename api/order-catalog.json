@@ -1,0 +1,764 @@
+{
+  "items": [
+    {
+      "name": "SPAS12",
+      "price": 22,
+      "addonGroup": "h",
+      "kind": null
+    },
+    {
+      "name": "AUG",
+      "price": 28,
+      "addonGroup": "h",
+      "kind": null
+    },
+    {
+      "name": "PARAFAL",
+      "price": 30,
+      "addonGroup": "h",
+      "kind": null
+    },
+    {
+      "name": "SKS",
+      "price": 32,
+      "addonGroup": "h",
+      "kind": null
+    },
+    {
+      "name": "LANÇA GRANADAS",
+      "price": 38,
+      "addonGroup": "h",
+      "kind": null
+    },
+    {
+      "name": "SVD",
+      "price": 28,
+      "addonGroup": "h",
+      "kind": null
+    },
+    {
+      "name": "K98",
+      "price": 30,
+      "addonGroup": "h",
+      "kind": null
+    },
+    {
+      "name": "VECTOR",
+      "price": 28,
+      "addonGroup": "h",
+      "kind": null
+    },
+    {
+      "name": "THOMPSON",
+      "price": 30,
+      "addonGroup": "h",
+      "kind": null
+    },
+    {
+      "name": "CARAPINA",
+      "price": 40,
+      "addonGroup": "h",
+      "kind": null
+    },
+    {
+      "name": "MAG-7",
+      "price": 25,
+      "addonGroup": "h",
+      "kind": null
+    },
+    {
+      "name": "MAC-10",
+      "price": 32,
+      "addonGroup": "h",
+      "kind": null
+    },
+    {
+      "name": "BIZON",
+      "price": 32,
+      "addonGroup": "h",
+      "kind": null
+    },
+    {
+      "name": "G-36 (CAMARÃO)",
+      "price": 40,
+      "addonGroup": "h",
+      "kind": null
+    },
+    {
+      "name": "AN-94 (CHARQUE)",
+      "price": 35,
+      "addonGroup": "h",
+      "kind": null
+    },
+    {
+      "name": "M500 (COSTELA)",
+      "price": 35,
+      "addonGroup": "h",
+      "kind": null
+    },
+    {
+      "name": "BIG LANCHE",
+      "price": 60,
+      "addonGroup": "h",
+      "kind": null
+    },
+    {
+      "name": "MP5",
+      "price": 10,
+      "addonGroup": "h",
+      "kind": null
+    },
+    {
+      "name": "UMP",
+      "price": 15,
+      "addonGroup": "h",
+      "kind": null
+    },
+    {
+      "name": "VSS",
+      "price": 15,
+      "addonGroup": "h",
+      "kind": null
+    },
+    {
+      "name": "SCAR",
+      "price": 16,
+      "addonGroup": "h",
+      "kind": null
+    },
+    {
+      "name": "XM8",
+      "price": 20,
+      "addonGroup": "h",
+      "kind": null
+    },
+    {
+      "name": "P90",
+      "price": 18,
+      "addonGroup": "h",
+      "kind": null
+    },
+    {
+      "name": "AK-47",
+      "price": 16,
+      "addonGroup": "h",
+      "kind": null
+    },
+    {
+      "name": "M4A1",
+      "price": 18,
+      "addonGroup": "h",
+      "kind": null
+    },
+    {
+      "name": "AWM",
+      "price": 22,
+      "addonGroup": "h",
+      "kind": null
+    },
+    {
+      "name": "MP40",
+      "price": 20,
+      "addonGroup": "h",
+      "kind": null
+    },
+    {
+      "name": "FAMAS",
+      "price": 20,
+      "addonGroup": "h",
+      "kind": null
+    },
+    {
+      "name": "M60",
+      "price": 20,
+      "addonGroup": "h",
+      "kind": null
+    },
+    {
+      "name": "Cachorro quente de carne",
+      "price": 15,
+      "addonGroup": null,
+      "kind": null
+    },
+    {
+      "name": "Cachorro quente de frango",
+      "price": 13,
+      "addonGroup": null,
+      "kind": null
+    },
+    {
+      "name": "Cachorro quente misto",
+      "price": 18,
+      "addonGroup": null,
+      "kind": null
+    },
+    {
+      "name": "Combo petiscos",
+      "price": 50,
+      "addonGroup": null,
+      "kind": null
+    },
+    {
+      "name": "Combo hambúrguer",
+      "price": 50,
+      "addonGroup": null,
+      "kind": null
+    },
+    {
+      "name": "Combo 03",
+      "price": 65,
+      "addonGroup": null,
+      "kind": null
+    },
+    {
+      "name": "Batatas fritas 250g",
+      "price": 18,
+      "addonGroup": null,
+      "kind": null
+    },
+    {
+      "name": "Batata gourmet de calabresa",
+      "price": 27,
+      "addonGroup": null,
+      "kind": null
+    },
+    {
+      "name": "Batata gourmet de strogonoff",
+      "price": 27,
+      "addonGroup": null,
+      "kind": null
+    },
+    {
+      "name": "Batata gourmet de carne de sol",
+      "price": 30,
+      "addonGroup": null,
+      "kind": null
+    },
+    {
+      "name": "Filé com fritas",
+      "price": 50,
+      "addonGroup": null,
+      "kind": null
+    },
+    {
+      "name": "Espetinho de carne",
+      "price": 12,
+      "addonGroup": null,
+      "kind": null
+    },
+    {
+      "name": "Espetinho de frango",
+      "price": 10,
+      "addonGroup": null,
+      "kind": null
+    },
+    {
+      "name": "Coca cola Júnior",
+      "price": 3,
+      "addonGroup": null,
+      "kind": "refrigerante"
+    },
+    {
+      "name": "Água mineral sem gás 500ml",
+      "price": 3,
+      "addonGroup": null,
+      "kind": "agua"
+    },
+    {
+      "name": "Água mineral com gás 500ml",
+      "price": 4,
+      "addonGroup": null,
+      "kind": "agua"
+    },
+    {
+      "name": "Guaraná júnior",
+      "price": 2.5,
+      "addonGroup": null,
+      "kind": "refrigerante"
+    },
+    {
+      "name": "Guaraná 1 litro",
+      "price": 10,
+      "addonGroup": null,
+      "kind": "refrigerante"
+    },
+    {
+      "name": "Coca cola 1 Litro",
+      "price": 12,
+      "addonGroup": null,
+      "kind": "refrigerante"
+    },
+    {
+      "name": "Coca cola 1 litro zero",
+      "price": 12,
+      "addonGroup": null,
+      "kind": "refrigerante"
+    },
+    {
+      "name": "Pepsi 1L",
+      "price": 10,
+      "addonGroup": null,
+      "kind": "refrigerante"
+    },
+    {
+      "name": "Guaraná 2 litros",
+      "price": 15,
+      "addonGroup": null,
+      "kind": "refrigerante"
+    },
+    {
+      "name": "Coca cola 2 litros",
+      "price": 18,
+      "addonGroup": null,
+      "kind": "refrigerante"
+    },
+    {
+      "name": "Guaraná lata",
+      "price": 6,
+      "addonGroup": null,
+      "kind": "refrigerante"
+    },
+    {
+      "name": "Guaraná lata zero",
+      "price": 6,
+      "addonGroup": null,
+      "kind": "refrigerante"
+    },
+    {
+      "name": "Coca lata",
+      "price": 7,
+      "addonGroup": null,
+      "kind": "refrigerante"
+    },
+    {
+      "name": "Coca lata zero",
+      "price": 7,
+      "addonGroup": null,
+      "kind": "refrigerante"
+    },
+    {
+      "name": "Fanta uva lata",
+      "price": 6,
+      "addonGroup": null,
+      "kind": "refrigerante"
+    },
+    {
+      "name": "Soda lata",
+      "price": 6,
+      "addonGroup": null,
+      "kind": "refrigerante"
+    },
+    {
+      "name": "Pepsi lata",
+      "price": 6,
+      "addonGroup": null,
+      "kind": "refrigerante"
+    },
+    {
+      "name": "Suco sem leite 500ml",
+      "price": 8,
+      "addonGroup": null,
+      "kind": "suco"
+    },
+    {
+      "name": "H2O",
+      "price": 8,
+      "addonGroup": null,
+      "kind": "agua"
+    },
+    {
+      "name": "Suco com leite 500ml",
+      "price": 10,
+      "addonGroup": null,
+      "kind": "suco"
+    },
+    {
+      "name": "Suco de laranja natural 500ml",
+      "price": 12,
+      "addonGroup": null,
+      "kind": null
+    },
+    {
+      "name": "Vitamina de açaí",
+      "price": 13,
+      "addonGroup": null,
+      "kind": "vitamina"
+    },
+    {
+      "name": "Vitamina de guaraná",
+      "price": 13,
+      "addonGroup": null,
+      "kind": "vitamina"
+    },
+    {
+      "name": "Red Bull 250ml",
+      "price": 12,
+      "addonGroup": null,
+      "kind": "energetico"
+    },
+    {
+      "name": "Monster 473ml",
+      "price": 15,
+      "addonGroup": null,
+      "kind": "energetico"
+    },
+    {
+      "name": "Sukita",
+      "price": 6,
+      "addonGroup": null,
+      "kind": "refrigerante"
+    },
+    {
+      "name": "Milkshake",
+      "price": 15,
+      "addonGroup": null,
+      "kind": "milkshake"
+    },
+    {
+      "name": "Spaten long neck",
+      "price": 9,
+      "addonGroup": null,
+      "kind": "alcool"
+    },
+    {
+      "name": "Stella long neck",
+      "price": 10,
+      "addonGroup": null,
+      "kind": "alcool"
+    },
+    {
+      "name": "Budweiser long neck",
+      "price": 9,
+      "addonGroup": null,
+      "kind": "alcool"
+    },
+    {
+      "name": "Corona long neck",
+      "price": 12,
+      "addonGroup": null,
+      "kind": "alcool"
+    },
+    {
+      "name": "Spaten lata",
+      "price": 7,
+      "addonGroup": null,
+      "kind": "alcool"
+    },
+    {
+      "name": "Stella lata",
+      "price": 8,
+      "addonGroup": null,
+      "kind": "alcool"
+    },
+    {
+      "name": "Budweiser lata",
+      "price": 7,
+      "addonGroup": null,
+      "kind": "alcool"
+    },
+    {
+      "name": "Pudim",
+      "price": 12,
+      "addonGroup": null,
+      "kind": null
+    },
+    {
+      "name": "Bolo com recheio",
+      "price": 15,
+      "addonGroup": null,
+      "kind": null
+    },
+    {
+      "name": "Bolo só com cobertura",
+      "price": 10,
+      "addonGroup": null,
+      "kind": null
+    },
+    {
+      "name": "Mousse",
+      "price": 12,
+      "addonGroup": null,
+      "kind": null
+    },
+    {
+      "name": "Tortilete",
+      "price": 5,
+      "addonGroup": null,
+      "kind": null
+    },
+    {
+      "name": "Empada (frango com catupiry)",
+      "price": 5,
+      "addonGroup": null,
+      "kind": null
+    },
+    {
+      "name": "Tapioca de carne de sol com queijo",
+      "price": 18,
+      "addonGroup": "g",
+      "kind": null
+    },
+    {
+      "name": "Tapioca de camarão",
+      "price": 25,
+      "addonGroup": "g",
+      "kind": null
+    },
+    {
+      "name": "Tapioca de frango com queijo",
+      "price": 16,
+      "addonGroup": "g",
+      "kind": null
+    },
+    {
+      "name": "Tapioca de presunto e queijo",
+      "price": 14,
+      "addonGroup": "g",
+      "kind": null
+    },
+    {
+      "name": "Tapioca de muçarela",
+      "price": 10,
+      "addonGroup": "g",
+      "kind": null
+    },
+    {
+      "name": "Tapioca de queijo coalho",
+      "price": 10,
+      "addonGroup": "g",
+      "kind": null
+    },
+    {
+      "name": "Tapioca de coco",
+      "price": 8,
+      "addonGroup": "g",
+      "kind": null
+    },
+    {
+      "name": "Tapioca de coco e queijo",
+      "price": 12,
+      "addonGroup": "g",
+      "kind": null
+    },
+    {
+      "name": "Tapioca de coco com leite condensado",
+      "price": 15,
+      "addonGroup": "g",
+      "kind": null
+    },
+    {
+      "name": "Tapioca romeu e julieta",
+      "price": 15,
+      "addonGroup": "g",
+      "kind": null
+    },
+    {
+      "name": "Tapioca de Nutella",
+      "price": 16,
+      "addonGroup": "g",
+      "kind": null
+    },
+    {
+      "name": "Tapioca de banana com queijo",
+      "price": 16,
+      "addonGroup": "g",
+      "kind": null
+    },
+    {
+      "name": "Mini pizza de muçarela",
+      "price": 13,
+      "addonGroup": null,
+      "kind": null
+    },
+    {
+      "name": "Mini pizza de calabresa",
+      "price": 16,
+      "addonGroup": null,
+      "kind": null
+    },
+    {
+      "name": "Mini pizza de frango com catupiry",
+      "price": 18,
+      "addonGroup": null,
+      "kind": null
+    },
+    {
+      "name": "Mini pizza de carne de sol",
+      "price": 20,
+      "addonGroup": null,
+      "kind": null
+    },
+    {
+      "name": "Mini pizza 3 queijos",
+      "price": 16,
+      "addonGroup": null,
+      "kind": null
+    },
+    {
+      "name": "Mini pizza mista",
+      "price": 16,
+      "addonGroup": null,
+      "kind": null
+    },
+    {
+      "name": "Pastel de queijo",
+      "price": 12,
+      "addonGroup": "g",
+      "kind": null
+    },
+    {
+      "name": "Pastel misto completo",
+      "price": 14,
+      "addonGroup": "g",
+      "kind": null
+    },
+    {
+      "name": "Pastel de frango completo",
+      "price": 14,
+      "addonGroup": "g",
+      "kind": null
+    },
+    {
+      "name": "Pastel de carne de sol completo",
+      "price": 16,
+      "addonGroup": "g",
+      "kind": null
+    },
+    {
+      "name": "Pastel de carne moída completo",
+      "price": 15,
+      "addonGroup": "g",
+      "kind": null
+    },
+    {
+      "name": "Pastel de frango com carne moída completo",
+      "price": 18,
+      "addonGroup": "g",
+      "kind": null
+    },
+    {
+      "name": "Pastel de pizza",
+      "price": 14,
+      "addonGroup": "g",
+      "kind": null
+    },
+    {
+      "name": "Pastel de carne moída com carne de sol completo",
+      "price": 19,
+      "addonGroup": "g",
+      "kind": null
+    },
+    {
+      "name": "Pastel de frango com carne de sol completo",
+      "price": 18,
+      "addonGroup": "g",
+      "kind": null
+    },
+    {
+      "name": "Pastel de camarão completo",
+      "price": 25,
+      "addonGroup": "g",
+      "kind": null
+    },
+    {
+      "name": "Pastel de Nutella",
+      "price": 16,
+      "addonGroup": "g",
+      "kind": null
+    },
+    {
+      "name": "Pastel mistão",
+      "price": 20,
+      "addonGroup": "g",
+      "kind": null
+    }
+  ],
+  "addons": {
+    "h": [
+      [
+        "Presunto",
+        3
+      ],
+      [
+        "Calabresa",
+        3
+      ],
+      [
+        "Ovo",
+        3
+      ],
+      [
+        "Bacon",
+        4
+      ],
+      [
+        "Cheddar",
+        4
+      ],
+      [
+        "Catupiry",
+        4
+      ],
+      [
+        "Queijo",
+        4
+      ],
+      [
+        "Anéis de cebola empanada",
+        4
+      ],
+      [
+        "Cebola caramelizada",
+        4
+      ],
+      [
+        "Hambúrguer tradicional",
+        5
+      ],
+      [
+        "Hambúrguer artesanal",
+        10
+      ]
+    ],
+    "g": [
+      [
+        "Presunto",
+        3
+      ],
+      [
+        "Calabresa",
+        3
+      ],
+      [
+        "Bacon",
+        4
+      ],
+      [
+        "Cheddar",
+        4
+      ],
+      [
+        "Catupiry",
+        4
+      ],
+      [
+        "Queijo",
+        4
+      ]
+    ]
+  },
+  "juiceFlavors": [
+    "Maracujá",
+    "Acerola",
+    "Goiaba",
+    "Cajá",
+    "Mangaba",
+    "Graviola",
+    "Caju"
+  ],
+  "milkshakeFlavors": [
+    "Morango",
+    "Chocolate",
+    "Creme"
+  ]
+}
