@@ -24,16 +24,22 @@ internal static class Program
         Application.SetCompatibleTextRenderingDefault(false);
         try
         {
-            string configPath = File.Exists(Path.Combine(LegacyDir, ConfigName))
-                ? Path.Combine(LegacyDir, ConfigName)
-                : Path.Combine(UserDir, ConfigName);
-            string workDir = Path.GetDirectoryName(configPath)!;
-            Directory.CreateDirectory(workDir);
+            // Always use a per-user writable directory. Import legacy settings when possible,
+            // but never write or execute scripts from ProgramData.
+            Directory.CreateDirectory(UserDir);
+            string configPath = Path.Combine(UserDir, ConfigName);
+            string legacyConfigPath = Path.Combine(LegacyDir, ConfigName);
+            string workDir = UserDir;
 
             AgentConfig? config = null;
             if (File.Exists(configPath))
             {
                 try { config = JsonSerializer.Deserialize<AgentConfig>(File.ReadAllText(configPath)); }
+                catch { }
+            }
+            if (config is null && File.Exists(legacyConfigPath))
+            {
+                try { config = JsonSerializer.Deserialize<AgentConfig>(File.ReadAllText(legacyConfigPath)); }
                 catch { }
             }
 
