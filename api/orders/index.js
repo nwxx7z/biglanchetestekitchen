@@ -63,11 +63,11 @@ function badRequest(message, status = 400) {
 }
 
 function parseLegacyAddons(name) {
-  const match = String(name || "").match(/\\s\\(adicionais? de (.+)\\)$/i);
+  const match = String(name || "").match(/\s\(adicionais? de (.+)\)$/i);
   if (!match) return [];
   const text = match[1];
   const parts = [];
-  const re = /(\\d+)\\s*x\\s+(.+?)(?=,\\s*\\d+\\s*x\\s+|\\s+e\\s+\\d+\\s*x\\s+|$)/giu;
+  const re = /(\d+)\s*x\s+(.+?)(?=,\s*\d+\s*x\s+|\s+e\s+\d+\s*x\s+|$)/giu;
   let item;
   while ((item = re.exec(text)) !== null) {
     parts.push({ name: item[2].trim(), quantity: Number(item[1]) });
@@ -142,7 +142,7 @@ function normalizeAndPriceOrder(body) {
     if (product.kind === "suco") {
       if (!JUICE_FLAVORS.includes(flavor)) {
         // Compatibilidade com pedidos antigos cujo sabor só estava no nome.
-        const legacyFlavor = legacyName.match(/\\(sabor:\\s*([^)]+)\\)/i)?.[1]?.trim() || "";
+        const legacyFlavor = legacyName.match(/\(sabor:\s*([^)]+)\)/i)?.[1]?.trim() || "";
         flavor = legacyFlavor;
       }
       if (!JUICE_FLAVORS.includes(flavor)) throw badRequest("Escolha um sabor válido para o suco.");
@@ -211,7 +211,7 @@ function normalizeAndPriceOrder(body) {
 
   const payment = String(body.payment || "").trim();
   const validPayment = payment === "Pix" || payment === "Cartão na entrega" ||
-    /^Dinheiro(?: · (?:Sem troco|Troco solicitado|Troco para R\\s?\$[\\s\\u00a0]?[0-9.,]+))?$/u.test(payment);
+    /^Dinheiro(?: · (?:Sem troco|Troco solicitado|Troco para R\$\s*[\s\u00a0]?[0-9.,]+))?$/u.test(payment);
   if (!validPayment) throw badRequest("Selecione uma forma de pagamento válida.");
 
   totalCents += Math.round(deliveryFee * 100);
