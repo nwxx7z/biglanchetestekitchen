@@ -148,7 +148,7 @@ function normalizeAndPriceOrder(body) {
       if (!JUICE_FLAVORS.includes(flavor)) throw badRequest("Escolha um sabor válido para o suco.");
     } else if (product.kind === "milkshake") {
       if (!MILKSHAKE_FLAVORS.includes(flavor)) {
-        const legacyFlavor = legacyName.match(/\\(sabor:\\s*([^)]+)\\)/i)?.[1]?.trim() || "";
+        const legacyFlavor = legacyName.match(/\(sabor:\s*([^)]+)\)/i)?.[1]?.trim() || "";
         flavor = legacyFlavor;
       }
       if (!MILKSHAKE_FLAVORS.includes(flavor)) throw badRequest("Escolha um sabor válido para o milk-shake.");
