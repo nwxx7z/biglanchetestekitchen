@@ -6351,12 +6351,16 @@ document.addEventListener("change", e => {
 function pedidoParaCozinha(){
   return {
     cart: cart.map(l => ({
+      productId: String(l.id || ""),
       name: nome(l),
       flavor: (l.juice || l.kind === "milkshake") ? String(l.flavor || "") : "",
       quantity: Number(l.q || 0),
       price: Number(l.p || 0),
       note: String(l.note || "").trim().slice(0, 300),
-      additions: []
+      additions: l.adds.map(x => ({
+        name: String(x[0] || ""),
+        quantity: Number(x[2] || 1)
+      }))
     })),
     delivery: {
       city: cidadeEntregaDescricao(),
