@@ -43,10 +43,10 @@ internal static class Program
                 catch { }
             }
 
-            if (config is null || string.IsNullOrWhiteSpace(config.token) ||
-                string.IsNullOrWhiteSpace(config.printerName))
+            // Keep the original predictable startup flow: always show the setup window,
+            // prefilled with the last saved settings, so the user can confirm/edit and start.
+            using (var form = new SetupForm(config))
             {
-                using var form = new SetupForm(config);
                 if (form.ShowDialog() != DialogResult.OK || form.Result is null) return;
                 config = form.Result;
                 config.apiUrl = DefaultApi;
