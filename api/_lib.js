@@ -3,7 +3,7 @@ const crypto = require("crypto");
 
 // ===================== SENHA DA COZINHA =====================
 // ALTERE SOMENTE A LINHA ABAIXO para trocar a senha.
-const KITCHEN_PASSWORD = "BIGLANCHE123";
+const KITCHEN_PASSWORD = String(process.env.KITCHEN_PASSWORD || "");
 const KITCHEN_SESSION_MAX_AGE = 60 * 60 * 8; // 8 horas
 const SESSION_COOKIE = "kitchen_session";
 
@@ -37,6 +37,7 @@ function parseCookies(req) {
 }
 
 function makeSessionToken() {
+  if (!KITCHEN_PASSWORD) throw new Error("KITCHEN_PASSWORD não configurada");
   const issuedAt = Math.floor(Date.now() / 1000);
   const payload = String(issuedAt);
   const signature = crypto
@@ -47,6 +48,7 @@ function makeSessionToken() {
 }
 
 function isValidSession(req) {
+  if (!KITCHEN_PASSWORD) return false;
   const token = parseCookies(req)[SESSION_COOKIE];
   if (!token) return false;
 
