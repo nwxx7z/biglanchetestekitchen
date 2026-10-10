@@ -3,14 +3,6 @@
     {
       "source": "/",
       "destination": "/index.html"
-    },
-    {
-      "source": "/cozinha",
-      "destination": "/cozinha/index.html"
-    },
-    {
-      "source": "/cozinha/",
-      "destination": "/cozinha/index.html"
     }
   ],
   "headers": [
@@ -72,6 +64,23 @@
           "value": "no-store"
         }
       ]
+    }
+  ],
+  "redirects": [
+    {
+      "source": "/cozinha",
+      "destination": "/kitchen",
+      "permanent": true
+    },
+    {
+      "source": "/cozinha/",
+      "destination": "/kitchen",
+      "permanent": true
+    },
+    {
+      "source": "/cozinha/index.html",
+      "destination": "/kitchen",
+      "permanent": true
     }
   ]
 }
