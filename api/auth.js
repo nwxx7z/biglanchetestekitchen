@@ -1,3 +1,4 @@
+const crypto = require("crypto");
 const {
   cors,
   send,
@@ -23,8 +24,14 @@ module.exports = async function handler(req, res) {
       try { body = JSON.parse(body); } catch { body = {}; }
     }
 
+    if (!KITCHEN_PASSWORD) {
+      return send(res, 503, { error: "Autenticação não configurada" });
+    }
     const password = String(body.password || "");
-    if (password !== KITCHEN_PASSWORD) {
+    const supplied = Buffer.from(password);
+    const expected = Buffer.from(KITCHEN_PASSWORD);
+    const valid = supplied.length === expected.length && crypto.timingSafeEqual(supplied, expected);
+    if (!valid) {
       return send(res, 401, { error: "Senha incorreta" });
     }
 
