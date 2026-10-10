@@ -764,5 +764,5 @@ const CATALOG = {
     "Creme"
   ]
 };
-const PRODUCTS_BY_NAME = Object.values(CATALOG.products).sort((a,b)=>b.name.length-a.name.length);
+const PRODUCTS_BY_NAME = Object.entries(CATALOG.products).map(([id,product])=>({id,...product})).sort((a,b)=>b.name.length-a.name.length);
 module.exports = { ...CATALOG, PRODUCTS_BY_NAME };
