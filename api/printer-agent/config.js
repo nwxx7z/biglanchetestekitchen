@@ -33,5 +33,5 @@ module.exports=async function handler(req,res){
    return send(res,200,rows[0]);
   }
   return send(res,405,{error:"Método não permitido"});
- }catch(error){console.error(error);return send(res,500,{error:"Erro interno",detail:error.message});}
+ }catch(error){console.error(error);return send(res,500,{error:"Erro interno"});}
 };
