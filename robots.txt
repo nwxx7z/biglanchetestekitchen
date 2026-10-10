@@ -1,4 +1,7 @@
 User-agent: *
 Allow: /
-Disallow: /kitchen/
+Disallow: /kitchen
+Disallow: /cozinha
 Disallow: /api/
+
+Sitemap: https://www.biglanchemaragogi.site/sitemap.xml
